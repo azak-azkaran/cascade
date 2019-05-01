@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
+	"errors"
 	"flag"
 	"github.com/azak-azkaran/putio-go-aria2/utils"
 	"io"
@@ -11,60 +13,32 @@ import (
 	"time"
 )
 
-var	running bool
+var running bool
+var created bool
+var server http.Server
 
-func handleTunneling(w http.ResponseWriter, r *http.Request) {
-	dest_conn, err := net.DialTimeout("tcp", r.Host, 10*time.Second)
+func shutdown(timeout time.Duration) error {
+	ctx, _ := context.WithTimeout(context.Background(), timeout)
+
+	if !running {
+		return errors.New("Server is not running")
+	}
+	err := server.Shutdown(ctx)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return
+		utils.Error.Println("Error while shutting down", err)
+		return err
 	}
-	w.WriteHeader(http.StatusOK)
-	hijacker, ok := w.(http.Hijacker)
-	if !ok {
-		http.Error(w, "Hijacking not supported", http.StatusInternalServerError)
-		return
-	}
-	client_conn, _, err := hijacker.Hijack()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-	}
-	go transfer(dest_conn, client_conn)
-	go transfer(client_conn, dest_conn)
-}
-func transfer(destination io.WriteCloser, source io.ReadCloser) {
-	defer destination.Close()
-	defer source.Close()
-	io.Copy(destination, source)
-}
-func handleHTTP(w http.ResponseWriter, req *http.Request) {
-	resp, err := http.DefaultTransport.RoundTrip(req)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return
-	}
-	defer resp.Body.Close()
-	copyHeader(w.Header(), resp.Header)
-	w.WriteHeader(resp.StatusCode)
-	io.Copy(w, resp.Body)
-}
-func copyHeader(dst, src http.Header) {
-	for k, vv := range src {
-		for _, v := range vv {
-			dst.Add(k, v)
-		}
-	}
+	running = false
+	return nil
 }
 
-func run(pemPath string, keyPath string, proto string) {
+func run() {
 	utils.Info.Println("Starting Proxy")
-	if proto != "http" && proto != "https" {
-		utils.Error.Fatalln("Protocol must be either http or https")
-	}
-	server := &http.Server{
+	created = true
+	server = http.Server{
 		Addr: ":8888",
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			utils.Info.Println("handling Request")
+			utils.Info.Println("handling Request: ", r.Method)
 			if r.Method == http.MethodConnect {
 				handleTunneling(w, r)
 			} else {
@@ -75,8 +49,8 @@ func run(pemPath string, keyPath string, proto string) {
 		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
 	}
 	utils.Info.Println("Starting Listening")
-	running = true;
-	utils.Error.Fatalln(server.ListenAndServe())
+	running = true
+	utils.Error.Println(server.ListenAndServe())
 }
 
 func main() {
@@ -89,5 +63,5 @@ func main() {
 	flag.StringVar(&proto, "proto", "https", "Proxy protocol (http or https)")
 	flag.Parse()
 
-	run(pemPath, keyPath, proto)
+	run()
 }
