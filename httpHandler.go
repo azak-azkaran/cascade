@@ -7,9 +7,9 @@ import (
 	"net/url"
 )
 
-func createTransport(fixedURL string) *http.Transport {
-	proxyURI, _ := url.Parse(fixedURL)
-	if fixedURL == "" {
+func createTransport(proxyURL string) *http.Transport {
+	proxyURI, _ := url.Parse(proxyURL)
+	if proxyURL == "" {
 		return &http.Transport{
 			Proxy: nil,
 		}
@@ -21,9 +21,9 @@ func createTransport(fixedURL string) *http.Transport {
 	}
 }
 
-func handleHTTP(w http.ResponseWriter, req *http.Request) {
-	utils.Info.Println("handle HTTP Request")
-	resp, err := createTransport("").RoundTrip(req)
+func handleHTTP(w http.ResponseWriter, req *http.Request, proxyURL string) {
+	utils.Info.Println("handle HTTP Request to: ", req.Host)
+	resp, err := createTransport(proxyURL).RoundTrip(req)
 	if err != nil {
 		utils.Error.Println(w, err.Error(), http.StatusServiceUnavailable)
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)

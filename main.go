@@ -4,10 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"flag"
 	"github.com/azak-azkaran/putio-go-aria2/utils"
-	"io"
-	"net"
 	"net/http"
 	"os"
 	"time"
@@ -32,17 +29,17 @@ func shutdown(timeout time.Duration) error {
 	return nil
 }
 
-func run() {
+func run(port string) {
 	utils.Info.Println("Starting Proxy")
 	created = true
 	server = http.Server{
-		Addr: ":8888",
+		Addr: port,
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			utils.Info.Println("handling Request: ", r.Method)
 			if r.Method == http.MethodConnect {
-				handleTunneling(w, r)
+				handleTunneling(w, r, "")
 			} else {
-				handleHTTP(w, r)
+				handleHTTP(w, r, "")
 			}
 		}),
 		// Disable HTTP/2.
@@ -55,13 +52,5 @@ func run() {
 
 func main() {
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
-	var pemPath string
-	flag.StringVar(&pemPath, "pem", "server.pem", "path to pem file")
-	var keyPath string
-	flag.StringVar(&keyPath, "key", "server.key", "path to key file")
-	var proto string
-	flag.StringVar(&proto, "proto", "https", "Proxy protocol (http or https)")
-	flag.Parse()
-
-	run()
+	run(":8888")
 }

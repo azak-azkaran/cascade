@@ -30,7 +30,7 @@ func Test_createTransport(t *testing.T) {
 		t.Error("Return code was not ok (200)")
 	}
 
-	tr = createTransport("http://localhost:8888")
+	tr = createTransport("http://localhost:8889")
 
 	if tr.ProxyConnectHeader != nil {
 		t.Error("Proxy was not set correctly")

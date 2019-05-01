@@ -13,7 +13,7 @@ func Test_run(t *testing.T) {
 	var infobuffer bytes.Buffer
 	utils.Init(&infobuffer, os.Stdout, os.Stderr)
 	if !created {
-		go run()
+		go run(":8889")
 	}
 
 	for !running {
@@ -29,7 +29,7 @@ func Test_handleHTTP(t *testing.T) {
 	var infobuffer bytes.Buffer
 	utils.Init(&infobuffer, os.Stdout, os.Stderr)
 
-	dump, _ := client("http://localhost:8888", "http://google.de")
+	dump, _ := client("http://localhost:8889", "http://google.de")
 
 	if len(dump) == 0 {
 		t.Error("No dump received")
@@ -40,7 +40,7 @@ func Test_handleHTTP(t *testing.T) {
 		t.Error("No http request received")
 	}
 
-	client("http://localhost:8888", "http://localhost:12313")
+	client("http://localhost:8889", "http://localhost:12313")
 	if strings.Contains(infobuffer.String(), "503") {
 		t.Error("Server available but should not", infobuffer.String())
 	}
@@ -54,7 +54,7 @@ func Test_handleTunneling(t *testing.T) {
 	var infobuffer bytes.Buffer
 	utils.Init(&infobuffer, os.Stdout, os.Stderr)
 
-	dump, _ := client("http://localhost:8888", "https://www.google.de")
+	dump, _ := client("http://localhost:8889", "https://www.google.de")
 
 	if len(dump) == 0 {
 		t.Error("No dump recieved")
@@ -68,7 +68,7 @@ func Test_handleTunneling(t *testing.T) {
 	if !strings.Contains(logMessages, "CONNECT") {
 		t.Error("Did not receive a HTTPS Request")
 	}
-	client("http://localhost:8888", "https://localhost:12313")
+	client("http://localhost:8889", "https://localhost:12313")
 	if strings.Contains(infobuffer.String(), "503") {
 		t.Error("Server available but should not", infobuffer.String())
 	}
