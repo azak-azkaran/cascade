@@ -54,7 +54,7 @@ func main() {
 	flag.StringVar(&password, "password", "", "Password for authentication to a forward proxy")
 	flag.StringVar(&proxyURL, "host", "", "Address of a forward proxy")
 	flag.StringVar(&username, "user", "", "Username for authentication to a forward proxy")
-	flag.StringVar(&localport, "port", ":8888", "Localport on which to run the proxy")
+	flag.StringVar(&localport, "port", "8888", "Localport on which to run the proxy")
 	flag.Parse()
 
 	var builder strings.Builder
@@ -62,6 +62,12 @@ func main() {
 	builder.WriteString(localport)
 
 	localaddress := builder.String()
+
+	log.Println("Starting Proxy with the following flags:")
+	log.Println("Username: ", username)
+	log.Println("Password: ", password)
+	log.Println("Localaddress: ", localaddress)
+
 	middleProxy := goproxy.NewProxyHttpServer()
 	middleProxy.Verbose = true
 	middleProxy.Tr.Proxy = func(req *http.Request) (*url.URL, error) {
@@ -76,5 +82,5 @@ func main() {
 		return req, nil
 	}))
 	log.Println("serving middle proxy server at ", localaddress)
-	http.ListenAndServe(localaddress, middleProxy)
+	log.Println(http.ListenAndServe(localaddress, middleProxy))
 }
