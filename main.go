@@ -4,9 +4,11 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"github.com/azak-azkaran/putio-go-aria2/utils"
+	"flag"
+	"github.com/azak-azkaran/proxy-go/utils"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -29,7 +31,7 @@ func shutdown(timeout time.Duration) error {
 	return nil
 }
 
-func run(port string) {
+func run(port string, proxyURL string) {
 	utils.Info.Println("Starting Proxy")
 	created = true
 	server = http.Server{
@@ -37,9 +39,9 @@ func run(port string) {
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			utils.Info.Println("handling Request: ", r.Method)
 			if r.Method == http.MethodConnect {
-				handleTunneling(w, r, "")
+				handleTunneling(w, r, proxyURL)
 			} else {
-				handleHTTP(w, r, "")
+				handleHTTP(w, r, proxyURL)
 			}
 		}),
 		// Disable HTTP/2.
@@ -52,5 +54,28 @@ func run(port string) {
 
 func main() {
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
-	run(":8888")
+	var password string
+	var proxyAddress string
+	var user string
+	var port string
+	flag.StringVar(&password, "password", "", "Password for authentication to a forward proxy")
+	flag.StringVar(&proxyAddress, "host", "", "Address of a forward proxy")
+	flag.StringVar(&user, "user", "", "Username for authentication to a forward proxy")
+
+	flag.StringVar(&port, "port", ":8888", "Localport on which to run the proxy")
+	flag.Parse()
+
+	if len(proxyAddress) > 0 {
+		if len(user) > 0 {
+			var builder strings.Builder
+			builder.WriteString(user)
+			builder.WriteString(":")
+			builder.WriteString(password)
+			builder.WriteString("@")
+			builder.WriteString(proxyAddress)
+			proxyAddress = builder.String()
+		}
+		utils.Info.Println("Using ProxyAddress: ", proxyAddress)
+	}
+	run(port, proxyAddress)
 }

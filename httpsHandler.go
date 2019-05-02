@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/azak-azkaran/putio-go-aria2/utils"
+	"github.com/azak-azkaran/proxy-go/utils"
 	"golang.org/x/net/proxy"
 	"io"
 	"net"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 type HTTPSConnection struct {
@@ -38,15 +39,15 @@ func createDialer(proxyURL string) (proxy.Dialer, error) {
 
 func handleTunneling(w http.ResponseWriter, req *http.Request, proxyURL string) {
 	utils.Info.Println("handle Tunnel Request to: ", req.Host)
-	//destConnection, err := net.DialTimeout("tcp", r.Host, 10*time.Second)
-	dialer, err := createDialer(proxyURL)
-	if err != nil {
-		utils.Error.Println(w, err.Error(), http.StatusServiceUnavailable)
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return
-	}
+	destConnection, err := net.DialTimeout("tcp", req.Host, 10*time.Second)
+	//dialer, err := createDialer(proxyURL)
+	//if err != nil {
+	//	utils.Error.Println(w, err.Error(), http.StatusServiceUnavailable)
+	//	http.Error(w, err.Error(), http.StatusServiceUnavailable)
+	//	return
+	//}
 
-	destConnection, err := dialer.Dial("tcp", req.Host)
+	//destConnection, err := dialer.Dial("tcp", req.Host)
 	if err != nil {
 		utils.Error.Println(w, err.Error(), http.StatusServiceUnavailable)
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)

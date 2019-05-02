@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"github.com/azak-azkaran/putio-go-aria2/utils"
+	"github.com/azak-azkaran/proxy-go/utils"
 	"os"
 	"strings"
 	"testing"

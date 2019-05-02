@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/azak-azkaran/putio-go-aria2/utils"
+	"github.com/azak-azkaran/proxy-go/utils"
 	"os"
 	"reflect"
 	"testing"
