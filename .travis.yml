@@ -1,8 +1,25 @@
 addons:
   sonarcloud:
     organization: "azak-azkaran-github" # the key of the org you chose at step #3
+    token:
+        secure: "mHaCAWtY8YvRZK4fB0VjDUR3iAMN6+cXxSHhhiFknCws7Jcy3FlO53v6sUUgCxzzBJyBz9jUkKmq/VkqG8gcMV4/OwKN4oEENwJvJTV/2VIvT8odMsiSuHJDtKMAX3J5i/MCM4kqEUou7luNNZ/WkgOqqla+H/IgYWwRVYfzH463Vxo7H3YO1SlLH5556vH1U7AB7FR00GhQqKf4LY64vFmMIkXSRHveJbIN3ID1BzKx1aHJfSNXFchc1arHPA5wiJPmXCpalCkSeGuqpEJK+JsNXjZqE719lZiGhpoydd6lDhj6EsAbCjnFBOwyWB8JnRXEM/GS1GzgtLy6Zju6pdhDf4ZGnmcwecx/lT+Sh4wzy84Ted+sMrtBKefzw7lkyEdQyuDH35PpYMi+nDcFC5+Fm7iIjIB0xAiHJRuXFLzuEJaQ+yLJSrocurovUQFjH3+wJuV9I37rmjoBYlaQl3EqDOJ45ODFW5BEIhQRJhAo+zwud3u2FupHmGnXNR+UbG7lk5i1PX5XW+omvrGUrqHjNyRZa8l3Yhb08N6Q4Rj/aDYtEMPZWRIalV4VNGtKR6sbREH808z5GI2gC7lLF6QGYXhUpO9IWLv2FC1k9rXLVQPMu0fmL2sO+JkWranJQRpcfU88I0Bhk7XGb5AbU+DU3rOL1qpsd604h2+lfEg="
+env:
+    global:
+        secure: "k/J8NPzdpa1H4crv/18iOEURKQBhRk9ztfj+fzw6IKIAH7S6nnyKyDN65IGU6ppJc85bj3kC1YQWu7j43oPOWMhG39hRTdNC6IydPb1NEQv53ls4Q50ORodlE01/vN8Po90Vi7L0TiAtsdoIOFpiPemgSMyOGYBMUs9at5S/jngUuppqPiM2GBiaj8/3NQMNIHu3v/VQ4Do8ppYQRWCJoh11BIEx6undYMDkBbjQo6MuGQNAHlKmewLxWkIdAGh9etbMCIo5JAyeA06BkHIdzMFRJcwsFwcd5CY5yznKbjQomzsE/UOUPGzZwbLbDO55SSRNpR0p+g4gMj7wjNXyG1zhnpXfg3l4cq2r9fjW3uE57oiNFDpgLFO7u/zfcQ3YobI9qnBdC80xJxlYzsSRp1Ptn4MgzSdb5wNlUFo1DYlNKNrahHCDTygCoSLJHArNjU32sE5bPMD7/Tja40+8484O64w+J7sosNgP5Wh55S+/etn4vsx9hT8ZjhEDl9gQWgsDSFdy3dY/zZ6moM61UgOwDploS72UGU3DE1B/UBgT/25gX/cqtZdCfv3RipWzwNNTJkncuSJbrqayBdPrYfOpBnT0BCuCI6BSYT2qn6uc8+G/RNb/vf0Ghnd3ny1GIWMcqyIpFktqjw4g4Y3OAcVBioOzMrX6BgcFZY+s3EA="
 
 script:
   # other script steps might be done before running the actual analysis
   - sonar-scanner
 language: go
+sudo: false
+go:
+  - tip
+before_install:
+  - go get github.com/mattn/goveralls
+  - go get -t -v ./...
+script:
+  - $GOPATH/bin/goveralls -service=travis-ci
+  - go test -race -coverprofile=coverage.txt -covermode=atomic
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
