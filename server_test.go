@@ -7,10 +7,10 @@ import (
 	"time"
 )
 
-func Test_createServer(t *testing.T) {
+func TestCreateServer(t *testing.T) {
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
 
-	testServer := createServer(DIRECT.run(true), "localhost", "8082")
+	testServer := CreateServer(DIRECT.Run(true), "localhost", "8082")
 	go func() {
 		err := testServer.ListenAndServe()
 		if err == nil {
@@ -19,9 +19,12 @@ func Test_createServer(t *testing.T) {
 	}()
 
 	time.Sleep(1 * time.Second)
-	_, err := client("http://localhost:8082", "https://www.google.de")
+	resp, err := utils.GetResponse("http://localhost:8082", "https://www.google.de")
 	if err != nil {
-		t.Error("Error while client request over cascade")
+		t.Error("Error while client request over proxy server", err)
+	}
+	if resp.StatusCode != 200 {
+		t.Error("Error while client request over proxy server", resp.StatusCode)
 	}
 
 	go func() {
@@ -31,16 +34,61 @@ func Test_createServer(t *testing.T) {
 		}
 	}()
 
-	_, err = client("http://localhost:8082", "https://www.google.de")
+	resp, err = utils.GetResponse("http://localhost:8082", "https://www.google.de")
 	if err == nil {
-		t.Error("Error while client request over cascade")
+		t.Error("No error received on shutdown server", err)
+	}
+	if resp != nil {
+		t.Error("No error received on shutdown server", resp.StatusCode)
 	}
 
-	testServer = createServer(DIRECT.run(true), "localhost", "8082")
+	testServer = CreateServer(DIRECT.Run(true), "localhost", "8082")
 	go func() {
 		err := testServer.ListenAndServe()
 		if err == nil {
 			t.Error("Error while starting server", err)
 		}
 	}()
+}
+
+func TestRunServer(t *testing.T) {
+	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	CreateServer(DIRECT.Run(true), "localhost", "8082")
+	if running {
+		t.Error("Server already running")
+	}
+
+	RunServer()
+	time.Sleep(1 * time.Second)
+	if !running {
+		t.Error("Server was not started")
+	}
+
+	resp, err := utils.GetResponse("http://localhost:8082", "https://www.google.de")
+	if err != nil {
+		t.Error("Error while client request over proxy server", err)
+	}
+	if resp.StatusCode != 200 {
+		t.Error("Error while client request over proxy server", resp.StatusCode)
+	}
+}
+
+func TestShutdownCurrentServer(t *testing.T) {
+	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	CreateServer(DIRECT.Run(true), "localhost", "8082")
+	if running {
+		t.Error("Server already running")
+	}
+
+	RunServer()
+	time.Sleep(1 * time.Second)
+	if !running {
+		t.Error("Server was not started")
+	}
+
+	ShutdownCurrentServer()
+	time.Sleep(1 * time.Second)
+	if running {
+		t.Error("Server was not shutdown")
+	}
 }

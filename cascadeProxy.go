@@ -30,22 +30,25 @@ func basicAuth(username, password string) string {
 	return base64.StdEncoding.EncodeToString([]byte(builder.String()))
 }
 
-func (cascadeProxy) run(verbose bool, proxyURL string, username string, password string) *goproxy.ProxyHttpServer {
+func (cascadeProxy) Run(verbose bool, proxyURL string, username string, password string) *goproxy.ProxyHttpServer {
 	middleProxy := goproxy.NewProxyHttpServer()
 	middleProxy.Verbose = verbose
+
 	middleProxy.Tr.Proxy = func(req *http.Request) (*url.URL, error) {
 		return url.Parse("http://" + proxyURL)
 	}
 	var connectReqHandler func(req *http.Request)
+
 	if len(username) > 0 {
+		LOGINREQUEIRED = true
 		connectReqHandler = func(req *http.Request) {
 			SetBasicAuth(username, password, req)
 		}
-		LOGINREQUEIRED = true
 	} else {
-		connectReqHandler = nil
 		LOGINREQUEIRED = false
+		connectReqHandler = nil
 	}
+
 	middleProxy.ConnectDial = middleProxy.NewConnectDialToProxyWithHandler(proxyURL, connectReqHandler)
 	middleProxy.OnRequest().Do(goproxy.FuncReqHandler(func(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
 		if LOGINREQUEIRED {

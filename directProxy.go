@@ -12,7 +12,7 @@ type directProxy struct {
 
 var DIRECT = directProxy{}
 
-func (directProxy) run(verbose bool) *goproxy.ProxyHttpServer {
+func (directProxy) Run(verbose bool) *goproxy.ProxyHttpServer {
 	endProxy := goproxy.NewProxyHttpServer()
 	endProxy.Verbose = verbose
 	endProxy.Logger = utils.Info

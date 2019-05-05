@@ -6,12 +6,11 @@ import (
 	"github.com/elazarl/goproxy/ext/auth"
 	"net/http"
 	"os"
-	"strings"
 	"testing"
 	"time"
 )
 
-func Test_Run(t *testing.T) {
+func TestCascadeProxy_Run(t *testing.T) {
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
 	username, password := "foo", "bar"
 
@@ -30,7 +29,7 @@ func Test_Run(t *testing.T) {
 		}
 	}()
 
-	middleProxy := CASCADE.run(true, "http://localhost:8082", username, password)
+	middleProxy := CASCADE.Run(true, "http://localhost:8082", username, password)
 
 	go func() {
 		utils.Init(os.Stdout, os.Stdout, os.Stderr)
@@ -41,33 +40,19 @@ func Test_Run(t *testing.T) {
 		}
 	}()
 
-	time.Sleep(1 * time.Second)
 	utils.Info.Println("waiting for running")
-	dump, err := client("http://localhost:8081", "https://www.google.de")
+	time.Sleep(1 * time.Second)
+
+	resp, err := utils.GetResponse("http://localhost:8081", "https://www.google.de")
 	if err != nil {
 		t.Error("Error while client request over cascade", err)
 	}
-
-	if len(dump) == 0 {
-		t.Error("Error while client Request, dump is empty", err)
+	if resp.StatusCode != 200 {
+		t.Error("Error while client https Request, ", resp.Status)
 	}
 
-	dump, err = client("http://localhost:8081", "http://www.google.de")
-	if err != nil {
-		t.Error("Error while client request over cascade", err)
-	}
-
-	if len(dump) == 0 {
-		t.Error("Error while client Request, dump is empty", err)
-	}
-
-	_, err = client("http://localhost:8082", "https://www.google.de")
+	_, err = utils.GetResponse("http://localhost:8082", "https://www.google.de")
 	if err == nil {
 		t.Error("Error direct connection did also work", err)
-	}
-
-	dump, err = client("http://localhost:8082", "http://www.google.de")
-	if !strings.Contains(string(dump), "407 Proxy Authentication Required") && err == nil {
-		t.Error("Error direct connection did also work", string(dump))
 	}
 }
