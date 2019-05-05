@@ -1,4 +1,6 @@
 # cascade
+[![Build Status](https://travis-ci.org/azak-azkaran/cascade.svg?branch=master)](https://travis-ci.org/azak-azkaran/cascade)
+
 golang proxy which can switch between Direct mode and Cascade mode
 Swich is done according to health check.
 
