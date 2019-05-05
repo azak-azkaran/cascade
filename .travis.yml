@@ -10,6 +10,7 @@ env:
 script:
   # other script steps might be done before running the actual analysis
   - go list -f '{{if len .TestGoFiles}}"go test -coverprofile={{.Dir}}/cover.out {{.ImportPath}}"{{end}}' ./... | xargs -L 1 sh -c
+  - go list -f '{{if len .TestGoFiles}}"go test -json > {{.Dir}}/cover.out {{.ImportPath}}"{{end}}' ./... | xargs -L 1 sh -c
   - sonar-scanner
 language: go
 sudo: false
