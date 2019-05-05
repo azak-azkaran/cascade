@@ -17,7 +17,11 @@ func RunServer() {
 		running = true
 		err := CURRENT_SERVER.ListenAndServe()
 		if err != nil {
-			utils.Error.Println("Error while running server: ", err)
+			if err == http.ErrServerClosed {
+				utils.Info.Println("Server was closed")
+			} else {
+				utils.Error.Println("Error while running server: ", err)
+			}
 		}
 		running = false
 	}()
@@ -47,6 +51,10 @@ func CreateServer(proxy *goproxy.ProxyHttpServer, addr string, port string) *htt
 		Handler: proxy,
 		// Disable HTTP/2.
 		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
+
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  15 * time.Second,
 	}
 	utils.Info.Println("Starting Listening")
 	CURRENT_SERVER = &server

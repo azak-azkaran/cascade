@@ -1,7 +1,9 @@
 package main
 
 import (
+	"context"
 	"github.com/azak-azkaran/cascade/utils"
+	"net/http"
 	"os"
 	"testing"
 	"time"
@@ -13,13 +15,14 @@ func TestCreateServer(t *testing.T) {
 	testServer := CreateServer(DIRECT.Run(true), "localhost", "8082")
 	go func() {
 		err := testServer.ListenAndServe()
-		if err == nil {
-			t.Error("Error while starting server", err)
+		if err != http.ErrServerClosed {
+			t.Error("Error while running server", err)
 		}
+
 	}()
 
 	time.Sleep(1 * time.Second)
-	resp, err := utils.GetResponse("http://localhost:8082", "https://www.google.de")
+	resp, err := utils.GetResponse("http://localhost:8082", "http://www.google.de")
 	if err != nil {
 		t.Error("Error while client request over proxy server", err)
 	}
@@ -27,33 +30,24 @@ func TestCreateServer(t *testing.T) {
 		t.Error("Error while client request over proxy server", resp.StatusCode)
 	}
 
-	go func() {
-		err = shutdown(1 * time.Second)
-		if err != nil {
-			t.Error("Error while shuting down", err)
-		}
-	}()
+	err = testServer.Shutdown(context.TODO())
+	if err != nil {
+		t.Error("Error while shutting down", err)
+	}
 
-	resp, err = utils.GetResponse("http://localhost:8082", "https://www.google.de")
+	time.Sleep(1 * time.Second)
+	resp, err = utils.GetResponse("http://localhost:8082", "http://www.google.de")
 	if err == nil {
 		t.Error("No error received on shutdown server", err)
 	}
 	if resp != nil {
 		t.Error("No error received on shutdown server", resp.StatusCode)
 	}
-
-	testServer = CreateServer(DIRECT.Run(true), "localhost", "8082")
-	go func() {
-		err := testServer.ListenAndServe()
-		if err == nil {
-			t.Error("Error while starting server", err)
-		}
-	}()
 }
 
 func TestRunServer(t *testing.T) {
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
-	CreateServer(DIRECT.Run(true), "localhost", "8082")
+	testServer := CreateServer(DIRECT.Run(true), "localhost", "8082")
 	if running {
 		t.Error("Server already running")
 	}
@@ -71,6 +65,13 @@ func TestRunServer(t *testing.T) {
 	if resp.StatusCode != 200 {
 		t.Error("Error while client request over proxy server", resp.StatusCode)
 	}
+
+	err = testServer.Shutdown(context.TODO())
+	if err != nil {
+		t.Error("Error while shutting down server, ", err)
+	}
+	time.Sleep(1 * time.Second)
+	running = false
 }
 
 func TestShutdownCurrentServer(t *testing.T) {
