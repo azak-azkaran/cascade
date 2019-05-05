@@ -17,6 +17,7 @@ func client(proxyUrl string, requestUrl string) ([]byte, error) {
 		return nil, err
 	}
 	tr := &http.Transport{
+		//Proxy: func(req *http.Request) (*url.URL, error) { return url.Parse(proxyUrl) }
 		Proxy: http.ProxyURL(u),
 		// Disable HTTP/2.
 		TLSNextProto: make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
