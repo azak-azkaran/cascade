@@ -9,6 +9,7 @@ import (
 )
 
 func parseCommandline() {
+	// TODO: maybe build Integration tests?
 	var username string
 	var password string
 	var proxyURL string
@@ -22,6 +23,7 @@ func parseCommandline() {
 	flag.StringVar(&localPort, "port", "8888", "Port on which to run the proxy")
 	flag.StringVar(&checkAddress, "health", "https://www.google.de", "Address which is used for health check if available go to cascade mode")
 	flag.IntVar(&healthTime, "health-time", 5, "Duration between health checks")
+	// TODO maybe add configuration yaml file? with proxy exceptions
 	flag.Parse()
 
 	var builder strings.Builder
