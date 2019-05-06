@@ -54,6 +54,15 @@ func TestRun(t *testing.T) {
 		t.Error("No Server was created")
 	}
 
+	resp, err := utils.GetResponse("http://localhost:8081", "https://www.google.de")
+	if err != nil {
+		t.Error("Error while client request over cascade", err)
+	}
+	if resp.StatusCode != 200 {
+		t.Error("Error while client https Request, ", resp.Status)
+	}
+
+
     CLOSE = true
 	time.Sleep(1 * time.Second)
     if running {
