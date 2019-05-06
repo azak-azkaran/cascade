@@ -26,7 +26,7 @@ func TestChangeMode(t *testing.T) {
 	CONFIG.CascadeMode = true
 	CONFIG.CascadeFunction = toggleCascade
 	CONFIG.DirectFunction = toggleDirect
-	ChangeMode(false)
+	ChangeMode(true)
 	if CONFIG.CascadeMode {
 		t.Error("Mode was not changed")
 	}
@@ -36,7 +36,7 @@ func TestChangeMode(t *testing.T) {
 		t.Error("direct function was not called")
 	}
 
-	ChangeMode(true)
+	ChangeMode(false)
 	if !CONFIG.CascadeMode {
 		t.Error("Mode was not changed")
 	}
