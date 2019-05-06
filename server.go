@@ -9,10 +9,14 @@ import (
 	"time"
 )
 
-var CURRENT_SERVER *http.Server
+var CURRENT_SERVER *http.Server = nil
 var running = false
 
 func RunServer() {
+	if CURRENT_SERVER == nil {
+		utils.Warning.Println("Server was not created waiting for a one second")
+		time.Sleep(1 * time.Second)
+	}
 	go func() {
 		running = true
 		err := CURRENT_SERVER.ListenAndServe()
@@ -28,6 +32,9 @@ func RunServer() {
 }
 
 func ShutdownCurrentServer() {
+	if CURRENT_SERVER == nil {
+		return
+	}
 	utils.Info.Println("Starting shutdown with Timout: ", 5*time.Second)
 	err := shutdown(5 * time.Second)
 	if err != nil {

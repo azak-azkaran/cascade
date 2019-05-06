@@ -13,12 +13,12 @@ type directProxy struct {
 var DIRECT = directProxy{}
 
 func (directProxy) Run(verbose bool) *goproxy.ProxyHttpServer {
-	endProxy := goproxy.NewProxyHttpServer()
-	endProxy.Verbose = verbose
-	endProxy.Logger = utils.Info
-	endProxy.Tr.Proxy = nil
-	endProxy.ConnectDial = func(network, address string) (net.Conn, error) {
+	proxy := goproxy.NewProxyHttpServer()
+	proxy.Verbose = verbose
+	proxy.Logger = utils.Info
+	proxy.Tr.Proxy = nil
+	proxy.ConnectDial = func(network, address string) (net.Conn, error) {
 		return net.DialTimeout(network, address, 5*time.Second)
 	}
-	return endProxy
+	return proxy
 }

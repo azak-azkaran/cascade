@@ -8,9 +8,7 @@ Swich is done according to health check.
 
 ## Health Check
 A temporary client tries to connect to a certain address regurlary.
-The Cascade mode is active if health check succeeds.
-
-__TODO__ This will be changed in the future.
+The Cascade mode is active if health check fails.
 
 ## Direct Mode
 Normal http internet Proxy Mode.

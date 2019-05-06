@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/base64"
+	"github.com/azak-azkaran/cascade/utils"
 	"github.com/elazarl/goproxy"
 	"net/http"
 	"net/url"
@@ -31,10 +32,11 @@ func basicAuth(username, password string) string {
 }
 
 func (cascadeProxy) Run(verbose bool, proxyURL string, username string, password string) *goproxy.ProxyHttpServer {
-	middleProxy := goproxy.NewProxyHttpServer()
-	middleProxy.Verbose = verbose
+	proxy := goproxy.NewProxyHttpServer()
+	proxy.Verbose = verbose
+	proxy.Logger = utils.Info
 
-	middleProxy.Tr.Proxy = func(req *http.Request) (*url.URL, error) {
+	proxy.Tr.Proxy = func(req *http.Request) (*url.URL, error) {
 		return url.Parse("http://" + proxyURL)
 	}
 	var connectReqHandler func(req *http.Request)
@@ -49,12 +51,12 @@ func (cascadeProxy) Run(verbose bool, proxyURL string, username string, password
 		connectReqHandler = nil
 	}
 
-	middleProxy.ConnectDial = middleProxy.NewConnectDialToProxyWithHandler(proxyURL, connectReqHandler)
-	middleProxy.OnRequest().Do(goproxy.FuncReqHandler(func(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
+	proxy.ConnectDial = proxy.NewConnectDialToProxyWithHandler(proxyURL, connectReqHandler)
+	proxy.OnRequest().Do(goproxy.FuncReqHandler(func(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
 		if LOGINREQUEIRED {
 			SetBasicAuth(username, password, req)
 		}
 		return req, nil
 	}))
-	return middleProxy
+	return proxy
 }

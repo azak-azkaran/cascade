@@ -70,12 +70,12 @@ func ModeSelection(checkAddress string) {
 }
 
 func ChangeMode(selector bool) {
-	if !selector && CONFIG.CascadeMode {
+	if selector && CONFIG.CascadeMode {
 		// switch to direct mode
 		utils.Info.Println("switch to: DirectMode")
 		CONFIG.CascadeMode = false
 		go CONFIG.DirectFunction()
-	} else if selector && !CONFIG.CascadeMode {
+	} else if !selector && !CONFIG.CascadeMode {
 		// switch to cascade mode
 		utils.Info.Println("switch to: CascadeMode")
 		CONFIG.CascadeMode = true
