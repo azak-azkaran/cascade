@@ -84,7 +84,7 @@ func TestRunServer(t *testing.T) {
 	RunServer()
 
 	time.Sleep(1 * time.Second)
-	if !running  {
+	if !running {
 		t.Error("Server was not started")
 	}
 
@@ -107,7 +107,7 @@ func TestShutdownCurrentServer(t *testing.T) {
 	}
 
 	RunServer()
-	time.Sleep(1 * time.Second)
+	time.Sleep(2 * time.Second)
 	if !running {
 		t.Error("Server was not started")
 	}
