@@ -13,7 +13,7 @@ go:
   - tip
 before_install:
   - go get github.com/mattn/goveralls
-  - sudo apt-get xargs
+  - sudo apt-get findutils
 before_script:
   - go list -f '{{if len .TestGoFiles}}"go test -coverprofile={{.Dir}}/cover.out {{.ImportPath}}"{{end}}' ./... | xargs -L 1 sh -c
   - go list -f '{{if len .TestGoFiles}}"go test -json > {{.Dir}}/cover.out {{.ImportPath}}"{{end}}' ./... | xargs -L 1 sh -c
