@@ -46,6 +46,7 @@ func parseCommandline() {
 
 func main() {
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	parseCommandline()
 
 	lastTime := time.Now()
 	utils.Info.Println("Creating Server")

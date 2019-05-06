@@ -23,7 +23,9 @@ type config struct {
 var CONFIG config
 
 func switchMode(server *goproxy.ProxyHttpServer, mode string) {
+	utils.Info.Println("Shutdown of current Server")
 	ShutdownCurrentServer()
+	utils.Info.Println("Creating Server")
 	CreateServer(server, "localhost", CONFIG.LocalPort)
 	utils.Info.Println("Starting Server in: ", mode)
 	RunServer()
@@ -73,12 +75,12 @@ func ModeSelection(checkAddress string) {
 }
 
 func ChangeMode(selector bool) {
-	if selector && CONFIG.CascadeMode {
+	if (selector && CONFIG.CascadeMode) || (selector && CURRENT_SERVER == nil) {
 		// switch to direct mode
 		utils.Info.Println("switch to: DirectMode")
 		CONFIG.CascadeMode = false
 		go CONFIG.DirectFunction()
-	} else if !selector && !CONFIG.CascadeMode {
+	} else if (!selector && !CONFIG.CascadeMode) || (!selector && CURRENT_SERVER == nil) {
 		// switch to cascade mode
 		utils.Info.Println("switch to: CascadeMode")
 		CONFIG.CascadeMode = true
