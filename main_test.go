@@ -48,6 +48,7 @@ func TestRun(t *testing.T) {
 	config.CheckAddress = "https://google.de"
 
 	go Run(config)
+	CURRENT_SERVER = nil
 
 	time.Sleep(1 * time.Second)
 	if CURRENT_SERVER == nil {

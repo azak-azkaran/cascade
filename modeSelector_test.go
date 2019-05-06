@@ -44,6 +44,8 @@ func TestChangeMode(t *testing.T) {
 	if !cascade {
 		t.Error("cascade function was not called")
 	}
+	CONFIG.CascadeFunction = nil
+	CONFIG.DirectFunction = nil
 }
 
 func TestModeSelection(t *testing.T) {
@@ -67,4 +69,6 @@ func TestModeSelection(t *testing.T) {
 	if !direct {
 		t.Error("direct function was not called")
 	}
+	CONFIG.CascadeFunction = nil
+	CONFIG.DirectFunction = nil
 }

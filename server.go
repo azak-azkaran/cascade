@@ -21,6 +21,8 @@ func RunServer() {
 		if counter <= 0 {
 			utils.Error.Println("Server was not created in time, going back to ModeSelection")
 			ModeSelection(CONFIG.CheckAddress)
+			utils.Info.Println("Resetting counter")
+			counter = 5
 		}
 	}
 	go func() {
