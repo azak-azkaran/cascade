@@ -21,7 +21,7 @@ type conf struct {
 
 var CLOSE bool = false
 
-func getConf(path string) {
+func GetConf(path string) *conf{
 	config := conf{}
 	yamlFile, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -32,7 +32,7 @@ func getConf(path string) {
 	if err != nil {
 		utils.Error.Printf("Unmarshal: %v", err)
 	}
-	Run(config)
+	return &config
 }
 
 func Run(config conf) {
@@ -47,7 +47,7 @@ func Run(config conf) {
 	utils.Info.Println("Health Time: ", CONFIG.Health)
 
 	lastTime := time.Now()
-	utils.Info.Println("Starting Selection Process and Runing Server")
+	utils.Info.Println("Starting Selection Process and Running Server")
 	ModeSelection(CONFIG.CheckAddress)
 	for !CLOSE {
 		currentDuration := time.Since(lastTime)
@@ -56,9 +56,12 @@ func Run(config conf) {
 			go ModeSelection(CONFIG.CheckAddress)
 		}
 	}
+	if CLOSE {
+		ShutdownCurrentServer()
+	}
 }
 
-func parseCommandline() {
+func ParseCommandline() *conf {
 	config := conf{}
 	var configFile string
 	flag.StringVar(&config.Password, "password", "", "Password for authentication to a forward proxy")
@@ -68,15 +71,12 @@ func parseCommandline() {
 	flag.StringVar(&config.CheckAddress, "health", "https://www.google.de", "Address which is used for health check if available go to cascade mode")
 	flag.Int64Var(&config.HealthTime, "health-time", 5, "Duration between health checks")
 	flag.StringVar(&configFile, "config", "", "Ignores other parameters and reads config yaml")
-	// TODO maybe add configuration yaml file? with proxy exceptions
 	flag.Parse()
 
 	if len(configFile) > 0 {
-		getConf(configFile)
-		return
-	} else {
-		Run(config)
+		return GetConf(configFile)
 	}
+	return &config
 }
 
 func cleanup() {
@@ -94,5 +94,6 @@ func main() {
 		cleanup()
 		os.Exit(1)
 	}()
-	parseCommandline()
+	config := ParseCommandline()
+	Run(*config)
 }

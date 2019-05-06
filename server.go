@@ -46,6 +46,7 @@ func ShutdownCurrentServer() {
 	if err != nil {
 		utils.Error.Println("Error while shutdown: ", err)
 	}
+	CURRENT_SERVER = nil
 }
 
 func shutdown(timeout time.Duration) error {

@@ -92,4 +92,7 @@ func TestShutdownCurrentServer(t *testing.T) {
 	if running {
 		t.Error("Server was not shutdown")
 	}
+	if CURRENT_SERVER != nil {
+		t.Error("Server was not removed")
+	}
 }
