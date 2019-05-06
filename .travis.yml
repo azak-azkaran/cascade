@@ -13,9 +13,11 @@ go:
   - tip
 before_install:
   - go get github.com/mattn/goveralls
-script:
-  # other script steps might be done before running the actual analysis
+  - sudo apt-get xargs
+before_script:
   - go list -f '{{if len .TestGoFiles}}"go test -coverprofile={{.Dir}}/cover.out {{.ImportPath}}"{{end}}' ./... | xargs -L 1 sh -c
   - go list -f '{{if len .TestGoFiles}}"go test -json > {{.Dir}}/cover.out {{.ImportPath}}"{{end}}' ./... | xargs -L 1 sh -c
+script:
+  # other script steps might be done before running the actual analysis
   - $GOPATH/bin/goveralls -service=travis-ci
   - sonar-scanner
