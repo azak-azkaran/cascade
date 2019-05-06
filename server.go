@@ -13,9 +13,15 @@ var CURRENT_SERVER *http.Server = nil
 var running = false
 
 func RunServer() {
-	if CURRENT_SERVER == nil {
+	counter := 5
+	for CURRENT_SERVER == nil {
 		utils.Warning.Println("Server was not created waiting for a one second")
 		time.Sleep(1 * time.Second)
+		counter = counter - 1
+		if counter <= 0 {
+			utils.Error.Println("Server was not created in time, going back to ModeSelection")
+			ModeSelection(CONFIG.CheckAddress)
+		}
 	}
 	go func() {
 		running = true
