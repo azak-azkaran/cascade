@@ -52,17 +52,17 @@ func TestModeSelection(t *testing.T) {
 	direct = false
 
 	CONFIG.Verbose = true
-	CONFIG.CascadeMode = false
+	CONFIG.CascadeMode = true
 	CONFIG.CascadeFunction = toggleCascade
 	CONFIG.DirectFunction = toggleDirect
 
-	ModeSelection("https://www.google.de")
+	ModeSelection("https://www.asda12313.de")
 	time.Sleep(1 * time.Second)
 	if !cascade {
 		t.Error("cascade function was not called")
 	}
 
-	ModeSelection("https://www.asda12313.de")
+	ModeSelection("https://www.google.de")
 	time.Sleep(1 * time.Second)
 	if !direct {
 		t.Error("direct function was not called")

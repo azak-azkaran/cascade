@@ -13,10 +13,10 @@ go:
   - tip
 before_install:
   - go get github.com/mattn/goveralls
-  - sudo apt-get findutils
+  #- sudo apt-get findutils
 before_script:
-  - go list -f '{{if len .TestGoFiles}}"go test -coverprofile={{.Dir}}/cover.out {{.ImportPath}}"{{end}}' ./... | xargs -L 1 sh -c
-  - go list -f '{{if len .TestGoFiles}}"go test -json > {{.Dir}}/cover.out {{.ImportPath}}"{{end}}' ./... | xargs -L 1 sh -c
+  #- go list -f '{{if len .TestGoFiles}}"go test -coverprofile={{.Dir}}/cover.out {{.ImportPath}}"{{end}}' ./... | xargs -L 1 sh -c
+  #- go list -f '{{if len .TestGoFiles}}"go test -json > {{.Dir}}/cover.out {{.ImportPath}}"{{end}}' ./... | xargs -L 1 sh -c
 script:
   # other script steps might be done before running the actual analysis
   - $GOPATH/bin/goveralls -service=travis-ci
