@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/azak-azkaran/cascade/utils"
 	"github.com/elazarl/goproxy"
+	"time"
 )
 
 type config struct {
@@ -16,6 +17,7 @@ type config struct {
 	DirectFunction   func()
 	ShutdownFunction func()
 	CheckAddress     string
+	Health           time.Duration
 }
 
 var CONFIG config
@@ -27,7 +29,7 @@ func switchMode(server *goproxy.ProxyHttpServer, mode string) {
 	RunServer()
 }
 
-func CreateConfig(localPort string, proxyUrl string, username string, password string, checkAddress string) {
+func CreateConfig(localPort string, proxyUrl string, username string, password string, checkAddress string, healthTime int) {
 	CONFIG.LocalPort = localPort
 	CONFIG.ProxyURL = proxyUrl
 	CONFIG.Username = username
@@ -40,6 +42,7 @@ func CreateConfig(localPort string, proxyUrl string, username string, password s
 		switchMode(CASCADE.Run(CONFIG.Verbose, CONFIG.ProxyURL, CONFIG.Username, CONFIG.Password), "Cascade Mode")
 	}
 	CONFIG.CheckAddress = checkAddress
+	CONFIG.Health = time.Duration(healthTime) * time.Second
 }
 
 func ModeSelection(checkAddress string) {
