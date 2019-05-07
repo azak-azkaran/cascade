@@ -26,6 +26,7 @@ func TestChangeMode(t *testing.T) {
 	CONFIG.CascadeMode = true
 	CONFIG.CascadeFunction = toggleCascade
 	CONFIG.DirectFunction = toggleDirect
+	CONFIG.ProxyURL = "something"
 	ChangeMode(true)
 	if CONFIG.CascadeMode {
 		t.Error("Mode was not changed")
@@ -46,6 +47,7 @@ func TestChangeMode(t *testing.T) {
 	}
 	CONFIG.CascadeFunction = nil
 	CONFIG.DirectFunction = nil
+	CONFIG.ProxyURL = ""
 }
 
 func TestModeSelection(t *testing.T) {
@@ -57,6 +59,7 @@ func TestModeSelection(t *testing.T) {
 	CONFIG.CascadeMode = true
 	CONFIG.CascadeFunction = toggleCascade
 	CONFIG.DirectFunction = toggleDirect
+	CONFIG.ProxyURL = "something"
 
 	ModeSelection("https://www.asda12313.de")
 	time.Sleep(1 * time.Second)
@@ -71,4 +74,6 @@ func TestModeSelection(t *testing.T) {
 	}
 	CONFIG.CascadeFunction = nil
 	CONFIG.DirectFunction = nil
+	CONFIG.ProxyURL = ""
+
 }

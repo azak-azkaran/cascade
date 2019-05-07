@@ -5,6 +5,7 @@ import (
 	"github.com/azak-azkaran/cascade/utils"
 	"net/http"
 	"os"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -113,5 +114,24 @@ func TestShutdownCurrentServer(t *testing.T) {
 	}
 	if CURRENT_SERVER != nil {
 		t.Error("Server was not removed")
+	}
+}
+
+func Test_Main(t *testing.T){
+	go main()
+
+	time.Sleep(2 * time.Second)
+	if CURRENT_SERVER == nil {
+		t.Error("Server was not reset")
+	}
+	stopChan <- syscall.SIGINT
+	time.Sleep(2 * time.Second)
+
+	if CURRENT_SERVER != nil {
+		t.Error("Server was not reset")
+	}
+
+	if !closeChan {
+		t.Error("Server was not closed")
 	}
 }

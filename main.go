@@ -19,7 +19,8 @@ type conf struct {
 	HealthTime   int64  `yaml:"health-time"`
 }
 
-var CLOSE bool = false
+var closeChan bool = false
+var stopChan = make(chan os.Signal, 2)
 
 func GetConf(path string) *conf {
 	config := conf{}
@@ -50,7 +51,7 @@ func Run(config conf) {
 	lastTime := time.Now()
 	utils.Info.Println("Starting Selection Process and Running Server")
 	ModeSelection(CONFIG.CheckAddress)
-	for !CLOSE {
+	for !closeChan {
 		currentDuration := time.Since(lastTime)
 		if currentDuration > CONFIG.Health {
 			lastTime = time.Now()
@@ -58,7 +59,7 @@ func Run(config conf) {
 			time.Sleep(CONFIG.Health)
 		}
 	}
-	if CLOSE {
+	if closeChan {
 		ShutdownCurrentServer()
 	}
 }
@@ -83,18 +84,18 @@ func ParseCommandline() *conf {
 
 func cleanup() {
 	ShutdownCurrentServer()
+	closeChan = true
+	time.Sleep(2 * time.Second)
 	utils.Info.Println("Happy Death")
-	CLOSE = true
 }
 
 func main() {
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
-	c := make(chan os.Signal)
-	signal.Notify(c, os.Interrupt)
+	signal.Notify(stopChan, os.Interrupt)
 	go func() {
-		<-c
+		<-stopChan
 		cleanup()
-		os.Exit(1)
+		//os.Exit(1)
 	}()
 	config := ParseCommandline()
 	if config != nil {

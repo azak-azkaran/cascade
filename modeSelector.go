@@ -75,7 +75,10 @@ func ModeSelection(checkAddress string) {
 }
 
 func ChangeMode(selector bool) {
-	if (selector && CONFIG.CascadeMode) || (selector && CURRENT_SERVER == nil) {
+	if (selector && CONFIG.CascadeMode) || (selector && CURRENT_SERVER == nil) || len(CONFIG.ProxyURL) == 0 {
+		if len(CONFIG.ProxyURL) == 0 && !selector{
+			utils.Error.Println("ProxyURL was not set so staying in DirectMode")
+		}
 		// switch to direct mode
 		utils.Info.Println("switch to: DirectMode")
 		CONFIG.CascadeMode = false
