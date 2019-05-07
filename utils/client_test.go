@@ -41,6 +41,7 @@ func TestGetResponse(t *testing.T) {
 		}
 	}()
 
+	time.Sleep(1 * time.Second)
 	resp, err = GetResponse("http://localhost:8082", "https://www.google.de")
 	if err != nil {
 		t.Error("Error while requesting without proxy, ", err)
