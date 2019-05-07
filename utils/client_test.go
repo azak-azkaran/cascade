@@ -1,8 +1,13 @@
 package utils
 
 import (
+	"context"
+	"github.com/elazarl/goproxy"
+	"net"
+	"net/http"
 	"os"
 	"testing"
+	"time"
 )
 
 func TestGetResponse(t *testing.T) {
@@ -14,6 +19,39 @@ func TestGetResponse(t *testing.T) {
 	}
 	if resp.StatusCode != 200 {
 		t.Error("Google could not be requested, ", resp.Status)
+	}
+
+	proxy := goproxy.NewProxyHttpServer()
+
+	proxy.ConnectDial = func(network, address string) (net.Conn, error) {
+		return net.DialTimeout(network, address, 5*time.Second)
+	}
+
+	var server *http.Server
+	go func() {
+		Init(os.Stdout, os.Stdout, os.Stderr)
+		Info.Println("serving end proxy server at localhost:8082")
+		server = &http.Server{
+			Addr:    "localhost:8082",
+			Handler: proxy,
+		}
+		err := server.ListenAndServe()
+		if err != http.ErrServerClosed {
+			t.Error("Other Error then ServerClose", err)
+		}
+	}()
+
+	resp, err = GetResponse("http://localhost:8082", "https://www.google.de")
+	if err != nil {
+		t.Error("Error while requesting without proxy, ", err)
+	}
+	if resp.StatusCode != 200 {
+		t.Error("Google could not be requested, ", resp.Status)
+	}
+
+	err = server.Shutdown(context.TODO())
+	if err != nil {
+		t.Error("Error while shutting down server")
 	}
 }
 

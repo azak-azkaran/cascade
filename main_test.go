@@ -34,6 +34,11 @@ func TestGetConf(t *testing.T) {
 	if conf.HealthTime != int64(1200) {
 		t.Error("HealthTime was not read correctly")
 	}
+
+	conf = GetConf("noname.yaml")
+	if conf != nil {
+		t.Error("Error could read YAML but should not be able to be")
+	}
 }
 
 func TestRun(t *testing.T) {
@@ -63,13 +68,12 @@ func TestRun(t *testing.T) {
 		t.Error("Error while client https Request, ", resp.Status)
 	}
 
-
-    CLOSE = true
+	cleanup()
 	time.Sleep(1 * time.Second)
-    if running {
-    	t.Error("Server is still running")
+	if running {
+		t.Error("Server is still running")
 	}
-    if CURRENT_SERVER != nil {
+	if CURRENT_SERVER != nil {
 		t.Error("Server was not created")
 	}
 }

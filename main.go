@@ -21,16 +21,17 @@ type conf struct {
 
 var CLOSE bool = false
 
-func GetConf(path string) *conf{
+func GetConf(path string) *conf {
 	config := conf{}
 	yamlFile, err := ioutil.ReadFile(path)
 	if err != nil {
 		utils.Error.Printf("yamlFile.Get err   #%v ", err)
-		panic("config file could not be read but was set")
+		return nil
 	}
 	err = yaml.Unmarshal(yamlFile, &config)
 	if err != nil {
 		utils.Error.Printf("Unmarshal: %v", err)
+		return nil
 	}
 	return &config
 }
@@ -95,5 +96,10 @@ func main() {
 		os.Exit(1)
 	}()
 	config := ParseCommandline()
-	Run(*config)
+	if config != nil {
+		Run(*config)
+	} else {
+		utils.Error.Println("Dying Horribly because problems with Configuration")
+	}
+
 }
