@@ -55,6 +55,7 @@ func Run(config conf) {
 		if currentDuration > CONFIG.Health {
 			lastTime = time.Now()
 			go ModeSelection(CONFIG.CheckAddress)
+			time.Sleep(CONFIG.Health)
 		}
 	}
 	if CLOSE {
