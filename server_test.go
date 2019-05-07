@@ -106,12 +106,6 @@ func TestShutdownCurrentServer(t *testing.T) {
 		t.Error("Server already running")
 	}
 
-	RunServer()
-	time.Sleep(2 * time.Second)
-	if !running {
-		t.Error("Server was not started")
-	}
-
 	ShutdownCurrentServer()
 	time.Sleep(1 * time.Second)
 	if running {
