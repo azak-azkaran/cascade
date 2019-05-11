@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"github.com/azak-azkaran/cascade/utils"
-	"github.com/elazarl/goproxy/ext/auth"
+	"github.com/azak-azkaran/goproxy/ext/auth"
 	"net/http"
 	"os"
 	"testing"
