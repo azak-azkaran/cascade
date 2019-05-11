@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/azak-azkaran/cascade/utils"
-	"github.com/elazarl/goproxy"
+	"github.com/azak-azkaran/goproxy"
 	"net"
 	"time"
 )

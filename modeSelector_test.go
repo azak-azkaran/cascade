@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/azak-azkaran/cascade/utils"
 	"os"
+	"strings"
 	"testing"
 	"time"
 )
@@ -60,6 +61,7 @@ func TestModeSelection(t *testing.T) {
 	CONFIG.CascadeFunction = toggleCascade
 	CONFIG.DirectFunction = toggleDirect
 	CONFIG.ProxyURL = "something"
+	CONFIG.SkipCascadeHosts = strings.Split("golang.org,youtube.com", ",")
 
 	ModeSelection("https://www.asda12313.de")
 	time.Sleep(1 * time.Second)
@@ -67,13 +69,33 @@ func TestModeSelection(t *testing.T) {
 		t.Error("cascade function was not called")
 	}
 
+
 	ModeSelection("https://www.google.de")
 	time.Sleep(1 * time.Second)
 	if !direct {
 		t.Error("direct function was not called")
 	}
-	CONFIG.CascadeFunction = nil
-	CONFIG.DirectFunction = nil
-	CONFIG.ProxyURL = ""
 
+	//CONFIG.CascadeFunction = nil
+	//CONFIG.DirectFunction = nil
+	//CONFIG.ProxyURL = ""
+	CONFIG = config{}
 }
+
+
+func TestCreateConfig (t *testing.T) {
+	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	CONFIG = config{}
+	CreateConfig("8888", "", "", "", "https://www.google.de", 5 , "google,eclipse")
+
+	if CONFIG.CascadeFunction == nil {
+		t.Error("Cascade function was not created")
+	}
+
+	if len(CONFIG.SkipCascadeHosts) != 2 {
+		t.Error("SkipHosts was not split correctly")
+	}
+
+	CONFIG = config{}
+}
+

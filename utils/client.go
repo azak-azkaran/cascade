@@ -11,7 +11,7 @@ func GetResponse(proxyUrl string, requestUrl string) (*http.Response, error) {
 	return getResponse(proxyUrl, requestUrl, true)
 }
 
-func getResponse(proxyUrl string, requestUrl string, close bool) (*http.Response, error) {
+func GetClient(proxyUrl string ) (*http.Client, error) {
 	var tr *http.Transport
 	if len(proxyUrl) > 0 {
 		u, err := url.Parse(proxyUrl)
@@ -30,7 +30,11 @@ func getResponse(proxyUrl string, requestUrl string, close bool) (*http.Response
 			TLSNextProto: make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
 		}
 	}
-	client := &http.Client{Transport: tr}
+	return &http.Client{Transport: tr}, nil
+}
+
+func getResponse(proxyUrl string, requestUrl string, close bool) (*http.Response, error) {
+	client, _ := GetClient(proxyUrl)
 	resp, err := client.Get(requestUrl)
 	if err != nil {
 		return nil, err

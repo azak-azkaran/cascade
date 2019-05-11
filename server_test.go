@@ -5,7 +5,6 @@ import (
 	"github.com/azak-azkaran/cascade/utils"
 	"net/http"
 	"os"
-	"syscall"
 	"testing"
 	"time"
 )
@@ -117,21 +116,40 @@ func TestShutdownCurrentServer(t *testing.T) {
 	}
 }
 
-func Test_Main(t *testing.T){
-	go main()
+func TestCreateServer2(t *testing.T) {
+	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	CreateConfig("8082", "", "", "", "https://www.google.de", 5 , "golang.org,youtube.com")
 
-	time.Sleep(2 * time.Second)
-	if CURRENT_SERVER == nil {
-		t.Error("Server was not reset")
+	go CONFIG.CascadeFunction()
+	time.Sleep(1 * time.Second)
+	if !running {
+		t.Error("Server was not started")
 	}
-	stopChan <- syscall.SIGINT
-	time.Sleep(2 * time.Second)
 
+	if len(CONFIG.SkipCascadeHosts) != 2 {
+		t.Error("Skip for Cascade list was not separated correctly")
+	}
+
+	resp, err := utils.GetResponse("http://localhost:8082", "https://www.google.de")
+	if err == nil {
+		t.Error("Error while requesting google with broken proxy", resp.Status)
+	}
+
+	resp, err = utils.GetResponse("http://localhost:8082", "http://golang.org/doc/")
+	if err != nil {
+		t.Error("Error while client request over proxy server", err)
+	}
+	if resp != nil && resp.StatusCode != 200 {
+		t.Error("Error while client request over proxy server", resp.Status)
+	}
+
+	ShutdownCurrentServer()
+	time.Sleep(1 * time.Second)
+	if running {
+		t.Error("Server was not shutdown")
+	}
 	if CURRENT_SERVER != nil {
-		t.Error("Server was not reset")
-	}
-
-	if !closeChan {
-		t.Error("Server was not closed")
+		t.Error("Server was not removed")
 	}
 }
+

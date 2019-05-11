@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/azak-azkaran/cascade/utils"
 	"os"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -12,27 +13,27 @@ func TestGetConf(t *testing.T) {
 	conf := GetConf("./test/test.yml")
 
 	if conf.CheckAddress != "TestHealth" {
-		t.Error("CheckAddress was not read correctly")
+		t.Error("CheckAddress was not read correctly, was: ", conf.CheckAddress)
 	}
 
-	if conf.LocalPort != "TestPort" {
-		t.Error("Port was not read correctly")
+	if conf.LocalPort != "8888" {
+		t.Error("Port was not read correctly, was:", conf.LocalPort)
 	}
 
 	if conf.ProxyURL != "TestHost" {
-		t.Error("ProxyURL was not read correctly")
+		t.Error("ProxyURL was not read correctly, was: ", conf.ProxyURL)
 	}
 
 	if conf.Password != "TestPassword" {
-		t.Error("Password was not read correctly")
+		t.Error("Password was not read correctly, was: ", conf.Password)
 	}
 
 	if conf.Username != "TestUser" {
-		t.Error("Username was not read correctly")
+		t.Error("Username was not read correctly, was: ", conf.Username)
 	}
 
-	if conf.HealthTime != int64(1200) {
-		t.Error("HealthTime was not read correctly")
+	if conf.HealthTime != int64(5) {
+		t.Error("HealthTime was not read correctly, was: ", conf.HealthTime)
 	}
 
 	conf = GetConf("noname.yaml")
@@ -75,5 +76,24 @@ func TestRun(t *testing.T) {
 	}
 	if CURRENT_SERVER != nil {
 		t.Error("Server was not created")
+	}
+}
+
+func Test_Main(t *testing.T){
+	go main()
+
+	time.Sleep(2 * time.Second)
+	if CURRENT_SERVER == nil {
+		t.Error("Server was not reset")
+	}
+	stopChan <- syscall.SIGINT
+	time.Sleep(2 * time.Second)
+
+	if CURRENT_SERVER != nil {
+		t.Error("Server was not reset")
+	}
+
+	if !closeChan {
+		t.Error("Server was not closed")
 	}
 }

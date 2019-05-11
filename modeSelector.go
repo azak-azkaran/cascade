@@ -2,7 +2,8 @@ package main
 
 import (
 	"github.com/azak-azkaran/cascade/utils"
-	"github.com/elazarl/goproxy"
+	"github.com/azak-azkaran/goproxy"
+	"strings"
 	"time"
 )
 
@@ -18,6 +19,7 @@ type config struct {
 	ShutdownFunction func()
 	CheckAddress     string
 	Health           time.Duration
+	SkipCascadeHosts []string
 }
 
 var CONFIG config
@@ -31,17 +33,24 @@ func switchMode(server *goproxy.ProxyHttpServer, mode string) {
 	RunServer()
 }
 
-func CreateConfig(localPort string, proxyUrl string, username string, password string, checkAddress string, healthTime int) {
+func CreateConfig(localPort string, proxyUrl string, username string, password string, checkAddress string, healthTime int, skipHosts string) {
 	CONFIG.LocalPort = localPort
 	CONFIG.ProxyURL = proxyUrl
 	CONFIG.Username = username
 	CONFIG.Password = password
 	CONFIG.Verbose = true
+	CONFIG.SkipCascadeHosts = strings.Split(skipHosts, ",")
+
 	CONFIG.DirectFunction = func() {
 		switchMode(DIRECT.Run(CONFIG.Verbose), "Direct Mode")
 	}
 	CONFIG.CascadeFunction = func() {
-		switchMode(CASCADE.Run(CONFIG.Verbose, CONFIG.ProxyURL, CONFIG.Username, CONFIG.Password), "Cascade Mode")
+		server := CASCADE.Run(CONFIG.Verbose, CONFIG.ProxyURL, CONFIG.Username, CONFIG.Password)
+		switchMode(server, "Cascade Mode")
+		for i := 0 ; i < len(CONFIG.SkipCascadeHosts); i++ {
+			host := CONFIG.SkipCascadeHosts[i]
+            AddDirectConnection(server, host)
+		}
 	}
 	CONFIG.CheckAddress = checkAddress
 	CONFIG.Health = time.Duration(healthTime) * time.Second
@@ -76,7 +85,7 @@ func ModeSelection(checkAddress string) {
 
 func ChangeMode(selector bool) {
 	if (selector && CONFIG.CascadeMode) || (selector && CURRENT_SERVER == nil) || len(CONFIG.ProxyURL) == 0 {
-		if len(CONFIG.ProxyURL) == 0 && !selector{
+		if len(CONFIG.ProxyURL) == 0 && !selector {
 			utils.Error.Println("ProxyURL was not set so staying in DirectMode")
 		}
 		// switch to direct mode

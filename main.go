@@ -17,6 +17,7 @@ type conf struct {
 	LocalPort    string `yaml:"port"`
 	CheckAddress string `yaml:"health"`
 	HealthTime   int64  `yaml:"health-time"`
+	HostList     string `yaml:"host-list"`
 }
 
 var closeChan bool = false
@@ -34,19 +35,33 @@ func GetConf(path string) *conf {
 		utils.Error.Printf("Unmarshal: %v", err)
 		return nil
 	}
+
+	if len(config.LocalPort) == 0{
+		config.LocalPort = "8888"
+	}
+
+	if len(config.CheckAddress ) == 0{
+		config.CheckAddress = "https://www.google.de"
+	}
+
+	if config.HealthTime == 0 {
+		config.HealthTime = 5
+	}
+
 	return &config
 }
 
 func Run(config conf) {
 	utils.Info.Println(config)
 	utils.Info.Println("Creating Configuration")
-	CreateConfig(config.LocalPort, config.ProxyURL, config.Username, config.Password, config.CheckAddress, int(config.HealthTime))
+	CreateConfig(config.LocalPort, config.ProxyURL, config.Username, config.Password, config.CheckAddress, int(config.HealthTime), config.HostList)
 	utils.Info.Println("Starting Proxy with the following flags:")
 	utils.Info.Println("Username: ", CONFIG.Username)
 	utils.Info.Println("Password: ", CONFIG.Password)
 	utils.Info.Println("ProxyUrl: ", CONFIG.ProxyURL)
 	utils.Info.Println("Health Address: ", CONFIG.CheckAddress)
 	utils.Info.Println("Health Time: ", CONFIG.Health)
+	utils.Info.Println("Skip Cascade for Hosts: ", CONFIG.SkipCascadeHosts)
 
 	lastTime := time.Now()
 	utils.Info.Println("Starting Selection Process and Running Server")
@@ -71,9 +86,10 @@ func ParseCommandline() *conf {
 	flag.StringVar(&config.ProxyURL, "host", "", "Address of a forward proxy")
 	flag.StringVar(&config.Username, "user", "", "Username for authentication to a forward proxy")
 	flag.StringVar(&config.LocalPort, "port", "8888", "Port on which to run the proxy")
-	flag.StringVar(&config.CheckAddress, "health", "https://www.google.de", "Address which is used for health check if available go to cascade mode")
-	flag.Int64Var(&config.HealthTime, "health-time", 5, "Duration between health checks")
-	flag.StringVar(&configFile, "config", "", "Ignores other parameters and reads config yaml")
+	flag.StringVar(&config.CheckAddress, "health", "https://www.google.de", "Address which is used for health check if available go to direct mode")
+	flag.Int64Var(&config.HealthTime, "health-time", 30, "Duration between health checks")
+	flag.StringVar(&config.HostList, "host-list", "", "Comma Separated List of Host for which DirectMode is used in Cascade Mode")
+	flag.StringVar(&configFile, "config", "", "Path to config yaml file. If set all other command line parameters will be ignored")
 	flag.Parse()
 
 	if len(configFile) > 0 {

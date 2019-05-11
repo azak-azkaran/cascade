@@ -1,6 +1,4 @@
 username: "TestUser"
 password: "TestPassword"
 host: "TestHost"
-port: "TestPort"
 health: "TestHealth"
-health-time: 1200
