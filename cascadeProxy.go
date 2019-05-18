@@ -4,10 +4,13 @@ import (
 	"encoding/base64"
 	"github.com/azak-azkaran/cascade/utils"
 	"github.com/azak-azkaran/goproxy"
+	"github.com/orcaman/concurrent-map"
+	"net"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
 )
 
 type cascadeProxy struct {
@@ -15,6 +18,7 @@ type cascadeProxy struct {
 
 var CASCADE cascadeProxy
 var LoginRequired bool
+var hostList cmap.ConcurrentMap = cmap.New()
 
 const (
 	ProxyAuthHeader = "Proxy-Authorization"
@@ -22,6 +26,12 @@ const (
 
 func SetBasicAuth(username, password string, req *http.Request) {
 	req.Header.Set(ProxyAuthHeader, "Basic "+basicAuth(username, password))
+}
+
+func ClearHostList(){
+	for content := range hostList.IterBuffered(){
+		hostList.Remove(content.Key)
+	}
 }
 
 func basicAuth(username, password string) string {
@@ -32,8 +42,14 @@ func basicAuth(username, password string) string {
 	return base64.StdEncoding.EncodeToString([]byte(builder.String()))
 }
 
-func HandleDirect(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response){
-    resp,err := utils.GetResponse("", req.URL.Scheme + "://" + req.Host)
+func HandleDirectHttpRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response){
+	var resp *http.Response
+	var err error
+	if req.URL.Scheme == "" {
+		resp,err = utils.GetResponse("", req.Host)
+	}else {
+		resp,err = utils.GetResponse("", req.URL.Scheme + "://" + req.Host)
+	}
     if err != nil {
     	utils.Error.Println("Problem while trying direct connection: ", err)
     	return req, nil
@@ -43,8 +59,26 @@ func HandleDirect(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *htt
 
 
 func AddDirectConnection(server *goproxy.ProxyHttpServer, host string ){
-	server.OnRequest(goproxy.ReqHostMatches(regexp.MustCompile(".*"+ host + ".*"))).DoFunc(
-		HandleDirect)
+	reg := regexp.MustCompile(".*"+ host + ".*")
+	server.OnRequest(goproxy.ReqHostMatches(reg)).DoFunc(
+		HandleDirectHttpRequest)
+
+	hostList.SetIfAbsent(host,reg)
+}
+
+func CustomConnectDial(proxyURL string, connectReqHandler func(req *http.Request), server *goproxy.ProxyHttpServer) func(network string, addr string) (net.Conn, error){
+    return func(network string, addr string) (conn net.Conn, e error) {
+
+    	for content := range hostList.IterBuffered() {
+    		val := content.Val
+            if val.(*regexp.Regexp).MatchString(addr) {
+				return net.DialTimeout(network, addr, 5*time.Second)
+			}
+		}
+
+		f  := server.NewConnectDialToProxyWithHandler(proxyURL, connectReqHandler)
+		return f(network, addr)
+	}
 }
 
 func (cascadeProxy) Run(verbose bool, proxyURL string, username string, password string) *goproxy.ProxyHttpServer {
@@ -72,7 +106,7 @@ func (cascadeProxy) Run(verbose bool, proxyURL string, username string, password
 		connectReqHandler = nil
 	}
 
-	proxy.ConnectDial = proxy.NewConnectDialToProxyWithHandler(proxyURL, connectReqHandler)
+	proxy.ConnectDial = CustomConnectDial(proxyURL, connectReqHandler, proxy)
 	//func(network string, addr string) (conn net.Conn, e error) {
 	//}
 

@@ -9,12 +9,12 @@ import (
 	"time"
 )
 
-var CURRENT_SERVER *http.Server = nil
+var CurrentServer *http.Server = nil
 var running = false
 
 func RunServer() {
 	counter := 5
-	for CURRENT_SERVER == nil {
+	for CurrentServer == nil {
 		utils.Warning.Println("Server was not created waiting for a one second")
 		time.Sleep(1 * time.Second)
 		counter = counter - 1
@@ -27,7 +27,7 @@ func RunServer() {
 	}
 	go func() {
 		running = true
-		err := CURRENT_SERVER.ListenAndServe()
+		err := CurrentServer.ListenAndServe()
 		if err != nil {
 			if err == http.ErrServerClosed {
 				utils.Info.Println("Server was closed")
@@ -40,39 +40,37 @@ func RunServer() {
 }
 
 func ShutdownCurrentServer() {
-	if CURRENT_SERVER == nil {
-		return
+	if CurrentServer != nil {
+		shutdown(5 * time.Second, CurrentServer)
+		CurrentServer = nil
+		ClearHostList()
 	}
-	utils.Info.Println("Starting shutdown with Timout: ", 5*time.Second)
-	err := shutdown(5 * time.Second)
+}
+
+func shutdown(timeout time.Duration, server *http.Server) {
+	utils.Info.Println("Starting shutdown with Timout: ", timeout)
+	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	err := server.Shutdown(ctx)
 	if err != nil {
 		utils.Error.Println("Error while shutdown: ", err)
 	}
-	CURRENT_SERVER = nil
 }
 
-func shutdown(timeout time.Duration) error {
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
-	err := CURRENT_SERVER.Shutdown(ctx)
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
-func CreateServer(proxy *goproxy.ProxyHttpServer, addr string, port string) *http.Server {
-	utils.Info.Println("Starting Proxy")
-	server := http.Server{
+func createServer(proxy *goproxy.ProxyHttpServer, addr string, port string) *http.Server{
+	return &http.Server{
 		Addr:    addr + ":" + port,
 		Handler: proxy,
 		// Disable HTTP/2.
 		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
-
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  15 * time.Second,
 	}
-	utils.Info.Println("Starting Listening")
-	CURRENT_SERVER = &server
-	return &server
+}
+
+func CreateServer(proxy *goproxy.ProxyHttpServer, addr string, port string) *http.Server {
+	utils.Info.Println("Starting First Proxy")
+	CurrentServer =createServer(proxy,addr,port)
+	return CurrentServer
 }

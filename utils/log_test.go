@@ -39,5 +39,4 @@ func TestInit(t *testing.T) {
 	if strings.Contains(s, "INFO") {
 		t.Errorf("ERROR Buffer does contain INFO keyword\n%s", s)
 	}
-
 }

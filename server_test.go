@@ -76,11 +76,11 @@ func TestRunServer(t *testing.T) {
 	CONFIG.CascadeFunction = func() {
 		cascade = true
 		testServer = CreateServer(DIRECT.Run(true), "localhost", "8082")
-		CURRENT_SERVER = testServer
+		CurrentServer = testServer
 	}
 
 	CONFIG.DirectFunction = CONFIG.CascadeFunction
-	CURRENT_SERVER = nil
+	CurrentServer = nil
 	RunServer()
 
 	time.Sleep(1 * time.Second)
@@ -96,7 +96,7 @@ func TestRunServer(t *testing.T) {
 		t.Error("Error while shutting down server, ", err)
 	}
 	running = false
-	CURRENT_SERVER = nil
+	CurrentServer = nil
 }
 
 func TestShutdownCurrentServer(t *testing.T) {
@@ -111,7 +111,7 @@ func TestShutdownCurrentServer(t *testing.T) {
 	if running {
 		t.Error("Server was not shutdown")
 	}
-	if CURRENT_SERVER != nil {
+	if CurrentServer != nil {
 		t.Error("Server was not removed")
 	}
 }
@@ -148,7 +148,7 @@ func TestCreateServer2(t *testing.T) {
 	if running {
 		t.Error("Server was not shutdown")
 	}
-	if CURRENT_SERVER != nil {
+	if CurrentServer != nil {
 		t.Error("Server was not removed")
 	}
 }

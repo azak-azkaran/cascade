@@ -110,13 +110,13 @@ func TestHandleDirect(t *testing.T) {
 		t.Error("Error while creating request to google", err)
 	}
 
-	req, resp = HandleDirect(req, nil)
+	req, resp = HandleDirectHttpRequest(req, nil)
 	if resp.StatusCode != 200 {
 		t.Error("Google was not available")
 	}
 
 	req, err = http.NewRequest("GET", "http://www.google.de", nil)
-	req, resp = HandleDirect(req, nil)
+	req, resp = HandleDirectHttpRequest(req, nil)
 	if resp.StatusCode != 200 {
 		t.Error("Google was not available")
 	}
@@ -146,8 +146,9 @@ func TestAddDirectConnection(t *testing.T) {
 		t.Error("Error while requesting google", err)
 	}
 
+	CONFIG.LocalPort = "8801"
 	AddDirectConnection(middleProxy, "google")
-	resp, err := utils.GetResponse("http://localhost:8081", "http://www.google.de")
+	resp, err := utils.GetResponse("http://localhost:8081", "https://www.google.de")
 	if err != nil {
 		t.Error("Error while requesting google", err)
 	}
@@ -155,7 +156,22 @@ func TestAddDirectConnection(t *testing.T) {
 		t.Error("Google was not available")
 	}
 
-err = middleServer.Shutdown(context.TODO())
+	resp, err = utils.GetResponse("http://localhost:8081", "http://www.google.de")
+	if err != nil {
+		t.Error("Error while requesting google", err)
+	}
+	if resp.StatusCode != 200 {
+		t.Error("Google was not available")
+	}
+
+
+    ClearHostList()
+	_, err = utils.GetResponse("http://localhost:8081", "https://www.google.de")
+	if err == nil{
+		t.Error("Error while requesting google", err)
+	}
+
+	err = middleServer.Shutdown(context.TODO())
 	if err != nil {
 		t.Error("Error while shutting down middle Server, ", err)
 	}

@@ -18,10 +18,12 @@ type conf struct {
 	CheckAddress string `yaml:"health"`
 	HealthTime   int64  `yaml:"health-time"`
 	HostList     string `yaml:"host-list"`
+	LogPath      string `yaml:"log-path"`
 }
 
 var closeChan bool = false
 var stopChan = make(chan os.Signal, 2)
+var LogFile *os.File
 
 func GetConf(path string) *conf {
 	config := conf{}
@@ -36,11 +38,11 @@ func GetConf(path string) *conf {
 		return nil
 	}
 
-	if len(config.LocalPort) == 0{
+	if len(config.LocalPort) == 0 {
 		config.LocalPort = "8888"
 	}
 
-	if len(config.CheckAddress ) == 0{
+	if len(config.CheckAddress) == 0 {
 		config.CheckAddress = "https://www.google.de"
 	}
 
@@ -79,6 +81,16 @@ func Run(config conf) {
 	}
 }
 
+func SetLogPath(path string) *os.File {
+	buffer, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		utils.Error.Println("Error while opining Log file:", err)
+		return nil
+	}
+	utils.Init(buffer, buffer, buffer)
+	return buffer
+}
+
 func ParseCommandline() *conf {
 	config := conf{}
 	var configFile string
@@ -89,6 +101,7 @@ func ParseCommandline() *conf {
 	flag.StringVar(&config.CheckAddress, "health", "https://www.google.de", "Address which is used for health check if available go to direct mode")
 	flag.Int64Var(&config.HealthTime, "health-time", 30, "Duration between health checks")
 	flag.StringVar(&config.HostList, "host-list", "", "Comma Separated List of Host for which DirectMode is used in Cascade Mode")
+	flag.StringVar(&config.LogPath, "log-path", "", "Path to a file to write Log Messages to")
 	flag.StringVar(&configFile, "config", "", "Path to config yaml file. If set all other command line parameters will be ignored")
 	flag.Parse()
 
@@ -101,6 +114,13 @@ func ParseCommandline() *conf {
 func cleanup() {
 	ShutdownCurrentServer()
 	closeChan = true
+	if LogFile != nil {
+		err := LogFile.Close()
+		if err != nil {
+			utils.Error.Println("Error while closing LogFile Pointer: ", err)
+		}
+	}
+
 	time.Sleep(2 * time.Second)
 	utils.Info.Println("Happy Death")
 }
@@ -119,5 +139,4 @@ func main() {
 	} else {
 		utils.Error.Println("Dying Horribly because problems with Configuration")
 	}
-
 }

@@ -2,11 +2,14 @@ package main
 
 import (
 	"github.com/azak-azkaran/cascade/utils"
+	"io/ioutil"
 	"os"
+	"strings"
 	"syscall"
 	"testing"
 	"time"
 )
+
 
 func TestGetConf(t *testing.T) {
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
@@ -54,10 +57,10 @@ func TestRun(t *testing.T) {
 	config.CheckAddress = "https://google.de"
 
 	go Run(config)
-	CURRENT_SERVER = nil
+	CurrentServer = nil
 
 	time.Sleep(1 * time.Second)
-	if CURRENT_SERVER == nil {
+	if CurrentServer == nil {
 		t.Error("No Server was created")
 	}
 
@@ -74,22 +77,64 @@ func TestRun(t *testing.T) {
 	if running {
 		t.Error("Server is still running")
 	}
-	if CURRENT_SERVER != nil {
+	if CurrentServer != nil {
 		t.Error("Server was not created")
 	}
+}
+
+func TestSetLogPath(t *testing.T) {
+	message :="message"
+	path :="testInfoBuffer"
+
+	buffer := SetLogPath(path)
+	LogFile = buffer
+
+	utils.Info.Println(message)
+	utils.Warning.Println(message)
+	utils.Error.Println(message)
+
+	err := LogFile.Close()
+	if err !=nil {
+		t.Errorf("%s could not be closed: %s", path, err)
+	}
+	dat, err := ioutil.ReadFile(path)
+	if err!= nil {
+		t.Errorf("error opening file: %v", err)
+	}
+
+	m := string(dat)
+	if !strings.Contains(m, message){
+		t.Error("File does not contain message")
+	}
+
+	if !strings.Contains(m, "INFO"){
+		t.Error("File does not contain INFO message")
+	}
+	if !strings.Contains(m, "WARNING"){
+		t.Error("File does not contain WARNING message")
+	}
+	if !strings.Contains(m, "ERROR"){
+		t.Error("File does not contain ERROR message")
+	}
+
+	err = os.Remove(path)
+	if err !=nil {
+		t.Errorf("%s could not be deleted", path)
+	}
+
 }
 
 func Test_Main(t *testing.T){
 	go main()
 
 	time.Sleep(2 * time.Second)
-	if CURRENT_SERVER == nil {
+	if CurrentServer == nil {
 		t.Error("Server was not reset")
 	}
 	stopChan <- syscall.SIGINT
 	time.Sleep(2 * time.Second)
 
-	if CURRENT_SERVER != nil {
+	if CurrentServer != nil {
 		t.Error("Server was not reset")
 	}
 
