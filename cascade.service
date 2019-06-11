@@ -1,0 +1,13 @@
+[Unit] 
+Description=Systemd configuration for a Golang proxy which can switch between Direct mode and Cascade mode
+Documentation=https://github.com/azak-azkaran/cascade
+Wants=network.target 
+After=network.target 
+[Service] 
+Type=simple 
+DynamicUser=yes 
+ExecStart=/usr/local/bin/cascade
+Restart=always 
+RestartSec=3 
+[Install] 
+WantedBy=multi-user.target 
