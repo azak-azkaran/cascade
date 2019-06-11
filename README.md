@@ -33,3 +33,26 @@ Basic Auth can be enabled for Cascade Mode
 ### Skip Cascade for Hosts
 
 If in cascade mode, requests to the provided hosts will be send diretly without sending it to the forward proxy
+
+## Systemd
+
+If you want to use the provided service configuration, the program has to be moved to 
+```
+/usr/local/bin
+```
+The configuration has to be moved to the following folder for Ubuntu:
+
+```
+/etc/systemd/system/
+```
+
+Afterwards, systemd has to be restarted as follows:
+```
+systemctl daemon-reload
+systemctl start cascade
+```
+
+The logs can be viewed by using:
+```
+journalctl -f -u cascade
+```
