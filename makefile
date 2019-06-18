@@ -18,12 +18,12 @@ test: fetch
 
 coverage: fetch
 	@echo Running Test with Coverage export
-	@go test -coverprofile=cover.out
-	@go test -json > report.json
-	@cd ./utils
-	@go test -coverprofile=cover.out
-	@go test -json > report.json
-	@cd ../
+	go test -coverprofile=cover.out
+	go test -json > report.json
+	cd ./utils
+	go test -coverprofile=cover.out
+	go test -json > report.json
+	cd ../
 
 daemon: build
 	@echo Moving cascade to /usr/local/bin
