@@ -16,6 +16,15 @@ test: fetch
 	@echo Running tests
 	go list -f '{{if len .TestGoFiles}}"go test  {{.ImportPath}}"{{end}}' ./... | xargs -L 1 sh -c
 
+coverage: fetch
+	@echo Running Test with Coverage export
+	@go test -coverprofile=cover.out
+	@go test -json > report.json
+	@cd ./utils
+	@go test -coverprofile=cover.out
+	@go test -json > report.json
+	@cd ../
+
 daemon: build
 	@echo Moving cascade to /usr/local/bin
 	mv ./cascade /usr/local/bin/
@@ -25,8 +34,6 @@ daemon: build
 	systemctl daemon-reload
 	@echo starting cascade as daemon
 	systemctl start cascade
-
-
 
 clean:
 	go clean
