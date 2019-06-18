@@ -10,10 +10,9 @@ import (
 	"time"
 )
 
-
 func TestGetConf(t *testing.T) {
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
-	conf := GetConf("./test/test.yml")
+	conf, _ := GetConf("./test/test.yml")
 
 	if conf.CheckAddress != "TestHealth" {
 		t.Error("CheckAddress was not read correctly, was: ", conf.CheckAddress)
@@ -39,7 +38,7 @@ func TestGetConf(t *testing.T) {
 		t.Error("HealthTime was not read correctly, was: ", conf.HealthTime)
 	}
 
-	conf = GetConf("noname.yaml")
+	conf, _ = GetConf("noname.yaml")
 	if conf != nil {
 		t.Error("Error could read YAML but should not be able to be")
 	}
@@ -83,8 +82,8 @@ func TestRun(t *testing.T) {
 }
 
 func TestSetLogPath(t *testing.T) {
-	message :="message"
-	path :="testInfoBuffer"
+	message := "message"
+	path := "testInfoBuffer"
 
 	buffer := SetLogPath(path)
 	LogFile = buffer
@@ -94,37 +93,37 @@ func TestSetLogPath(t *testing.T) {
 	utils.Error.Println(message)
 
 	err := LogFile.Close()
-	if err !=nil {
+	if err != nil {
 		t.Errorf("%s could not be closed: %s", path, err)
 	}
 	dat, err := ioutil.ReadFile(path)
-	if err!= nil {
+	if err != nil {
 		t.Errorf("error opening file: %v", err)
 	}
 
 	m := string(dat)
-	if !strings.Contains(m, message){
+	if !strings.Contains(m, message) {
 		t.Error("File does not contain message")
 	}
 
-	if !strings.Contains(m, "INFO"){
+	if !strings.Contains(m, "INFO") {
 		t.Error("File does not contain INFO message")
 	}
-	if !strings.Contains(m, "WARNING"){
+	if !strings.Contains(m, "WARNING") {
 		t.Error("File does not contain WARNING message")
 	}
-	if !strings.Contains(m, "ERROR"){
+	if !strings.Contains(m, "ERROR") {
 		t.Error("File does not contain ERROR message")
 	}
 
 	err = os.Remove(path)
-	if err !=nil {
+	if err != nil {
 		t.Errorf("%s could not be deleted", path)
 	}
 
 }
 
-func Test_Main(t *testing.T){
+func Test_Main(t *testing.T) {
 	go main()
 
 	time.Sleep(2 * time.Second)

@@ -1,7 +1,9 @@
 package main
 
 import (
+	"errors"
 	"flag"
+	"fmt"
 	"github.com/azak-azkaran/cascade/utils"
 	"gopkg.in/yaml.v3"
 	"io/ioutil"
@@ -21,21 +23,20 @@ type conf struct {
 	LogPath      string `yaml:"log-path"`
 }
 
+var version = "undefined"
 var closeChan bool = false
 var stopChan = make(chan os.Signal, 2)
 var LogFile *os.File
 
-func GetConf(path string) *conf {
+func GetConf(path string) (*conf, error) {
 	config := conf{}
 	yamlFile, err := ioutil.ReadFile(path)
 	if err != nil {
-		utils.Error.Printf("yamlFile.Get err   #%v ", err)
-		return nil
+		return nil, errors.New(fmt.Sprintf("yamlFile.Get err   #%v ", err))
 	}
 	err = yaml.Unmarshal(yamlFile, &config)
 	if err != nil {
-		utils.Error.Printf("Unmarshal: %v", err)
-		return nil
+		return nil, errors.New(fmt.Sprintf("Unmarshal: %v", err))
 	}
 
 	if len(config.LocalPort) == 0 {
@@ -50,7 +51,7 @@ func GetConf(path string) *conf {
 		config.HealthTime = 5
 	}
 
-	return &config
+	return &config, nil
 }
 
 func Run(config conf) {
@@ -91,7 +92,7 @@ func SetLogPath(path string) *os.File {
 	return buffer
 }
 
-func ParseCommandline() *conf {
+func ParseCommandline() (*conf, error) {
 	config := conf{}
 	var configFile string
 	flag.StringVar(&config.Password, "password", "", "Password for authentication to a forward proxy")
@@ -103,12 +104,16 @@ func ParseCommandline() *conf {
 	flag.StringVar(&config.HostList, "host-list", "", "Comma Separated List of Host for which DirectMode is used in Cascade Mode")
 	flag.StringVar(&config.LogPath, "log-path", "", "Path to a file to write Log Messages to")
 	flag.StringVar(&configFile, "config", "", "Path to config yaml file. If set all other command line parameters will be ignored")
+	ver := flag.Bool("version", false, "prints out the version")
 	flag.Parse()
 
+	if *ver {
+		return nil, nil
+	}
 	if len(configFile) > 0 {
 		return GetConf(configFile)
 	}
-	return &config
+	return &config, nil
 }
 
 func cleanup() {
@@ -133,10 +138,12 @@ func main() {
 		cleanup()
 		//os.Exit(1)
 	}()
-	config := ParseCommandline()
-	if config != nil {
+	config, err := ParseCommandline()
+	if err != nil {
+		utils.Error.Println("Dying Horribly because problems with Configuration: ", err)
+	} else if config != nil {
 		Run(*config)
 	} else {
-		utils.Error.Println("Dying Horribly because problems with Configuration")
+		utils.Info.Println("Version: ", version)
 	}
 }
