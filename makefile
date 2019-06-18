@@ -20,8 +20,8 @@ coverage: fetch
 	@echo Running Test with Coverage export
 	go test -coverprofile=cover.out
 	go test -json > report.json
-	go test github.com/azak-azkaran/cascade/utils -coverprofile=cover.out
-	go test github.com/azak-azkaran/cascade/utils -json > report.json
+	go test github.com/azak-azkaran/cascade/utils -coverprofile=./utils/cover.out
+	go test github.com/azak-azkaran/cascade/utils -json > ./utils/report.json
 	cd ../
 
 daemon: build
