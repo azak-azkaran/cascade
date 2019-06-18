@@ -12,7 +12,6 @@ sudo: false
 go:
   - tip
 before_install:
-  - go get ./...
   - go get github.com/mattn/goveralls
   - sudo apt-get update
   - sudo apt-get install findutils

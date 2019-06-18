@@ -1,7 +1,10 @@
 VERSION := $(shell git describe --always --long --dirty)
 all: install
 
-build:
+fetch:
+	@go get ./...
+
+build: fetch
 	@echo Building to current folder
 	go build -i -v -ldflags="-X main.version=${VERSION}" 
 
@@ -9,7 +12,7 @@ install: build
 	@echo Installing to ${GOPATH}/bin
 	go install
 
-test:
+test: fetch
 	@echo Running tests
 	go list -f '{{if len .TestGoFiles}}"go test  {{.ImportPath}}"{{end}}' ./... | xargs -L 1 sh -c
 
