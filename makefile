@@ -2,18 +2,28 @@ VERSION := $(shell git describe --always --long --dirty)
 all: install
 
 build:
-	Building cascade
+	@echo Building to current folder
 	go build -i -v -ldflags="-X main.version=${VERSION}" 
-	@go build -i -v -ldflags="-X main.version=${VERSION}" 
 
-install:
-	Installing cascade
-	go install -i -v -ldflags="-X main.version=${VERSION}" 
-	@go install -i -v -ldflags="-X main.version=${VERSION}" 
+install: build
+	@echo Installing to ${GOPATH}/bin
+	go install
 
 test:
-	Running tests
-	@go list -f '{{if len .TestGoFiles}}"go test  {{.ImportPath}}"{{end}}' ./... | xargs -L 1 sh -c
+	@echo Running tests
+	go list -f '{{if len .TestGoFiles}}"go test  {{.ImportPath}}"{{end}}' ./... | xargs -L 1 sh -c
+
+daemon: build
+	@echo Moving cascade to /usr/local/bin
+	mv ./cascade /usr/local/bin/
+	@echo Copying config to /etc/systemd/system/cascade.service
+	cp ./cascade.service /etc/systemd/system/cascade.service
+	@echo restarting systemd
+	systemctl daemon-reload
+	@echo starting cascade as daemon
+	systemctl start cascade
+
+
 
 clean:
-	@go clean
+	go clean

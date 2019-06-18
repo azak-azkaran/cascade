@@ -4,11 +4,21 @@
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=azak-azkaran_cascade&metric=coverage)](https://sonarcloud.io/dashboard?id=azak-azkaran_cascade)
 [![Coverage Status](https://coveralls.io/repos/github/azak-azkaran/cascade/badge.svg?branch=master)](https://coveralls.io/github/azak-azkaran/cascade?branch=master)
 
-golang proxy which can switch between Direct mode and Cascade mode
-Swich is done according to health check.
+Go proxy which can switch between Direct mode and Cascade mode
+Switch is done according to health check.
+
+## Installation
+Just download the current release
+For running as daemon checkout the section in this readme
+
+### Install from source
+checkout the source code and run 
+```
+make install
+```
 
 ## Configuration
-Configuration can be done by file or command line argumments.
+Configuration can be done by file or command line arguments
 
 * __password__ : Password for authentication to a forward proxy
 * __host__ : Address of a forward proxy
@@ -17,10 +27,11 @@ Configuration can be done by file or command line argumments.
 * __health__ : Address which is used for health check if available go to direct mode (default: https://www.google.de )
 * __health-time__ : Duration between health checks (default: 30 Seconds )
 * __host-list__ : Comma Separated List of Host for which DirectMode is used in Cascade Mode
-* __config__ : Path to config yaml file. If set all other command line parameters will be ignored
+* __config__ : Path to configuration yaml file. If set all other command line parameters will be ignored
+* __version__: Just shows the current version
 
 ## Health Check
-A temporary client tries to connect to a certain address regurlary.
+A temporary client tries to connect to a certain address regularly.
 The Cascade mode is active if health check fails.
 
 ## Direct Mode
@@ -28,11 +39,11 @@ Normal http internet Proxy Mode.
 
 ## Cascade Mode
 Cascade Mode means that this proxy stands between the client and another Proxy.
-Basic Auth can be enabled for Cascade Mode
+Basic Authentication can be enabled for Cascade Mode
 
 ### Skip Cascade for Hosts
 
-If in cascade mode, requests to the provided hosts will be send diretly without sending it to the forward proxy
+If in cascade mode, requests to the provided hosts will be send directly without sending it to the forward proxy
 
 ## Systemd
 
