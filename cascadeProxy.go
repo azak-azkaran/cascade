@@ -28,8 +28,8 @@ func SetBasicAuth(username, password string, req *http.Request) {
 	req.Header.Set(ProxyAuthHeader, "Basic "+basicAuth(username, password))
 }
 
-func ClearHostList(){
-	for content := range hostList.IterBuffered(){
+func ClearHostList() {
+	for content := range hostList.IterBuffered() {
 		hostList.Remove(content.Key)
 	}
 }
@@ -42,41 +42,43 @@ func basicAuth(username, password string) string {
 	return base64.StdEncoding.EncodeToString([]byte(builder.String()))
 }
 
-func HandleDirectHttpRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response){
+func HandleDirectHttpRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
 	var resp *http.Response
 	var err error
 	if req.URL.Scheme == "" {
-		resp,err = utils.GetResponse("", req.Host)
-	}else {
-		resp,err = utils.GetResponse("", req.URL.Scheme + "://" + req.Host)
+		resp, err = utils.GetResponse("", req.Host)
+	} else {
+		resp, err = utils.GetResponse("", req.URL.Scheme+"://"+req.Host)
 	}
-    if err != nil {
-    	utils.Error.Println("Problem while trying direct connection: ", err)
-    	return req, nil
+	if err != nil {
+		utils.Error.Println("Problem while trying direct connection: ", err)
 	}
-    return req, resp
-    }
+	if resp != nil {
+		return req, resp
+	} else {
+		return req, nil
+	}
+}
 
-
-func AddDirectConnection(server *goproxy.ProxyHttpServer, host string ){
-	reg := regexp.MustCompile(".*"+ host + ".*")
+func AddDirectConnection(server *goproxy.ProxyHttpServer, host string) {
+	reg := regexp.MustCompile(".*" + host + ".*")
 	server.OnRequest(goproxy.ReqHostMatches(reg)).DoFunc(
 		HandleDirectHttpRequest)
 
-	hostList.SetIfAbsent(host,reg)
+	hostList.SetIfAbsent(host, reg)
 }
 
-func CustomConnectDial(proxyURL string, connectReqHandler func(req *http.Request), server *goproxy.ProxyHttpServer) func(network string, addr string) (net.Conn, error){
-    return func(network string, addr string) (conn net.Conn, e error) {
+func CustomConnectDial(proxyURL string, connectReqHandler func(req *http.Request), server *goproxy.ProxyHttpServer) func(network string, addr string) (net.Conn, error) {
+	return func(network string, addr string) (conn net.Conn, e error) {
 
-    	for content := range hostList.IterBuffered() {
-    		val := content.Val
-            if val.(*regexp.Regexp).MatchString(addr) {
+		for content := range hostList.IterBuffered() {
+			val := content.Val
+			if val.(*regexp.Regexp).MatchString(addr) {
 				return net.DialTimeout(network, addr, 5*time.Second)
 			}
 		}
 
-		f  := server.NewConnectDialToProxyWithHandler(proxyURL, connectReqHandler)
+		f := server.NewConnectDialToProxyWithHandler(proxyURL, connectReqHandler)
 		return f(network, addr)
 	}
 }
@@ -88,7 +90,7 @@ func (cascadeProxy) Run(verbose bool, proxyURL string, username string, password
 	proxy.KeepHeader = true
 
 	proxy.Tr.Proxy = func(req *http.Request) (*url.URL, error) {
-		if strings.HasPrefix( proxyURL,"http://") {
+		if strings.HasPrefix(proxyURL, "http://") {
 			return url.Parse(proxyURL)
 		} else {
 			return url.Parse("http://" + proxyURL)
@@ -107,8 +109,6 @@ func (cascadeProxy) Run(verbose bool, proxyURL string, username string, password
 	}
 
 	proxy.ConnectDial = CustomConnectDial(proxyURL, connectReqHandler, proxy)
-	//func(network string, addr string) (conn net.Conn, e error) {
-	//}
 
 	proxy.OnRequest().Do(goproxy.FuncReqHandler(func(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
 		if LoginRequired {
