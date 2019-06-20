@@ -17,7 +17,7 @@ test: fetch
 	go test 
 	go test github.com/azak-azkaran/cascade/utils 
 
-coverage: fetch
+coverage: test
 	@echo Running Test with Coverage export
 	go test -coverprofile=cover.out
 	go test -json > report.json
