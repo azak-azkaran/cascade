@@ -26,7 +26,7 @@ Configuration can be done by file or command line arguments
 * __port__ : Port on which to run the proxy
 * __health__ : Address which is used for health check if available go to direct mode (default: https://www.google.de )
 * __health-time__ : Duration between health checks (default: 30 Seconds )
-* __host-list__ : Comma Separated List of Host for which DirectMode is used in Cascade Mode
+* __host-list__ : Comma Separated List of Host for which Proxy Redirect is used in Cascade Mode
 * __config__ : Path to configuration yaml file. If set all other command line parameters will be ignored
 * __version__: Just shows the current version
 
@@ -41,9 +41,16 @@ Normal http internet Proxy Mode.
 Cascade Mode means that this proxy stands between the client and another Proxy.
 Basic Authentication can be enabled for Cascade Mode
 
-### Skip Cascade for Hosts
+### Proxy redirect for Hosts
 
-If in cascade mode, requests to the provided hosts will be send directly without sending it to the forward proxy
+If in cascade mode, different Proxy redirects can be added by adding a Comma seperated list. These redirects changes HTTPS and HTTP Request according to the setup rules.
+The Requests can be send to another Proxy or directly.
+
+Direct Configuration:
+
+* __DIRECT Connection__: eclipse
+* __DIRECT Connection__: azure->
+* __REDIRECT Connection to other Proxy__: google->test:8888
 
 ## Systemd
 

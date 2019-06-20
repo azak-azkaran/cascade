@@ -8,18 +8,18 @@ import (
 )
 
 type config struct {
-	CascadeMode      bool
-	Username         string
-	Password         string
-	ProxyURL         string
-	LocalPort        string
-	Verbose          bool
-	CascadeFunction  func()
-	DirectFunction   func()
-	ShutdownFunction func()
-	CheckAddress     string
-	Health           time.Duration
-	SkipCascadeHosts []string
+	CascadeMode       bool
+	Username          string
+	Password          string
+	ProxyURL          string
+	LocalPort         string
+	Verbose           bool
+	CascadeFunction   func()
+	DirectFunction    func()
+	ShutdownFunction  func()
+	CheckAddress      string
+	Health            time.Duration
+	ProxyRedirectList []string
 }
 
 var CONFIG config
@@ -39,7 +39,7 @@ func CreateConfig(localPort string, proxyUrl string, username string, password s
 	CONFIG.Username = username
 	CONFIG.Password = password
 	CONFIG.Verbose = true
-	CONFIG.SkipCascadeHosts = strings.Split(skipHosts, ",")
+	CONFIG.ProxyRedirectList = strings.Split(skipHosts, ",")
 
 	CONFIG.DirectFunction = func() {
 		switchMode(DIRECT.Run(CONFIG.Verbose), "Direct Mode")
@@ -47,7 +47,7 @@ func CreateConfig(localPort string, proxyUrl string, username string, password s
 	CONFIG.CascadeFunction = func() {
 		server := CASCADE.Run(CONFIG.Verbose, CONFIG.ProxyURL, CONFIG.Username, CONFIG.Password)
 		switchMode(server, "Cascade Mode")
-		HandleCustomProxies(CONFIG.SkipCascadeHosts)
+		HandleCustomProxies(CONFIG.ProxyRedirectList)
 	}
 	CONFIG.CheckAddress = checkAddress
 	CONFIG.Health = time.Duration(healthTime) * time.Second

@@ -61,7 +61,7 @@ func TestModeSelection(t *testing.T) {
 	CONFIG.CascadeFunction = toggleCascade
 	CONFIG.DirectFunction = toggleDirect
 	CONFIG.ProxyURL = "something"
-	CONFIG.SkipCascadeHosts = strings.Split("golang.org,youtube.com", ",")
+	CONFIG.ProxyRedirectList = strings.Split("golang.org,youtube.com", ",")
 
 	ModeSelection("https://www.asda12313.de")
 	time.Sleep(1 * time.Second)
@@ -87,7 +87,7 @@ func TestCreateConfig(t *testing.T) {
 		t.Error("Cascade function was not created")
 	}
 
-	if len(CONFIG.SkipCascadeHosts) != 2 {
+	if len(CONFIG.ProxyRedirectList) != 2 {
 		t.Error("SkipHosts was not split correctly")
 	}
 

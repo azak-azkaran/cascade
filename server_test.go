@@ -118,7 +118,7 @@ func TestShutdownCurrentServer(t *testing.T) {
 
 func TestCreateServer2(t *testing.T) {
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
-	CreateConfig("8082", "", "", "", "https://www.google.de", 5 , "golang.org,youtube.com")
+	CreateConfig("8082", "", "", "", "https://www.google.de", 5, "golang.org,youtube.com")
 
 	go CONFIG.CascadeFunction()
 	time.Sleep(1 * time.Second)
@@ -126,7 +126,7 @@ func TestCreateServer2(t *testing.T) {
 		t.Error("Server was not started")
 	}
 
-	if len(CONFIG.SkipCascadeHosts) != 2 {
+	if len(CONFIG.ProxyRedirectList) != 2 {
 		t.Error("Skip for Cascade list was not separated correctly")
 	}
 
@@ -152,4 +152,3 @@ func TestCreateServer2(t *testing.T) {
 		t.Error("Server was not removed")
 	}
 }
-

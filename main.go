@@ -63,7 +63,7 @@ func Run(config conf) {
 	utils.Info.Println("ProxyUrl: ", CONFIG.ProxyURL)
 	utils.Info.Println("Health Address: ", CONFIG.CheckAddress)
 	utils.Info.Println("Health Time: ", CONFIG.Health)
-	utils.Info.Println("Skip Cascade for Hosts: ", CONFIG.SkipCascadeHosts)
+	utils.Info.Println("Skip Cascade for Hosts: ", CONFIG.ProxyRedirectList)
 
 	lastTime := time.Now()
 	utils.Info.Println("Starting Selection Process and Running Server")

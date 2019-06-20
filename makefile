@@ -14,7 +14,8 @@ install: build
 
 test: fetch
 	@echo Running tests
-	go list -f '{{if len .TestGoFiles}}"go test  {{.ImportPath}}"{{end}}' ./... | xargs -L 1 sh -c
+	go test 
+	go test github.com/azak-azkaran/cascade/utils 
 
 coverage: fetch
 	@echo Running Test with Coverage export
