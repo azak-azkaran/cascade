@@ -16,9 +16,15 @@ import (
 type cascadeProxy struct {
 }
 
+type HostConfig struct {
+	addr      string
+	reg       *regexp.Regexp
+	proxyAddr string
+}
+
 var CASCADE cascadeProxy
 var LoginRequired bool
-var hostList cmap.ConcurrentMap = cmap.New()
+var HostList cmap.ConcurrentMap = cmap.New()
 
 const (
 	ProxyAuthHeader = "Proxy-Authorization"
@@ -29,8 +35,8 @@ func SetBasicAuth(username, password string, req *http.Request) {
 }
 
 func ClearHostList() {
-	for content := range hostList.IterBuffered() {
-		hostList.Remove(content.Key)
+	for content := range HostList.IterBuffered() {
+		HostList.Remove(content.Key)
 	}
 }
 
@@ -60,26 +66,61 @@ func HandleDirectHttpRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Re
 	}
 }
 
-func AddDirectConnection(server *goproxy.ProxyHttpServer, host string) {
-	reg := regexp.MustCompile(".*" + host + ".*")
-	server.OnRequest(goproxy.ReqHostMatches(reg)).DoFunc(
-		HandleDirectHttpRequest)
+func AddDifferentProxyConnection(host string, proxyAddr string) {
+	var value HostConfig
+	value.reg = regexp.MustCompile(".*" + host + ".*")
+	value.addr = host
+	value.proxyAddr = proxyAddr
+	HostList.Set(host, value)
+}
 
-	hostList.SetIfAbsent(host, reg)
+func AddDirectConnection(host string) {
+	AddDifferentProxyConnection(host, "")
 }
 
 func CustomConnectDial(proxyURL string, connectReqHandler func(req *http.Request), server *goproxy.ProxyHttpServer) func(network string, addr string) (net.Conn, error) {
 	return func(network string, addr string) (conn net.Conn, e error) {
 
-		for content := range hostList.IterBuffered() {
-			val := content.Val
-			if val.(*regexp.Regexp).MatchString(addr) {
-				return net.DialTimeout(network, addr, 5*time.Second)
+		for content := range HostList.IterBuffered() {
+			val := content.Val.(HostConfig)
+			if val.reg.MatchString(addr) {
+				if len(val.proxyAddr) != 0 {
+					f := server.NewConnectDialToProxyWithHandler(val.proxyAddr, connectReqHandler)
+					return f(network, addr)
+				} else {
+					return net.DialTimeout(network, addr, 5*time.Second)
+				}
+			}
+		}
+		f := server.NewConnectDialToProxyWithHandler(proxyURL, connectReqHandler)
+		return f(network, addr)
+	}
+}
+
+func parseProxyUrl(proxyURL string) (*url.URL, error) {
+	if strings.HasPrefix(proxyURL, "http://") {
+		return url.Parse(proxyURL)
+	} else {
+		return url.Parse("http://" + proxyURL)
+	}
+}
+
+func CustomProxy(proxyURL string) func(req *http.Request) (*url.URL, error) {
+	return func(reg *http.Request) (*url.URL, error) {
+		for content := range HostList.IterBuffered() {
+			val := content.Val.(HostConfig)
+			if val.reg.MatchString(reg.Host) {
+				if len(val.proxyAddr) != 0 {
+					f, err := parseProxyUrl(val.proxyAddr)
+					return f, err
+				} else {
+					return nil, nil
+				}
 			}
 		}
 
-		f := server.NewConnectDialToProxyWithHandler(proxyURL, connectReqHandler)
-		return f(network, addr)
+		f, err := parseProxyUrl(proxyURL)
+		return f, err
 	}
 }
 
@@ -89,13 +130,7 @@ func (cascadeProxy) Run(verbose bool, proxyURL string, username string, password
 	proxy.Logger = utils.Info
 	proxy.KeepHeader = true
 
-	proxy.Tr.Proxy = func(req *http.Request) (*url.URL, error) {
-		if strings.HasPrefix(proxyURL, "http://") {
-			return url.Parse(proxyURL)
-		} else {
-			return url.Parse("http://" + proxyURL)
-		}
-	}
+	proxy.Tr.Proxy = CustomProxy(proxyURL)
 	var connectReqHandler func(req *http.Request)
 
 	if len(username) > 0 {

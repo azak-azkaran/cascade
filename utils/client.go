@@ -11,7 +11,7 @@ func GetResponse(proxyUrl string, requestUrl string) (*http.Response, error) {
 	return getResponse(proxyUrl, requestUrl, true)
 }
 
-func GetClient(proxyUrl string ) (*http.Client, error) {
+func GetClient(proxyUrl string) (*http.Client, error) {
 	var tr *http.Transport
 	if len(proxyUrl) > 0 {
 		u, err := url.Parse(proxyUrl)
@@ -37,7 +37,7 @@ func getResponse(proxyUrl string, requestUrl string, close bool) (*http.Response
 	client, _ := GetClient(proxyUrl)
 	resp, err := client.Get(requestUrl)
 	if err != nil {
-		return nil, err
+		return resp, err
 	}
 	if close {
 		defer resp.Body.Close()

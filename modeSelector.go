@@ -47,17 +47,26 @@ func CreateConfig(localPort string, proxyUrl string, username string, password s
 	CONFIG.CascadeFunction = func() {
 		server := CASCADE.Run(CONFIG.Verbose, CONFIG.ProxyURL, CONFIG.Username, CONFIG.Password)
 		switchMode(server, "Cascade Mode")
-		for i := 0 ; i < len(CONFIG.SkipCascadeHosts); i++ {
-			host := CONFIG.SkipCascadeHosts[i]
-            AddDirectConnection(server, host)
-		}
+		HandleCustomProxies(CONFIG.SkipCascadeHosts)
 	}
 	CONFIG.CheckAddress = checkAddress
 	CONFIG.Health = time.Duration(healthTime) * time.Second
 }
 
+func HandleCustomProxies(list []string) {
+	for i := 0; i < len(list); i++ {
+		rule := list[i]
+		if strings.Contains(rule, "->") {
+			split := strings.Split(rule, "->")
+			AddDifferentProxyConnection(split[0], split[1])
+		} else {
+			AddDirectConnection(rule)
+		}
+	}
+}
+
 func ModeSelection(checkAddress string) {
-	success := false
+	var success bool
 	utils.Info.Println("Running check on: ", checkAddress)
 	rep, err := utils.GetResponse("", checkAddress)
 	if err != nil {

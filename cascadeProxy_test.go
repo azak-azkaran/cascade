@@ -54,12 +54,12 @@ func TestCascadeProxy_Run(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	utils.Info.Println("Start http Test")
-	client , err:= utils.GetClient("http://localhost:8081")
+	client, err := utils.GetClient("http://localhost:8081")
 	if err != nil {
 		t.Error("Error while client request over cascade", err)
 	}
-	request, err := http.NewRequest("GET", "http://google.de/", nil)
-	resp, err := client.Do( request)
+	request, _ := http.NewRequest("GET", "http://google.de/", nil)
+	resp, err := client.Do(request)
 
 	if err != nil {
 		t.Error("Error while client request over cascade", err)
@@ -76,7 +76,6 @@ func TestCascadeProxy_Run(t *testing.T) {
 	if resp.StatusCode != 200 {
 		t.Error("Error while client https Request, ", resp.Status)
 	}
-
 
 	_, err = utils.GetResponse("http://localhost:8082", "https://www.google.de")
 	if err == nil {
@@ -110,13 +109,13 @@ func TestHandleDirect(t *testing.T) {
 		t.Error("Error while creating request to google", err)
 	}
 
-	req, resp = HandleDirectHttpRequest(req, nil)
+	_, resp = HandleDirectHttpRequest(req, nil)
 	if resp.StatusCode != 200 {
 		t.Error("Google was not available")
 	}
 
-	req, err = http.NewRequest("GET", "http://www.google.de", nil)
-	req, resp = HandleDirectHttpRequest(req, nil)
+	_, _ = http.NewRequest("GET", "http://www.google.de", nil)
+	_, resp = HandleDirectHttpRequest(req, nil)
 	if resp.StatusCode != 200 {
 		t.Error("Google was not available")
 	}
@@ -142,12 +141,12 @@ func TestAddDirectConnection(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 	_, err := utils.GetResponse("http://localhost:8081", "https://www.google.de")
-	if err == nil{
+	if err == nil {
 		t.Error("Error while requesting google", err)
 	}
 
 	CONFIG.LocalPort = "8801"
-	AddDirectConnection(middleProxy, "google")
+	AddDirectConnection("google")
 	resp, err := utils.GetResponse("http://localhost:8081", "https://www.google.de")
 	if err != nil {
 		t.Error("Error while requesting google", err)
@@ -164,14 +163,134 @@ func TestAddDirectConnection(t *testing.T) {
 		t.Error("Google was not available")
 	}
 
-
-    ClearHostList()
+	ClearHostList()
 	_, err = utils.GetResponse("http://localhost:8081", "https://www.google.de")
-	if err == nil{
+	if err == nil {
 		t.Error("Error while requesting google", err)
 	}
 
 	err = middleServer.Shutdown(context.TODO())
+	if err != nil {
+		t.Error("Error while shutting down middle Server, ", err)
+	}
+}
+
+func TestAddDifferentProxyConnection(t *testing.T) {
+	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	username, password := "foo", "bar"
+	endProxy := DIRECT.Run(true)
+	endProxy.Verbose = true
+	var endServer *http.Server
+	auth.ProxyBasic(endProxy, "my_realm", func(user, pwd string) bool {
+		return user == username && password == pwd
+	})
+	go func() {
+		utils.Init(os.Stdout, os.Stdout, os.Stderr)
+		utils.Info.Println("serving end proxy server at localhost:8082")
+		endServer = &http.Server{
+			Addr:    "localhost:8082",
+			Handler: endProxy,
+		}
+		err := endServer.ListenAndServe()
+		if err == nil {
+			t.Error("Error shutdown should always return error", err)
+		}
+	}()
+
+	middleProxy := CASCADE.Run(true, "http://localhost:8083", username, password)
+	var middleServer *http.Server
+
+	go func() {
+		utils.Init(os.Stdout, os.Stdout, os.Stderr)
+		utils.Info.Println("serving middle proxy server at localhost:8081")
+		middleServer = &http.Server{
+			Addr:    "localhost:8081",
+			Handler: middleProxy,
+		}
+		err := middleServer.ListenAndServe()
+		if err == nil {
+			t.Error("Error shutdown should always return error", err)
+		}
+	}()
+
+	time.Sleep(1 * time.Second)
+	CONFIG.LocalPort = "8801"
+	utils.Info.Println("starting HTTPS test to fail")
+	_, err := utils.GetResponse("http://localhost:8081", "https://www.google.de")
+	if err == nil {
+		t.Error("Error while requesting google", err)
+	}
+	utils.Info.Println("starting HTTP test to fail")
+	resp, err := utils.GetResponse("http://localhost:8081", "http://www.google.de")
+	if resp != nil && resp.StatusCode != 500 {
+		t.Error("Error while requesting google", err)
+	}
+
+	AddDifferentProxyConnection("google", "http://localhost:8082")
+	utils.Info.Println("starting HTTPS test to work")
+	resp, err = utils.GetResponse("http://localhost:8081", "https://www.google.de")
+	if err != nil {
+		t.Error("Error while requesting google", err)
+	}
+	if resp.StatusCode != 200 {
+		t.Error("Google was not available")
+	}
+
+	utils.Info.Println("starting HTTP test")
+	resp, err = utils.GetResponse("http://localhost:8081", "http://www.google.de")
+	if err != nil {
+		t.Error("Error while requesting google", err)
+	}
+	if resp.StatusCode != 200 {
+		t.Error("Google was not available")
+	}
+
+	AddDifferentProxyConnection("google", "")
+	utils.Info.Println("starting HTTPS test to work")
+	resp, err = utils.GetResponse("http://localhost:8081", "https://www.google.de")
+	if err != nil {
+		t.Error("Error while requesting google", err)
+	}
+	if resp.StatusCode != 200 {
+		t.Error("Google was not available")
+	}
+
+	utils.Info.Println("starting HTTP test")
+	resp, err = utils.GetResponse("http://localhost:8081", "http://www.google.de")
+	if err != nil {
+		t.Error("Error while requesting google", err)
+	}
+	if resp.StatusCode != 200 {
+		resp, err := utils.GetResponse("http://localhost:8081", "https://www.google.de")
+		if err != nil {
+			t.Error("Error while requesting google", err)
+		}
+		if resp.StatusCode != 200 {
+			t.Error("Google was not available")
+		}
+
+		utils.Info.Println("starting HTTP test")
+		resp, err = utils.GetResponse("http://localhost:8081", "http://www.google.de")
+		if err != nil {
+			t.Error("Error while requesting google", err)
+		}
+		if resp.StatusCode != 200 {
+			t.Error("Google was not available")
+		}
+		t.Error("Google was not available")
+	}
+
+	ClearHostList()
+	_, err = utils.GetResponse("http://localhost:8081", "https://www.google.de")
+	if err == nil {
+		t.Error("Error while requesting google", err)
+	}
+
+	err = middleServer.Shutdown(context.TODO())
+	if err != nil {
+		t.Error("Error while shutting down middle Server, ", err)
+	}
+	err = endServer.Shutdown(context.TODO())
 	if err != nil {
 		t.Error("Error while shutting down middle Server, ", err)
 	}

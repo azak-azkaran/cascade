@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"github.com/azak-azkaran/cascade/utils"
@@ -32,11 +31,11 @@ func GetConf(path string) (*conf, error) {
 	config := conf{}
 	yamlFile, err := ioutil.ReadFile(path)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("yamlFile.Get err   #%v ", err))
+		return nil, fmt.Errorf("yamlFile.Get err   #%v ", err)
 	}
 	err = yaml.Unmarshal(yamlFile, &config)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Unmarshal: %v", err))
+		return nil, fmt.Errorf("Unmarshal: %v", err)
 	}
 
 	if len(config.LocalPort) == 0 {

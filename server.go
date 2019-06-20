@@ -41,7 +41,7 @@ func RunServer() {
 
 func ShutdownCurrentServer() {
 	if CurrentServer != nil {
-		shutdown(5 * time.Second, CurrentServer)
+		shutdown(5*time.Second, CurrentServer)
 		CurrentServer = nil
 		ClearHostList()
 	}
@@ -49,15 +49,15 @@ func ShutdownCurrentServer() {
 
 func shutdown(timeout time.Duration, server *http.Server) {
 	utils.Info.Println("Starting shutdown with Timout: ", timeout)
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	err := server.Shutdown(ctx)
 	if err != nil {
 		utils.Error.Println("Error while shutdown: ", err)
 	}
 }
 
-
-func createServer(proxy *goproxy.ProxyHttpServer, addr string, port string) *http.Server{
+func createServer(proxy *goproxy.ProxyHttpServer, addr string, port string) *http.Server {
 	return &http.Server{
 		Addr:    addr + ":" + port,
 		Handler: proxy,
@@ -71,6 +71,6 @@ func createServer(proxy *goproxy.ProxyHttpServer, addr string, port string) *htt
 
 func CreateServer(proxy *goproxy.ProxyHttpServer, addr string, port string) *http.Server {
 	utils.Info.Println("Starting First Proxy")
-	CurrentServer =createServer(proxy,addr,port)
+	CurrentServer = createServer(proxy, addr, port)
 	return CurrentServer
 }
