@@ -70,7 +70,11 @@ func AddDifferentProxyConnection(host string, proxyAddr string) {
 	var value HostConfig
 	value.reg = regexp.MustCompile(".*" + host + ".*")
 	value.addr = host
-	value.proxyAddr = proxyAddr
+	if !strings.HasPrefix(proxyAddr, "http://") && len(proxyAddr) > 0 {
+		value.proxyAddr = "http://" + proxyAddr
+	} else {
+		value.proxyAddr = proxyAddr
+	}
 	HostList.Set(host, value)
 }
 
@@ -84,10 +88,13 @@ func CustomConnectDial(proxyURL string, connectReqHandler func(req *http.Request
 		for content := range HostList.IterBuffered() {
 			val := content.Val.(HostConfig)
 			if val.reg.MatchString(addr) {
+				utils.Info.Println("Matching Host found")
 				if len(val.proxyAddr) != 0 {
+					utils.Info.Println("Redirect to: ", val.proxyAddr)
 					f := server.NewConnectDialToProxyWithHandler(val.proxyAddr, connectReqHandler)
 					return f(network, addr)
 				} else {
+					utils.Info.Println("Using direct connection")
 					return net.DialTimeout(network, addr, 5*time.Second)
 				}
 			}
