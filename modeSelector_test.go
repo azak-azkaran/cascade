@@ -124,7 +124,7 @@ func TestHandleCustomProxies(t *testing.T) {
 		if !value.reg.MatchString("www.google.de") {
 			t.Error("Proxy redirect regex does not match")
 		}
-		if strings.Compare(value.proxyAddr, "test:8888") != 0 {
+		if strings.Compare(value.proxyAddr, "http://test:8888") != 0 {
 			t.Error("Proxy redirect address does not match")
 		}
 	}
