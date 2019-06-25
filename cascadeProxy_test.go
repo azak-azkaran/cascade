@@ -280,6 +280,11 @@ func TestAddDifferentProxyConnection(t *testing.T) {
 		t.Error("Google was not available")
 	}
 
+	AddDifferentProxyConnection("steam", "")
+	if !HostList.Has("") {
+		t.Error("direct not in HostList: ", HostList.Keys())
+	}
+
 	ClearHostList()
 	_, err = utils.GetResponse("http://localhost:8081", "https://www.google.de")
 	if err == nil {

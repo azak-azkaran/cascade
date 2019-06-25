@@ -99,46 +99,45 @@ func TestHandleCustomProxies(t *testing.T) {
 	list := strings.Split("eclipse,google->test:8888,azure->", ",")
 	HandleCustomProxies(list)
 
-	val, in := HostList.Get("eclipse")
+	val, in := HostList.Get("")
 	if !in {
 		t.Error("Proxy redirect to eclipse not added")
 	}
 
 	value := val.(HostConfig)
 	if in && !value.reg.MatchString("eclipse2017.nasa.gov") {
-		t.Error("Proxy redirect regex does not match")
+		t.Error("Proxy redirect regex does not match: ", value.regString)
 	}
 	if value.proxyAddr != "" && in {
 		t.Error("Proxy redirect regex does not match")
 
 	}
 
-	val, in = HostList.Get("google")
+	val, in = HostList.Get("test:8888")
 	if !in {
-		t.Error("Proxy redirect to google not added")
+		t.Error("Proxy redirect to google not added: ", value.regString)
 	}
 
 	if in {
 		value = val.(HostConfig)
-
 		if !value.reg.MatchString("www.google.de") {
-			t.Error("Proxy redirect regex does not match")
+			t.Error("Proxy redirect regex does not match: ", value.regString)
 		}
 		if strings.Compare(value.proxyAddr, "http://test:8888") != 0 {
 			t.Error("Proxy redirect address does not match")
 		}
 	}
 
-	val, in = HostList.Get("azure")
+	val, in = HostList.Get("")
 	if !in {
-		t.Error("Proxy redirect to azure not added")
+		t.Error("Proxy redirect to azure not added: ", value.regString)
 	}
 
 	if in {
 		value = val.(HostConfig)
 
 		if !value.reg.MatchString("https://azure.microsoft.com/en-us/") {
-			t.Error("Proxy redirect regex does not match")
+			t.Error("Proxy redirect regex does not match: ", value.regString)
 		}
 		if value.proxyAddr != "" {
 			t.Error("Proxy redirect address does not match")

@@ -20,6 +20,7 @@ type HostConfig struct {
 	addr      string
 	reg       *regexp.Regexp
 	proxyAddr string
+	regString string
 }
 
 var CASCADE cascadeProxy
@@ -68,14 +69,19 @@ func HandleDirectHttpRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Re
 
 func AddDifferentProxyConnection(host string, proxyAddr string) {
 	var value HostConfig
-	value.reg = regexp.MustCompile(".*" + host + ".*")
+	if HostList.Has(proxyAddr) {
+		value.regString += "|"
+	}
+
+	value.regString += ".*" + host + ".*"
+	value.reg = regexp.MustCompile(value.regString)
 	value.addr = host
 	if !strings.HasPrefix(proxyAddr, "http://") && len(proxyAddr) > 0 {
 		value.proxyAddr = "http://" + proxyAddr
 	} else {
 		value.proxyAddr = proxyAddr
 	}
-	HostList.Set(host, value)
+	HostList.Set(proxyAddr, value)
 }
 
 func AddDirectConnection(host string) {
