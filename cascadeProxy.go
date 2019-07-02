@@ -28,6 +28,7 @@ var LoginRequired bool
 var HostList cmap.ConcurrentMap = cmap.New()
 
 const (
+	httpPrefix      = "http://"
 	ProxyAuthHeader = "Proxy-Authorization"
 )
 
@@ -76,8 +77,8 @@ func AddDifferentProxyConnection(host string, proxyAddr string) {
 	value.regString += ".*" + host + ".*"
 	value.reg = regexp.MustCompile(value.regString)
 	value.addr = host
-	if !strings.HasPrefix(proxyAddr, "http://") && len(proxyAddr) > 0 {
-		value.proxyAddr = "http://" + proxyAddr
+	if !strings.HasPrefix(proxyAddr, httpPrefix) && len(proxyAddr) > 0 {
+		value.proxyAddr = httpPrefix + proxyAddr
 	} else {
 		value.proxyAddr = proxyAddr
 	}
@@ -111,10 +112,10 @@ func CustomConnectDial(proxyURL string, connectReqHandler func(req *http.Request
 }
 
 func parseProxyUrl(proxyURL string) (*url.URL, error) {
-	if strings.HasPrefix(proxyURL, "http://") {
+	if strings.HasPrefix(proxyURL, httpPrefix) {
 		return url.Parse(proxyURL)
 	} else {
-		return url.Parse("http://" + proxyURL)
+		return url.Parse(httpPrefix + proxyURL)
 	}
 }
 
