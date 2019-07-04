@@ -95,7 +95,7 @@ func CustomConnectDial(proxyURL string, connectReqHandler func(req *http.Request
 		for content := range HostList.IterBuffered() {
 			val := content.Val.(HostConfig)
 			if val.reg.MatchString(addr) {
-				utils.Info.Println("Matching Host found")
+				utils.Info.Println("Matching Host found: ", addr)
 				if len(val.proxyAddr) != 0 {
 					utils.Info.Println("Redirect to: ", val.proxyAddr)
 					f := server.NewConnectDialToProxyWithHandler(val.proxyAddr, connectReqHandler)
@@ -124,10 +124,14 @@ func CustomProxy(proxyURL string) func(req *http.Request) (*url.URL, error) {
 		for content := range HostList.IterBuffered() {
 			val := content.Val.(HostConfig)
 			if val.reg.MatchString(reg.Host) {
+				utils.Info.Println("Found Matching Host for: ", reg.Host)
+
 				if len(val.proxyAddr) != 0 {
+					utils.Info.Println("with redirect to: ", val.proxyAddr)
 					f, err := parseProxyUrl(val.proxyAddr)
 					return f, err
 				} else {
+					utils.Info.Println("Using direct connection")
 					return nil, nil
 				}
 			}
