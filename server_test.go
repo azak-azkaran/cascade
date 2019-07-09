@@ -130,12 +130,12 @@ func TestCreateServer2(t *testing.T) {
 		t.Error("Skip for Cascade list was not separated correctly")
 	}
 
-	resp, err := utils.GetResponse("http://localhost:8082", "https://www.google.de")
+	_, err := utils.GetResponse("http://localhost:8082", "https://www.google.de")
 	if err != nil {
-		t.Error("Error while requesting google with broken proxy", resp.Status)
+		t.Error("Error while requesting google with broken proxy", err)
 	}
 
-	resp, err = utils.GetResponse("http://localhost:8082", "http://golang.org/doc/")
+	resp, err := utils.GetResponse("http://localhost:8082", "http://golang.org/doc/")
 	if err != nil {
 		t.Error("Error while client request over proxy server", err)
 	}
