@@ -69,6 +69,11 @@ func HandleDirectHttpRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Re
 }
 
 func AddDifferentProxyConnection(host string, proxyAddr string) {
+	if host == "" {
+		utils.Error.Println("Empty host in skiplist found, with redirect to: ", proxyAddr)
+		return
+	}
+
 	var value HostConfig
 	val, ok := HostList.Get(proxyAddr)
 	if ok {
