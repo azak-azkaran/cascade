@@ -54,7 +54,7 @@ func CreateConfig(localPort string, proxyUrl string, username string, password s
 }
 
 func HandleCustomProxies(list []string) {
-	if len(list) > 0 {
+	if len(list) == 0 {
 		return
 	}
 
