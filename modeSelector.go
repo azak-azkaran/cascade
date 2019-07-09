@@ -54,6 +54,10 @@ func CreateConfig(localPort string, proxyUrl string, username string, password s
 }
 
 func HandleCustomProxies(list []string) {
+	if len(list) > 0 {
+		return
+	}
+
 	for i := 0; i < len(list); i++ {
 		rule := list[i]
 		if strings.Contains(rule, "->") {

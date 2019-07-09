@@ -2,7 +2,7 @@ VERSION := $(shell git describe --always --long --dirty)
 all: install
 
 fetch:
-	@go get ./...
+	@go get -u ./...
 
 build: fetch
 	@echo Building to current folder

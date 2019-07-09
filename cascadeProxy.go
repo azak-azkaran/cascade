@@ -70,7 +70,9 @@ func HandleDirectHttpRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Re
 
 func AddDifferentProxyConnection(host string, proxyAddr string) {
 	var value HostConfig
-	if HostList.Has(proxyAddr) {
+	val, ok := HostList.Get(proxyAddr)
+	if ok {
+		value = val.(HostConfig)
 		value.regString += "|"
 	}
 
@@ -82,6 +84,7 @@ func AddDifferentProxyConnection(host string, proxyAddr string) {
 	} else {
 		value.proxyAddr = proxyAddr
 	}
+	utils.Info.Println("Adding Redirect: ", proxyAddr, " for: ", host, " Regex:", value.regString)
 	HostList.Set(proxyAddr, value)
 }
 
@@ -95,15 +98,16 @@ func CustomConnectDial(proxyURL string, connectReqHandler func(req *http.Request
 		for content := range HostList.IterBuffered() {
 			val := content.Val.(HostConfig)
 			if val.reg.MatchString(addr) {
-				utils.Info.Println("Matching Host found: ", addr)
+				utils.Info.Println("Matching Host found: ", addr, " for: ", val.regString)
+				utils.Info.Println("Regex: ", val.reg)
+
 				if len(val.proxyAddr) != 0 {
 					utils.Info.Println("Redirect to: ", val.proxyAddr)
 					f := server.NewConnectDialToProxyWithHandler(val.proxyAddr, connectReqHandler)
 					return f(network, addr)
-				} else {
-					utils.Info.Println("Using direct connection")
-					return net.DialTimeout(network, addr, 5*time.Second)
 				}
+				utils.Info.Println("Using direct connection")
+				return net.DialTimeout(network, addr, 5*time.Second)
 			}
 		}
 		f := server.NewConnectDialToProxyWithHandler(proxyURL, connectReqHandler)
@@ -124,7 +128,8 @@ func CustomProxy(proxyURL string) func(req *http.Request) (*url.URL, error) {
 		for content := range HostList.IterBuffered() {
 			val := content.Val.(HostConfig)
 			if val.reg.MatchString(reg.Host) {
-				utils.Info.Println("Found Matching Host for: ", reg.Host)
+				utils.Info.Println("Matching Host found: ", reg.Host, " for: ", val.regString)
+				utils.Info.Println("Regex: ", val.reg)
 
 				if len(val.proxyAddr) != 0 {
 					utils.Info.Println("with redirect to: ", val.proxyAddr)
