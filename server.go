@@ -9,9 +9,13 @@ import (
 	"time"
 )
 
-var CurrentServer *http.Server = nil
+// CurrentServer the running httpserver
+var CurrentServer *http.Server
+
+// true if the server has started
 var running = false
 
+// RunServer : Starts the Server which selects the Mode in which it should be running,
 func RunServer() {
 	counter := 5
 	for CurrentServer == nil {
@@ -39,9 +43,10 @@ func RunServer() {
 	}()
 }
 
+//ShutdownCurrentServer Shuts down the current server with a 1 Second timeout
 func ShutdownCurrentServer() {
 	if CurrentServer != nil {
-		shutdown(5*time.Second, CurrentServer)
+		shutdown(1*time.Second, CurrentServer)
 		CurrentServer = nil
 		ClearHostList()
 	}
@@ -69,8 +74,9 @@ func createServer(proxy *goproxy.ProxyHttpServer, addr string, port string) *htt
 	}
 }
 
+// CreateServer creates a proxy server on addr:port
 func CreateServer(proxy *goproxy.ProxyHttpServer, addr string, port string) *http.Server {
-	utils.Info.Println("Starting First Proxy")
+	utils.Info.Println("Starting Proxy")
 	CurrentServer = createServer(proxy, addr, port)
 	return CurrentServer
 }

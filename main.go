@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-type conf struct {
+type Conf struct {
 	Username     string `yaml:"username"`
 	Password     string `yaml:"password"`
 	ProxyURL     string `yaml:"host"`
@@ -23,12 +23,15 @@ type conf struct {
 }
 
 var version = "undefined"
-var closeChan bool = false
+var closeChan bool
 var stopChan = make(chan os.Signal, 2)
+
+// LogFile File for logs if log to file is active
 var LogFile *os.File
 
-func GetConf(path string) (*conf, error) {
-	config := conf{}
+// GetConf reads the Configuration from a yaml file at @path
+func GetConf(path string) (*Conf, error) {
+	config := Conf{}
 	yamlFile, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("yamlFile.Get err   #%v ", err)
@@ -53,7 +56,7 @@ func GetConf(path string) (*conf, error) {
 	return &config, nil
 }
 
-func Run(config conf) {
+func Run(config Conf) {
 	utils.Info.Println(config)
 	utils.Info.Println("Creating Configuration")
 	CreateConfig(config.LocalPort, config.ProxyURL, config.Username, config.Password, config.CheckAddress, int(config.HealthTime), config.HostList)
@@ -91,8 +94,8 @@ func SetLogPath(path string) *os.File {
 	return buffer
 }
 
-func ParseCommandline() (*conf, error) {
-	config := conf{}
+func ParseCommandline() (*Conf, error) {
+	config := Conf{}
 	var configFile string
 	flag.StringVar(&config.Password, "password", "", "Password for authentication to a forward proxy")
 	flag.StringVar(&config.ProxyURL, "host", "", "Address of a forward proxy")

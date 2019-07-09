@@ -47,7 +47,7 @@ func TestGetConf(t *testing.T) {
 func TestRun(t *testing.T) {
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
 
-	config := conf{}
+	config := Conf{}
 	config.HealthTime = 5
 	config.Username = "foo"
 	config.Password = "bar"

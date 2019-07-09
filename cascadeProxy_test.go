@@ -64,8 +64,8 @@ func TestCascadeProxy_Run(t *testing.T) {
 	if err != nil {
 		t.Error("Error while client request over cascade", err)
 	}
-	if resp.StatusCode != 200 {
-		t.Error("Error while client https Request, ", resp.Status)
+	if resp == nil || resp.StatusCode != 200 {
+		t.Error("Error while client https Request, ", resp)
 	}
 
 	utils.Info.Println("Start https Test")
@@ -73,8 +73,8 @@ func TestCascadeProxy_Run(t *testing.T) {
 	if err != nil {
 		t.Error("Error while client request over cascade", err)
 	}
-	if resp.StatusCode != 200 {
-		t.Error("Error while client https Request, ", resp.Status)
+	if resp == nil || resp.StatusCode != 200 {
+		t.Error("Error while client https Request, ", resp)
 	}
 
 	_, err = utils.GetResponse("http://localhost:8082", "https://www.google.de")
@@ -100,7 +100,7 @@ func TestHandleDirect(t *testing.T) {
 	if err != nil {
 		t.Error("Error while requesting google", err)
 	}
-	if resp.StatusCode != 200 {
+	if resp == nil || resp.StatusCode != 200 {
 		t.Error("Google was not available")
 	}
 
@@ -110,13 +110,13 @@ func TestHandleDirect(t *testing.T) {
 	}
 
 	_, resp = HandleDirectHttpRequest(req, nil)
-	if resp.StatusCode != 200 {
+	if resp == nil || resp.StatusCode != 200 {
 		t.Error("Google was not available")
 	}
 
 	_, _ = http.NewRequest("GET", "http://www.google.de", nil)
 	_, resp = HandleDirectHttpRequest(req, nil)
-	if resp.StatusCode != 200 {
+	if resp == nil || resp.StatusCode != 200 {
 		t.Error("Google was not available")
 	}
 }
@@ -151,7 +151,7 @@ func TestAddDirectConnection(t *testing.T) {
 	if err != nil {
 		t.Error("Error while requesting google", err)
 	}
-	if resp.StatusCode != 200 {
+	if resp == nil || resp.StatusCode != 200 {
 		t.Error("Google was not available")
 	}
 
@@ -159,7 +159,7 @@ func TestAddDirectConnection(t *testing.T) {
 	if err != nil {
 		t.Error("Error while requesting google", err)
 	}
-	if resp.StatusCode != 200 {
+	if resp == nil || resp.StatusCode != 200 {
 		t.Error("Google was not available")
 	}
 
@@ -222,7 +222,7 @@ func TestAddDifferentProxyConnection(t *testing.T) {
 	}
 	utils.Info.Println("starting HTTP test to fail")
 	resp, err := utils.GetResponse("http://localhost:8081", "http://www.google.de")
-	if resp != nil && resp.StatusCode != 500 {
+	if resp == nil || resp.StatusCode != 500 {
 		t.Error("Error while requesting google", err)
 	}
 
@@ -232,7 +232,7 @@ func TestAddDifferentProxyConnection(t *testing.T) {
 	if err != nil {
 		t.Error("Error while requesting google", err)
 	}
-	if resp.StatusCode != 200 {
+	if resp == nil || resp.StatusCode != 200 {
 		t.Error("Google was not available")
 	}
 
@@ -241,7 +241,7 @@ func TestAddDifferentProxyConnection(t *testing.T) {
 	if err != nil {
 		t.Error("Error while requesting google", err)
 	}
-	if resp.StatusCode != 200 {
+	if resp == nil || resp.StatusCode != 200 {
 		t.Error("Google was not available")
 	}
 
@@ -251,7 +251,7 @@ func TestAddDifferentProxyConnection(t *testing.T) {
 	if err != nil {
 		t.Error("Error while requesting google", err)
 	}
-	if resp.StatusCode != 200 {
+	if resp == nil || resp.StatusCode != 200 {
 		t.Error("Google was not available")
 	}
 
@@ -260,12 +260,12 @@ func TestAddDifferentProxyConnection(t *testing.T) {
 	if err != nil {
 		t.Error("Error while requesting google", err)
 	}
-	if resp.StatusCode != 200 {
+	if resp == nil || resp.StatusCode != 200 {
 		resp, err := utils.GetResponse("http://localhost:8081", "https://www.google.de")
 		if err != nil {
 			t.Error("Error while requesting google", err)
 		}
-		if resp.StatusCode != 200 {
+		if resp == nil || resp.StatusCode != 200 {
 			t.Error("Google was not available")
 		}
 
@@ -274,7 +274,7 @@ func TestAddDifferentProxyConnection(t *testing.T) {
 		if err != nil {
 			t.Error("Error while requesting google", err)
 		}
-		if resp.StatusCode != 200 {
+		if resp == nil || resp.StatusCode != 200 {
 			t.Error("Google was not available")
 		}
 		t.Error("Google was not available")

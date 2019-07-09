@@ -131,8 +131,8 @@ func TestCreateServer2(t *testing.T) {
 	}
 
 	_, err := utils.GetResponse("http://localhost:8082", "https://www.google.de")
-	if err != nil {
-		t.Error("Error while requesting google with broken proxy", err)
+	if err == nil {
+		t.Error("Request over broken proxy was successfull but should not be", err)
 	}
 
 	resp, err := utils.GetResponse("http://localhost:8082", "http://golang.org/doc/")
