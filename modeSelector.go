@@ -2,36 +2,24 @@ package main
 
 import (
 	"github.com/azak-azkaran/cascade/utils"
-	"github.com/azak-azkaran/goproxy"
 	"strings"
 	"time"
 )
 
 type config struct {
-	CascadeMode       bool
-	Username          string
-	Password          string
-	ProxyURL          string
+	CascadeMode       bool   `json:"CascadeMode"`
+	Username          string `json:"Username"`
+	Password          string `json:"Password"`
+	ProxyURL          string `json:"ProxyURL"`
 	LocalPort         string
 	Verbose           bool
-	CascadeFunction   func()
-	DirectFunction    func()
 	ShutdownFunction  func()
-	CheckAddress      string
+	CheckAddress      string `json:"CheckAddress"`
 	Health            time.Duration
-	ProxyRedirectList []string
+	ProxyRedirectList []string `json:"host-list"`
 }
 
 var CONFIG config
-
-func switchMode(server *goproxy.ProxyHttpServer, mode string) {
-	utils.Info.Println("Shutdown of current Server")
-	ShutdownCurrentServer()
-	utils.Info.Println("Creating Server")
-	CreateServer(server, "localhost", CONFIG.LocalPort)
-	utils.Info.Println("Starting Server in: ", mode)
-	RunServer()
-}
 
 func CreateConfig(localPort string, proxyUrl string, username string, password string, checkAddress string, healthTime int, skipHosts string) {
 	CONFIG.LocalPort = localPort
@@ -41,16 +29,13 @@ func CreateConfig(localPort string, proxyUrl string, username string, password s
 	CONFIG.Verbose = true
 	CONFIG.ProxyRedirectList = strings.Split(skipHosts, ",")
 
-	CONFIG.DirectFunction = func() {
-		switchMode(DIRECT.Run(CONFIG.Verbose), "Direct Mode")
-	}
-	CONFIG.CascadeFunction = func() {
-		server := CASCADE.Run(CONFIG.Verbose, CONFIG.ProxyURL, CONFIG.Username, CONFIG.Password)
-		switchMode(server, "Cascade Mode")
-		HandleCustomProxies(CONFIG.ProxyRedirectList)
-	}
+	CONFIG.CascadeMode = true
 	CONFIG.CheckAddress = checkAddress
 	CONFIG.Health = time.Duration(healthTime) * time.Second
+
+	utils.Info.Println("Creating Server")
+	//switchMode(server, "Cascade Mode")
+	CurrentServer = CreateServer(CONFIG)
 }
 
 func HandleCustomProxies(list []string) {
@@ -104,11 +89,13 @@ func ChangeMode(selector bool) {
 		// switch to direct mode
 		utils.Info.Println("switch to: DirectMode")
 		CONFIG.CascadeMode = false
-		go CONFIG.DirectFunction()
+		DirectOverrideChan = true
+		//go CONFIG.DirectFunction()
 	} else if (!selector && !CONFIG.CascadeMode) || (!selector && CurrentServer == nil) {
 		// switch to cascade mode
 		utils.Info.Println("switch to: CascadeMode")
 		CONFIG.CascadeMode = true
-		go CONFIG.CascadeFunction()
+		DirectOverrideChan = false
+		//go CONFIG.CascadeFunction()
 	}
 }

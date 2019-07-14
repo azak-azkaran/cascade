@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/azak-azkaran/cascade/utils"
 	"os"
 	"strings"
@@ -8,25 +9,11 @@ import (
 	"time"
 )
 
-var cascade bool
-var direct bool
-
-func toggleCascade() {
-	cascade = !cascade
-}
-
-func toggleDirect() {
-	direct = !direct
-}
-
 func TestChangeMode(t *testing.T) {
+	fmt.Println("Running: TestChangeMode")
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
-	cascade = false
-	direct = false
 
 	CONFIG.CascadeMode = true
-	CONFIG.CascadeFunction = toggleCascade
-	CONFIG.DirectFunction = toggleDirect
 	CONFIG.ProxyURL = "something"
 	ChangeMode(true)
 	if CONFIG.CascadeMode {
@@ -34,8 +21,8 @@ func TestChangeMode(t *testing.T) {
 	}
 
 	time.Sleep(1 * time.Second)
-	if !direct {
-		t.Error("direct function was not called")
+	if !DirectOverrideChan {
+		t.Error("DirectOverride is active")
 	}
 
 	ChangeMode(false)
@@ -43,48 +30,44 @@ func TestChangeMode(t *testing.T) {
 		t.Error("Mode was not changed")
 	}
 	time.Sleep(1 * time.Second)
-	if !cascade {
-		t.Error("cascade function was not called")
+	if DirectOverrideChan {
+		t.Error("DirectOverride is not active")
 	}
-	CONFIG.CascadeFunction = nil
-	CONFIG.DirectFunction = nil
 	CONFIG.ProxyURL = ""
 }
 
 func TestModeSelection(t *testing.T) {
+	fmt.Println("Running: TestModeSelection")
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
-	cascade = false
-	direct = false
 
 	CONFIG.Verbose = true
 	CONFIG.CascadeMode = true
-	CONFIG.CascadeFunction = toggleCascade
-	CONFIG.DirectFunction = toggleDirect
 	CONFIG.ProxyURL = "something"
 	CONFIG.ProxyRedirectList = strings.Split("golang.org,youtube.com", ",")
 
 	ModeSelection("https://www.asda12313.de")
 	time.Sleep(1 * time.Second)
-	if !cascade {
-		t.Error("cascade function was not called")
+	if DirectOverrideChan {
+		t.Error("DirectOverride is active")
 	}
 
 	ModeSelection("https://www.google.de")
 	time.Sleep(1 * time.Second)
-	if !direct {
-		t.Error("direct function was not called")
+	if !DirectOverrideChan {
+		t.Error("DirectOverride is not active")
 	}
 
 	CONFIG = config{}
 }
 
 func TestCreateConfig(t *testing.T) {
+	fmt.Println("Running: TestCreateConfig")
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
 	CONFIG = config{}
 	CreateConfig("8888", "", "", "", "https://www.google.de", 5, "google,eclipse")
 
-	if CONFIG.CascadeFunction == nil {
-		t.Error("Cascade function was not created")
+	if CurrentServer == nil {
+		t.Error("Server was not created")
 	}
 
 	if len(CONFIG.ProxyRedirectList) != 2 {
@@ -95,6 +78,7 @@ func TestCreateConfig(t *testing.T) {
 }
 
 func TestHandleCustomProxies(t *testing.T) {
+	fmt.Println("Running: TestHandleCustomProxies")
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
 	list := strings.Split("eclipse,google->test:8888,azure->", ",")
 	HandleCustomProxies(list)
@@ -143,5 +127,4 @@ func TestHandleCustomProxies(t *testing.T) {
 			t.Error("Proxy redirect address does not match")
 		}
 	}
-
 }

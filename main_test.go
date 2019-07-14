@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/azak-azkaran/cascade/utils"
 	"io/ioutil"
 	"os"
@@ -11,7 +12,9 @@ import (
 )
 
 func TestGetConf(t *testing.T) {
+	fmt.Println("Running: TestGetConf")
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+
 	conf, _ := GetConf("./test/test.yml")
 
 	if conf.CheckAddress != "TestHealth" {
@@ -45,9 +48,10 @@ func TestGetConf(t *testing.T) {
 }
 
 func TestRun(t *testing.T) {
+	fmt.Println("Running: TestRun")
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
 
-	config := Conf{}
+	config := Yaml{}
 	config.HealthTime = 5
 	config.Username = "foo"
 	config.Password = "bar"
@@ -56,11 +60,14 @@ func TestRun(t *testing.T) {
 	config.CheckAddress = "https://google.de"
 
 	go Run(config)
-	CurrentServer = nil
 
 	time.Sleep(1 * time.Second)
 	if CurrentServer == nil {
 		t.Error("No Server was created")
+	}
+
+	if !DirectOverrideChan {
+		t.Error("Direct Override is not active")
 	}
 
 	resp, err := utils.GetResponse("http://localhost:8081", "https://www.google.de")
@@ -82,6 +89,7 @@ func TestRun(t *testing.T) {
 }
 
 func TestSetLogPath(t *testing.T) {
+	fmt.Println("Running: TestSetLogPath")
 	message := "message"
 	path := "testInfoBuffer"
 
@@ -123,13 +131,31 @@ func TestSetLogPath(t *testing.T) {
 
 }
 
-func Test_Main(t *testing.T) {
+func TestMain(t *testing.T) {
+	fmt.Println("Running: TestMain")
+	closeChan = false
 	go main()
 
 	time.Sleep(2 * time.Second)
-	if CurrentServer == nil {
-		t.Error("Server was not reset")
+	utils.Info.Println("calling HTTP")
+	resp, err := utils.GetResponse("http://localhost:8888", "http://www.google.de")
+	if err != nil {
+		t.Error("http test failed: ", err)
 	}
+	if resp == nil || resp.StatusCode != 200 {
+		t.Error("http test failed: ", resp)
+	}
+
+	utils.Info.Println("calling HTTPs")
+	resp, err = utils.GetResponse("http://localhost:8888", "https://www.google.de")
+	if err != nil {
+		t.Error("http test failed: ", err)
+	}
+	if resp == nil || resp.StatusCode != 200 {
+		t.Error("http test failed: ", resp)
+	}
+
+	utils.Info.Println("Closing")
 	stopChan <- syscall.SIGINT
 	time.Sleep(2 * time.Second)
 
@@ -139,5 +165,21 @@ func Test_Main(t *testing.T) {
 
 	if !closeChan {
 		t.Error("Server was not closed")
+	}
+}
+
+func TestExportConfiguration(t *testing.T) {
+	fmt.Println("Running: TestExportConfiguration")
+	// currently unsupported
+	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	conf, _ := GetConf("./test/test.yml")
+	json, err := ExportConfiguration(conf)
+	if err != nil {
+		t.Error("Error while creating JSON")
+	}
+
+	utils.Info.Println("JSON:\n", json)
+	if !strings.Contains(json, "Username") {
+		t.Error("Error checking json content")
 	}
 }

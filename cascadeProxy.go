@@ -24,8 +24,10 @@ type HostConfig struct {
 }
 
 var CASCADE cascadeProxy
+var DirectOverrideChan bool
 var LoginRequired bool
 var HostList cmap.ConcurrentMap = cmap.New()
+var cascadeMode bool = true
 
 const (
 	httpPrefix      = "http://"
@@ -48,24 +50,6 @@ func basicAuth(username, password string) string {
 	builder.WriteString(":")
 	builder.WriteString(password)
 	return base64.StdEncoding.EncodeToString([]byte(builder.String()))
-}
-
-func HandleDirectHttpRequest(req *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
-	var resp *http.Response
-	var err error
-	if req.URL.Scheme == "" {
-		resp, err = utils.GetResponse("", req.Host)
-	} else {
-		resp, err = utils.GetResponse("", req.URL.Scheme+"://"+req.Host)
-	}
-	if err != nil {
-		utils.Error.Println("Problem while trying direct connection: ", err)
-	}
-	if resp != nil {
-		return req, resp
-	} else {
-		return req, nil
-	}
 }
 
 func AddDifferentProxyConnection(host string, proxyAddr string) {
@@ -97,29 +81,6 @@ func AddDirectConnection(host string) {
 	AddDifferentProxyConnection(host, "")
 }
 
-func CustomConnectDial(proxyURL string, connectReqHandler func(req *http.Request), server *goproxy.ProxyHttpServer) func(network string, addr string) (net.Conn, error) {
-	return func(network string, addr string) (conn net.Conn, e error) {
-
-		for content := range HostList.IterBuffered() {
-			val := content.Val.(HostConfig)
-			if val.reg.MatchString(addr) {
-				utils.Info.Println("Matching Host found: ", addr, " for: ", val.regString)
-				utils.Info.Println("Regex: ", val.reg)
-
-				if len(val.proxyAddr) != 0 {
-					utils.Info.Println("Redirect to: ", val.proxyAddr)
-					f := server.NewConnectDialToProxyWithHandler(val.proxyAddr, connectReqHandler)
-					return f(network, addr)
-				}
-				utils.Info.Println("Using direct connection")
-				return net.DialTimeout(network, addr, 5*time.Second)
-			}
-		}
-		f := server.NewConnectDialToProxyWithHandler(proxyURL, connectReqHandler)
-		return f(network, addr)
-	}
-}
-
 func parseProxyUrl(proxyURL string) (*url.URL, error) {
 	if strings.HasPrefix(proxyURL, httpPrefix) {
 		return url.Parse(proxyURL)
@@ -128,27 +89,65 @@ func parseProxyUrl(proxyURL string) (*url.URL, error) {
 	}
 }
 
-func CustomProxy(proxyURL string) func(req *http.Request) (*url.URL, error) {
-	return func(reg *http.Request) (*url.URL, error) {
-		for content := range HostList.IterBuffered() {
-			val := content.Val.(HostConfig)
-			if val.reg.MatchString(reg.Host) {
-				utils.Info.Println("Matching Host found: ", reg.Host, " for: ", val.regString)
-				utils.Info.Println("Regex: ", val.reg)
+func directOverride() bool {
+	if DirectOverrideChan {
+		cascadeMode = false
+	} else {
+		cascadeMode = true
+	}
 
-				if len(val.proxyAddr) != 0 {
-					utils.Info.Println("with redirect to: ", val.proxyAddr)
-					f, err := parseProxyUrl(val.proxyAddr)
-					return f, err
-				} else {
-					utils.Info.Println("Using direct connection")
-					return nil, nil
-				}
+	return !cascadeMode
+}
+
+func directRedirect(Host string, proxyURL string) (bool, string) {
+	for content := range HostList.IterBuffered() {
+		val := content.Val.(HostConfig)
+		if val.reg.MatchString(Host) {
+			utils.Info.Println("Matching Host found: ", Host, " for: ", val.regString)
+			utils.Info.Println("Regex: ", val.reg)
+
+			if len(val.proxyAddr) != 0 {
+				utils.Info.Println("with redirect to: ", val.proxyAddr)
+				return false, val.proxyAddr
+			} else {
+				utils.Info.Println("Using direct connection")
+				return true, ""
 			}
 		}
+	}
+	return false, proxyURL
+}
 
-		f, err := parseProxyUrl(proxyURL)
+func CustomProxy(proxyURL string) func(req *http.Request) (*url.URL, error) {
+	return func(reg *http.Request) (*url.URL, error) {
+		if directOverride() {
+			utils.Info.Println("Using direct connection")
+			return nil, nil
+		}
+
+		directly, redirectAddr := directRedirect(reg.Host, proxyURL)
+		if directly {
+			return nil, nil
+		}
+
+		f, err := parseProxyUrl(redirectAddr)
 		return f, err
+	}
+}
+
+func CustomConnectDial(proxyURL string, connectReqHandler func(req *http.Request), server *goproxy.ProxyHttpServer) func(network string, addr string) (net.Conn, error) {
+	return func(network string, addr string) (conn net.Conn, e error) {
+		if directOverride() {
+			utils.Info.Println("Using direct connection")
+			return net.DialTimeout(network, addr, 5*time.Second)
+		}
+
+		directly, redirectAddr := directRedirect(addr, proxyURL)
+		if directly {
+			return net.DialTimeout(network, addr, 5*time.Second)
+		}
+		f := server.NewConnectDialToProxyWithHandler(redirectAddr, connectReqHandler)
+		return f(network, addr)
 	}
 }
 
@@ -157,6 +156,10 @@ func (cascadeProxy) Run(verbose bool, proxyURL string, username string, password
 	proxy.Verbose = verbose
 	proxy.Logger = utils.Info
 	proxy.KeepHeader = true
+
+	if !strings.HasPrefix(proxyURL, httpPrefix) {
+		proxyURL = httpPrefix + proxyURL
+	}
 
 	proxy.Tr.Proxy = CustomProxy(proxyURL)
 	var connectReqHandler func(req *http.Request)

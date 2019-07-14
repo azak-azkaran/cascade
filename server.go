@@ -6,6 +6,7 @@ import (
 	"github.com/azak-azkaran/cascade/utils"
 	"github.com/azak-azkaran/goproxy"
 	"net/http"
+	"syscall"
 	"time"
 )
 
@@ -17,19 +18,18 @@ var running = false
 
 // RunServer : Starts the Server which selects the Mode in which it should be running,
 func RunServer() {
-	counter := 5
-	for CurrentServer == nil {
-		utils.Warning.Println("Server was not created waiting for a one second")
-		time.Sleep(1 * time.Second)
-		counter = counter - 1
-		if counter <= 0 {
-			utils.Error.Println("Server was not created in time, going back to ModeSelection")
-			ModeSelection(CONFIG.CheckAddress)
-			utils.Info.Println("Resetting counter")
-			counter = 5
-		}
-	}
 	go func() {
+		counter := 5
+		for CurrentServer == nil {
+			utils.Warning.Println("Server was not created waiting for a one second")
+			time.Sleep(1 * time.Second)
+			counter = counter - 1
+			if counter <= 0 {
+				utils.Error.Println("Server was not created in time")
+				stopChan <- syscall.SIGINT
+			}
+		}
+
 		running = true
 		err := CurrentServer.ListenAndServe()
 		if err != nil {
@@ -41,6 +41,7 @@ func RunServer() {
 		}
 		running = false
 	}()
+	utils.Info.Println("Server started")
 }
 
 //ShutdownCurrentServer Shuts down the current server with a 1 Second timeout
@@ -75,8 +76,10 @@ func createServer(proxy *goproxy.ProxyHttpServer, addr string, port string) *htt
 }
 
 // CreateServer creates a proxy server on addr:port
-func CreateServer(proxy *goproxy.ProxyHttpServer, addr string, port string) *http.Server {
-	utils.Info.Println("Starting Proxy")
-	CurrentServer = createServer(proxy, addr, port)
+func CreateServer(config config) *http.Server {
+	utils.Info.Println("Creating Proxy on: localhost", ":", config.LocalPort)
+	proxy := CASCADE.Run(config.Verbose, config.ProxyURL, config.Username, config.Password)
+	HandleCustomProxies(config.ProxyRedirectList)
+	CurrentServer = createServer(proxy, "localhost", config.LocalPort)
 	return CurrentServer
 }

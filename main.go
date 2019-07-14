@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/azak-azkaran/cascade/utils"
@@ -11,7 +12,7 @@ import (
 	"time"
 )
 
-type Conf struct {
+type Yaml struct {
 	Username     string `yaml:"username"`
 	Password     string `yaml:"password"`
 	ProxyURL     string `yaml:"host"`
@@ -29,9 +30,18 @@ var stopChan = make(chan os.Signal, 2)
 // LogFile File for logs if log to file is active
 var LogFile *os.File
 
+func ExportConfiguration(config *Yaml) (string, error) {
+	bytes, err := json.Marshal(&config)
+	if err != nil {
+		utils.Error.Println("Error while creating JSON from Configuration: ", err)
+		return "", err
+	}
+	return string(bytes), nil
+}
+
 // GetConf reads the Configuration from a yaml file at @path
-func GetConf(path string) (*Conf, error) {
-	config := Conf{}
+func GetConf(path string) (*Yaml, error) {
+	config := Yaml{}
 	yamlFile, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("yamlFile.Get err   #%v ", err)
@@ -56,7 +66,7 @@ func GetConf(path string) (*Conf, error) {
 	return &config, nil
 }
 
-func Run(config Conf) {
+func Run(config Yaml) {
 	utils.Info.Println(config)
 	utils.Info.Println("Creating Configuration")
 	CreateConfig(config.LocalPort, config.ProxyURL, config.Username, config.Password, config.CheckAddress, int(config.HealthTime), config.HostList)
@@ -69,8 +79,11 @@ func Run(config Conf) {
 	utils.Info.Println("Skip Cascade for Hosts: ", CONFIG.ProxyRedirectList)
 
 	lastTime := time.Now()
-	utils.Info.Println("Starting Selection Process and Running Server")
+	utils.Info.Println("Starting Selection Process")
 	ModeSelection(CONFIG.CheckAddress)
+	utils.Info.Println("Starting Running Server")
+	RunServer()
+
 	for !closeChan {
 		currentDuration := time.Since(lastTime)
 		if currentDuration > CONFIG.Health {
@@ -79,7 +92,9 @@ func Run(config Conf) {
 			time.Sleep(CONFIG.Health)
 		}
 	}
+
 	if closeChan {
+		utils.Info.Println("Close was set")
 		ShutdownCurrentServer()
 	}
 }
@@ -94,8 +109,8 @@ func SetLogPath(path string) *os.File {
 	return buffer
 }
 
-func ParseCommandline() (*Conf, error) {
-	config := Conf{}
+func ParseCommandline() (*Yaml, error) {
+	config := Yaml{}
 	var configFile string
 	flag.StringVar(&config.Password, "password", "", "Password for authentication to a forward proxy")
 	flag.StringVar(&config.ProxyURL, "host", "", "Address of a forward proxy")
@@ -134,9 +149,11 @@ func cleanup() {
 
 func main() {
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	stopChan = make(chan os.Signal, 2)
 	signal.Notify(stopChan, os.Interrupt)
 	go func() {
 		<-stopChan
+		utils.Error.Println("Stop was called")
 		cleanup()
 		//os.Exit(1)
 	}()

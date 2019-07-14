@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/azak-azkaran/cascade/utils"
 	"net/http"
 	"os"
@@ -9,10 +10,13 @@ import (
 	"time"
 )
 
+var test_config config = config{LocalPort: "8082", Verbose: true}
+
 func TestCreateServer(t *testing.T) {
+	fmt.Println("Running: TestCreateServer")
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
 
-	testServer := CreateServer(DIRECT.Run(true), "localhost", "8082")
+	testServer := CreateServer(test_config) //CASCADE.Run(true, "", "", ""), "localhost", "8082")
 	go func() {
 		err := testServer.ListenAndServe()
 		if err != http.ErrServerClosed {
@@ -22,6 +26,7 @@ func TestCreateServer(t *testing.T) {
 	}()
 
 	time.Sleep(1 * time.Second)
+	DirectOverrideChan = true
 	resp, err := utils.GetResponse("http://localhost:8082", "http://www.google.de")
 	if err != nil {
 		t.Error("Error while client request over proxy server", err)
@@ -43,13 +48,19 @@ func TestCreateServer(t *testing.T) {
 	if resp != nil {
 		t.Error("No error received on shutdown server", resp.StatusCode)
 	}
+	DirectOverrideChan = false
 }
 
 func TestRunServer(t *testing.T) {
+	fmt.Println("Running: TestRunServer")
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
-	testServer := CreateServer(DIRECT.Run(true), "localhost", "8082")
+	testServer := CreateServer(test_config)
 	if running {
 		t.Error("Server already running")
+	}
+
+	if CurrentServer == nil {
+		t.Error("Server was not created")
 	}
 
 	RunServer()
@@ -57,51 +68,29 @@ func TestRunServer(t *testing.T) {
 	if !running {
 		t.Error("Server was not started")
 	}
+	DirectOverrideChan = true
 
 	resp, err := utils.GetResponse("http://localhost:8082", "https://www.google.de")
 	if err != nil {
 		t.Error("Error while client request over proxy server", err)
 	}
-	if resp.StatusCode != 200 {
-		t.Error("Error while client request over proxy server", resp.StatusCode)
+	if resp == nil || resp.StatusCode != 200 {
+		t.Error("Error while client request over proxy server", resp)
 	}
 
 	err = testServer.Shutdown(context.TODO())
-	if err != nil {
-		t.Error("Error while shutting down server, ", err)
-	}
-
-	running = false
-	cascade = false
-	CONFIG.CascadeFunction = func() {
-		cascade = true
-		testServer = CreateServer(DIRECT.Run(true), "localhost", "8082")
-		CurrentServer = testServer
-	}
-
-	CONFIG.DirectFunction = CONFIG.CascadeFunction
-	CurrentServer = nil
-	RunServer()
-
 	time.Sleep(1 * time.Second)
-	if !running {
-		t.Error("Server was not started")
-	}
-
-	if !cascade {
-		t.Error("Cascade function was not called")
-	}
-	err = testServer.Shutdown(context.TODO())
 	if err != nil {
 		t.Error("Error while shutting down server, ", err)
 	}
-	running = false
+	DirectOverrideChan = false
 	CurrentServer = nil
 }
 
 func TestShutdownCurrentServer(t *testing.T) {
+	fmt.Println("Running: TestShutdownCurrentServer")
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
-	CreateServer(DIRECT.Run(true), "localhost", "8082")
+	CreateServer(test_config)
 	if running {
 		t.Error("Server already running")
 	}
@@ -116,11 +105,12 @@ func TestShutdownCurrentServer(t *testing.T) {
 	}
 }
 
-func TestCreateServer2(t *testing.T) {
+func TestCreateBrokenServer(t *testing.T) {
+	fmt.Println("Running: TestCreateBrokenServer")
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
 	CreateConfig("8082", "", "", "", "https://www.google.de", 5, "golang.org,youtube.com")
 
-	go CONFIG.CascadeFunction()
+	RunServer()
 	time.Sleep(1 * time.Second)
 	if !running {
 		t.Error("Server was not started")

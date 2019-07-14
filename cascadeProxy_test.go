@@ -94,33 +94,6 @@ func TestCascadeProxy_Run(t *testing.T) {
 	time.Sleep(1 * time.Second)
 }
 
-func TestHandleDirect(t *testing.T) {
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
-	resp, err := utils.GetResponse("", "https://www.google.de")
-	if err != nil {
-		t.Error("Error while requesting google", err)
-	}
-	if resp == nil || resp.StatusCode != 200 {
-		t.Error("Google was not available")
-	}
-
-	req, err := http.NewRequest("GET", "https://www.google.de", nil)
-	if err != nil {
-		t.Error("Error while creating request to google", err)
-	}
-
-	_, resp = HandleDirectHttpRequest(req, nil)
-	if resp == nil || resp.StatusCode != 200 {
-		t.Error("Google was not available")
-	}
-
-	_, _ = http.NewRequest("GET", "http://www.google.de", nil)
-	_, resp = HandleDirectHttpRequest(req, nil)
-	if resp == nil || resp.StatusCode != 200 {
-		t.Error("Google was not available")
-	}
-}
-
 func TestAddDirectConnection(t *testing.T) {
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
 	middleProxy := CASCADE.Run(true, "http://localhost:8082", "", "")
@@ -299,4 +272,47 @@ func TestAddDifferentProxyConnection(t *testing.T) {
 	if err != nil {
 		t.Error("Error while shutting down middle Server, ", err)
 	}
+}
+
+func TestCascadeProxy_ModeSwitch(t *testing.T) {
+	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	middleProxy := CASCADE.Run(true, "http://localhost:8083", "", "")
+	var middleServer *http.Server
+
+	go func() {
+		utils.Init(os.Stdout, os.Stdout, os.Stderr)
+		utils.Info.Println("serving middle proxy server at localhost:8081")
+		middleServer = &http.Server{
+			Addr:    "localhost:8081",
+			Handler: middleProxy,
+		}
+		err := middleServer.ListenAndServe()
+		if err == nil {
+			t.Error("Error shutdown should always return error", err)
+		}
+	}()
+
+	time.Sleep(1 * time.Millisecond)
+	_, err := utils.GetResponse("http://localhost:8081", "https://www.google.de")
+	if err == nil {
+		t.Error("Error while requesting google", err)
+	}
+
+	utils.Info.Println("writing to DirectOverrideChan")
+	DirectOverrideChan = true
+	utils.Info.Println("Testing direct Override")
+	resp, err := utils.GetResponse("http://localhost:8081", "https://www.google.de")
+	if err != nil {
+		t.Error("Error while requesting google in directOverride", err)
+	}
+
+	if resp == nil || resp.StatusCode != 200 {
+		t.Error("Error while requesting google in directOverride", resp)
+	}
+
+	err = middleServer.Shutdown(context.TODO())
+	if err != nil {
+		t.Error("Error while shutting down middle Server, ", err)
+	}
+	DirectOverrideChan = false
 }
