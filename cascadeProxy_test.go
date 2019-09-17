@@ -54,7 +54,7 @@ func TestCascadeProxy_Run(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	utils.Info.Println("Start http Test")
-	client, err := utils.GetClient("http://localhost:8081")
+	client, err := utils.GetClient("http://localhost:8081", 2)
 	if err != nil {
 		t.Error("Error while client request over cascade", err)
 	}
