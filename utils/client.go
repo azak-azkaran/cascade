@@ -5,13 +5,14 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"time"
 )
 
 func GetResponse(proxyUrl string, requestUrl string) (*http.Response, error) {
 	return getResponse(proxyUrl, requestUrl, true)
 }
 
-func GetClient(proxyUrl string) (*http.Client, error) {
+func GetClient(proxyUrl string, timeout int) (*http.Client, error) {
 	var tr *http.Transport
 	if len(proxyUrl) > 0 {
 		u, err := url.Parse(proxyUrl)
@@ -30,11 +31,12 @@ func GetClient(proxyUrl string) (*http.Client, error) {
 			TLSNextProto: make(map[string]func(authority string, c *tls.Conn) http.RoundTripper),
 		}
 	}
-	return &http.Client{Transport: tr}, nil
+
+	return &http.Client{Transport: tr, Timeout: time.Duration(time.Duration(timeout) * time.Second)}, nil
 }
 
 func getResponse(proxyUrl string, requestUrl string, close bool) (*http.Response, error) {
-	client, _ := GetClient(proxyUrl)
+	client, _ := GetClient(proxyUrl, 2)
 	resp, err := client.Get(requestUrl)
 	if err != nil {
 		return resp, err
