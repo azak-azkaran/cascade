@@ -30,6 +30,7 @@ func ModeSelection(checkAddress string) {
 		success = false
 	} else {
 		if rep.StatusCode == 200 {
+			utils.Info.Println("Response was: ", rep.Status, "\t", rep.StatusCode)
 			success = true
 		} else {
 			utils.Info.Println("Response was: ", rep.Status)
