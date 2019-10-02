@@ -65,11 +65,12 @@ func shutdown(timeout time.Duration, server *http.Server) {
 	}
 }
 
-func createServer(proxy *goproxy.ProxyHttpServer, addr string, port string) *http.Server {
+func createServer(proxy *goproxy.ProxyHttpServer, addr string, port string, classic bool) *http.Server {
 	CreateRestEndpoint(addr, port)
 
 	var n *negroni.Negroni
-	if Config.verbose {
+	if classic {
+		utils.Info.Println("Starting Negroni in Classic Mode")
 		n = negroni.Classic()
 	} else {
 		n = negroni.New()
@@ -92,6 +93,6 @@ func CreateServer(config Yaml) *http.Server {
 	utils.Info.Println("Creating Proxy on: localhost", ":", config.LocalPort)
 	proxy := CASCADE.Run(config.verbose, config.ProxyURL, config.Username, config.Password)
 	HandleCustomProxies(config.proxyRedirectList)
-	CurrentServer = createServer(proxy, "localhost", config.LocalPort)
+	CurrentServer = createServer(proxy, "localhost", config.LocalPort, config.verbose)
 	return CurrentServer
 }
