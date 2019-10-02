@@ -75,7 +75,6 @@ func createServer(proxy *goproxy.ProxyHttpServer, addr string, port string) *htt
 		n = negroni.New()
 	}
 	n.UseFunc(HandleConfig)
-	//n.UseHandler(CreateRestRouter())
 	n.UseHandler(proxy)
 	return &http.Server{
 		Addr:    addr + ":" + port,

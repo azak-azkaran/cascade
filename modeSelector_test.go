@@ -64,7 +64,7 @@ func TestCreateConfig(t *testing.T) {
 	fmt.Println("Running: TestCreateConfig")
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
 	Config = Yaml{}
-	CreateConfig("8888", "", "", "", "https://www.google.de", 5, "google,eclipse")
+	CreateConfig("8888", "", "", "", "https://www.google.de", 5, "google,eclipse", "info")
 
 	if CurrentServer == nil {
 		t.Error("Server was not created")
@@ -88,7 +88,7 @@ func TestHandleCustomProxies(t *testing.T) {
 		t.Error("Proxy redirect to eclipse not added")
 	}
 
-	value := val.(HostConfig)
+	value := val.(hostConfig)
 	if in && !value.reg.MatchString("eclipse2017.nasa.gov") {
 		t.Error("Proxy redirect regex does not match: ", value.regString)
 	}
@@ -103,7 +103,7 @@ func TestHandleCustomProxies(t *testing.T) {
 	}
 
 	if in {
-		value = val.(HostConfig)
+		value = val.(hostConfig)
 		if !value.reg.MatchString("www.google.de") {
 			t.Error("Proxy redirect regex does not match: ", value.regString)
 		}
@@ -118,7 +118,7 @@ func TestHandleCustomProxies(t *testing.T) {
 	}
 
 	if in {
-		value = val.(HostConfig)
+		value = val.(hostConfig)
 
 		if !value.reg.MatchString("https://azure.microsoft.com/en-us/") {
 			t.Error("Proxy redirect regex does not match: ", value.regString)

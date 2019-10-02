@@ -24,18 +24,9 @@ type Yaml struct {
 	proxyRedirectList []string
 	health            time.Duration
 	verbose           bool
-	CascadeMode       bool `yaml:"CascadeMode"`
+	CascadeMode       bool   `yaml:"CascadeMode"`
+	Log               string `yaml:"Log"`
 }
-
-//type config struct {
-//	CascadeMode  bool   `json:"CascadeMode"`
-//	Username     string `json:"Username"`
-//	Password     string `json:"Password"`
-//	ProxyURL     string `json:"ProxyURL"`
-//	LocalPort    string
-//	Verbose      bool
-//	CheckAddress string `json:"CheckAddress"`
-//}
 
 var Config Yaml
 
@@ -66,6 +57,10 @@ func GetConf(path string) (*Yaml, error) {
 		config.CheckAddress = "https://www.google.de"
 	}
 
+	if len(config.Log) == 0 {
+		config.Log = "WARNING"
+	}
+
 	if config.HealthTime == 0 {
 		config.HealthTime = 5
 	}
@@ -73,12 +68,28 @@ func GetConf(path string) (*Yaml, error) {
 	return &config, nil
 }
 
-func CreateConfig(localPort string, proxyUrl string, username string, password string, checkAddress string, healthTime int, skipHosts string) {
+func CreateConfig(localPort string, proxyUrl string, username string, password string, checkAddress string, healthTime int, skipHosts string, logLevel string) {
 	Config.LocalPort = localPort
 	Config.ProxyURL = proxyUrl
 	Config.Username = username
 	Config.Password = password
-	Config.verbose = true
+
+	switch strings.ToUpper(logLevel) {
+	case "INFO":
+		Config.Log = "INFO"
+		Config.verbose = true
+		utils.EnableInfo()
+		break
+	case "ERROR":
+		Config.Log = "ERROR"
+		Config.verbose = false
+		break
+	case "WARNING":
+	default:
+		Config.Log = "WARNING"
+		Config.verbose = true
+	}
+
 	Config.proxyRedirectList = strings.Split(skipHosts, ",")
 
 	Config.CascadeMode = true
@@ -86,14 +97,13 @@ func CreateConfig(localPort string, proxyUrl string, username string, password s
 	Config.health = time.Duration(healthTime) * time.Second
 
 	utils.Info.Println("Creating Server")
-	//switchMode(server, "Cascade Mode")
 	CurrentServer = CreateServer(Config)
 }
 
 func Run(config Yaml) {
 	utils.Info.Println(config)
 	utils.Info.Println("Creating Configuration")
-	CreateConfig(config.LocalPort, config.ProxyURL, config.Username, config.Password, config.CheckAddress, int(config.HealthTime), config.HostList)
+	CreateConfig(config.LocalPort, config.ProxyURL, config.Username, config.Password, config.CheckAddress, int(config.HealthTime), config.HostList, config.Log)
 	utils.Info.Println("Starting Proxy with the following flags:")
 	utils.Info.Println("Username: ", Config.Username)
 	utils.Info.Println("Password: ", Config.Password)
@@ -101,6 +111,7 @@ func Run(config Yaml) {
 	utils.Info.Println("Health Address: ", Config.CheckAddress)
 	utils.Info.Println("Health Time: ", Config.health)
 	utils.Info.Println("Skip Cascade for Hosts: ", Config.proxyRedirectList)
+	utils.Info.Println("Log Level: ", Config.Log)
 
 	lastTime := time.Now()
 	utils.Info.Println("Starting Selection Process")
@@ -150,6 +161,7 @@ func ParseCommandline() (*Yaml, error) {
 	flag.StringVar(&config.HostList, "host-list", "", "Comma Separated List of Host for which DirectMode is used in Cascade Mode")
 	flag.StringVar(&config.LogPath, "log-path", "", "Path to a file to write Log Messages to")
 	flag.StringVar(&configFile, "config", "", "Path to config yaml file. If set all other command line parameters will be ignored")
+	flag.StringVar(&config.Log, "log", "WARNING", "Log level INFO, WARNING, ERROR")
 	ver := flag.Bool("version", false, "prints out the version")
 	flag.Parse()
 
@@ -177,14 +189,12 @@ func cleanup() {
 }
 
 func main() {
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
 	stopChan = make(chan os.Signal, 2)
 	signal.Notify(stopChan, os.Interrupt)
 	go func() {
 		<-stopChan
 		utils.Error.Println("Stop was called")
 		cleanup()
-		//os.Exit(1)
 	}()
 	config, err := ParseCommandline()
 	if err != nil {

@@ -16,7 +16,7 @@ import (
 type cascadeProxy struct {
 }
 
-type HostConfig struct {
+type hostConfig struct {
 	addr      string
 	reg       *regexp.Regexp
 	proxyAddr string
@@ -59,10 +59,10 @@ func AddDifferentProxyConnection(host string, proxyAddr string) {
 		return
 	}
 
-	var value HostConfig
+	var value hostConfig
 	val, ok := HostList.Get(proxyAddr)
 	if ok {
-		value = val.(HostConfig)
+		value = val.(hostConfig)
 		value.regString += "|"
 	}
 
@@ -102,9 +102,9 @@ func directOverride() bool {
 
 func directRedirect(Host string, proxyURL string) (bool, string) {
 	for content := range HostList.IterBuffered() {
-		val := content.Val.(HostConfig)
+		val := content.Val.(hostConfig)
 		if val.reg.MatchString(Host) {
-			utils.Info.Println("Matching Host found: ", Host, " for: ", val.regString)
+			utils.Warning.Println("Matching Host found: ", Host, " for: ", val.regString)
 			utils.Info.Println("Regex: ", val.reg)
 
 			if len(val.proxyAddr) != 0 {

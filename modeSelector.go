@@ -26,7 +26,7 @@ func ModeSelection(checkAddress string) {
 	utils.Info.Println("Running check on: ", checkAddress)
 	rep, err := utils.GetResponse("", checkAddress)
 	if err != nil {
-		utils.Error.Println("Error while checking,", checkAddress, " , ", err)
+		utils.Info.Println("Error while checking,", checkAddress, " , ", err)
 		success = false
 	} else {
 		if rep.StatusCode == 200 {
@@ -53,13 +53,13 @@ func ChangeMode(selector bool) {
 			utils.Error.Println("ProxyURL was not set so staying in DirectMode")
 		}
 		// switch to direct mode
-		utils.Info.Println("switch to: DirectMode")
+		utils.Warning.Println("switch to: DirectMode")
 		Config.CascadeMode = false
 		DirectOverrideChan = true
 		//go Config.DirectFunction()
 	} else if (!selector && !Config.CascadeMode) || (!selector && CurrentServer == nil) {
 		// switch to cascade mode
-		utils.Info.Println("switch to: CascadeMode")
+		utils.Warning.Println("switch to: CascadeMode")
 		Config.CascadeMode = true
 		DirectOverrideChan = false
 		//go Config.CascadeFunction()

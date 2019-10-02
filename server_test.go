@@ -108,7 +108,7 @@ func TestShutdownCurrentServer(t *testing.T) {
 func TestCreateBrokenServer(t *testing.T) {
 	fmt.Println("Running: TestCreateBrokenServer")
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
-	CreateConfig("8082", "", "", "", "https://www.google.de", 5, "golang.org,youtube.com")
+	CreateConfig("8082", "", "", "", "https://www.google.de", 5, "golang.org,youtube.com", "info")
 
 	RunServer()
 	time.Sleep(1 * time.Second)
