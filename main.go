@@ -107,7 +107,7 @@ func CreateConfig(localPort string, proxyUrl string, username string, password s
 func Run(config Yaml) {
 	utils.Warning.Println("Creating Configuration")
 	CreateConfig(config.LocalPort, config.ProxyURL, config.Username, config.Password, config.CheckAddress, int(config.HealthTime), config.HostList, config.Log)
-	utils.Warning.Println(config)
+	utils.Info.Println(config)
 	utils.Warning.Println("Starting Proxy with the following flags:")
 	utils.Warning.Println("Username: ", Config.Username)
 	utils.Warning.Println("Password: ", Config.Password)
