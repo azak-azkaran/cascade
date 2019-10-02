@@ -82,12 +82,21 @@ func CreateConfig(localPort string, proxyUrl string, username string, password s
 	case "ERROR":
 		Config.Log = "ERROR"
 		Config.verbose = false
+		utils.DisableInfo()
+		utils.DisableWarning()
 		utils.EnableError()
 		break
 	case "WARNING":
+		Config.Log = "WARNING"
+		Config.verbose = true
+		utils.DisableInfo()
+		utils.EnableWarning()
+		utils.EnableError()
+		break
 	default:
 		Config.Log = "WARNING"
 		Config.verbose = true
+		utils.DisableInfo()
 		utils.EnableWarning()
 		utils.EnableError()
 	}
@@ -103,8 +112,8 @@ func CreateConfig(localPort string, proxyUrl string, username string, password s
 }
 
 func Run(config Yaml) {
-	utils.Info.Println(config)
-	utils.Info.Println("Creating Configuration")
+	utils.Warning.Println(config)
+	utils.Warning.Println("Creating Configuration")
 	CreateConfig(config.LocalPort, config.ProxyURL, config.Username, config.Password, config.CheckAddress, int(config.HealthTime), config.HostList, config.Log)
 	utils.Warning.Println("Starting Proxy with the following flags:")
 	utils.Warning.Println("Username: ", Config.Username)
