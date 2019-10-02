@@ -34,9 +34,6 @@ var version = "undefined"
 var closeChan bool
 var stopChan = make(chan os.Signal, 2)
 
-// LogFile File for logs if log to file is active
-var LogFile *os.File
-
 // GetConf reads the Configuration from a yaml file at @path
 func GetConf(path string) (*Yaml, error) {
 	config := Yaml{}
@@ -139,16 +136,6 @@ func Run(config Yaml) {
 	}
 }
 
-func SetLogPath(path string) *os.File {
-	buffer, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		utils.Error.Println("Error while opining Log file:", err)
-		return nil
-	}
-	utils.Init(buffer, buffer, buffer)
-	return buffer
-}
-
 func ParseCommandline() (*Yaml, error) {
 	config := Yaml{}
 	var configFile string
@@ -177,18 +164,13 @@ func ParseCommandline() (*Yaml, error) {
 func cleanup() {
 	ShutdownCurrentServer()
 	closeChan = true
-	if LogFile != nil {
-		err := LogFile.Close()
-		if err != nil {
-			utils.Error.Println("Error while closing LogFile Pointer: ", err)
-		}
-	}
 
 	time.Sleep(1 * time.Second)
 	utils.Info.Println("Happy Death")
 }
 
 func main() {
+	utils.Init(os.Stdout, os.Stdout, os.Stderr)
 	stopChan = make(chan os.Signal, 2)
 	signal.Notify(stopChan, os.Interrupt)
 	go func() {

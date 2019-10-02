@@ -2,6 +2,9 @@ package utils
 
 import (
 	"bytes"
+	"fmt"
+	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 )
@@ -39,4 +42,47 @@ func TestInit(t *testing.T) {
 	if strings.Contains(s, "INFO") {
 		t.Errorf("ERROR Buffer does contain INFO keyword\n%s", s)
 	}
+}
+
+func TestSetLogPath(t *testing.T) {
+	fmt.Println("Running: TestSetLogPath")
+	message := "message"
+	path := "testInfoBuffer"
+
+	buffer := SetLogPath(path)
+	LogFile = buffer
+
+	Info.Println(message)
+	Warning.Println(message)
+	Error.Println(message)
+
+	err := LogFile.Close()
+	if err != nil {
+		t.Errorf("%s could not be closed: %s", path, err)
+	}
+	dat, err := ioutil.ReadFile(path)
+	if err != nil {
+		t.Errorf("error opening file: %v", err)
+	}
+
+	m := string(dat)
+	if !strings.Contains(m, message) {
+		t.Error("File does not contain message")
+	}
+
+	if !strings.Contains(m, "INFO") {
+		t.Error("File does not contain INFO message")
+	}
+	if !strings.Contains(m, "WARNING") {
+		t.Error("File does not contain WARNING message: ", m)
+	}
+	if !strings.Contains(m, "ERROR") {
+		t.Error("File does not contain ERROR message")
+	}
+
+	err = os.Remove(path)
+	if err != nil {
+		t.Errorf("%s could not be deleted", path)
+	}
+
 }

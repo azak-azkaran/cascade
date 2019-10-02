@@ -3,9 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/azak-azkaran/cascade/utils"
-	"io/ioutil"
 	"os"
-	"strings"
 	"syscall"
 	"testing"
 	"time"
@@ -86,49 +84,6 @@ func TestRun(t *testing.T) {
 	if CurrentServer != nil {
 		t.Error("Server was not created")
 	}
-}
-
-func TestSetLogPath(t *testing.T) {
-	fmt.Println("Running: TestSetLogPath")
-	message := "message"
-	path := "testInfoBuffer"
-
-	buffer := SetLogPath(path)
-	LogFile = buffer
-
-	utils.Info.Println(message)
-	utils.Warning.Println(message)
-	utils.Error.Println(message)
-
-	err := LogFile.Close()
-	if err != nil {
-		t.Errorf("%s could not be closed: %s", path, err)
-	}
-	dat, err := ioutil.ReadFile(path)
-	if err != nil {
-		t.Errorf("error opening file: %v", err)
-	}
-
-	m := string(dat)
-	if !strings.Contains(m, message) {
-		t.Error("File does not contain message")
-	}
-
-	if !strings.Contains(m, "INFO") {
-		t.Error("File does not contain INFO message")
-	}
-	if !strings.Contains(m, "WARNING") {
-		t.Error("File does not contain WARNING message")
-	}
-	if !strings.Contains(m, "ERROR") {
-		t.Error("File does not contain ERROR message")
-	}
-
-	err = os.Remove(path)
-	if err != nil {
-		t.Errorf("%s could not be deleted", path)
-	}
-
 }
 
 func TestMain(t *testing.T) {

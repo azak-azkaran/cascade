@@ -15,6 +15,8 @@ var (
 	infoWriter    io.Writer   = os.Stdout
 	warningWriter io.Writer   = os.Stdout
 	errorWriter   io.Writer   = os.Stderr
+	// LogFile File for logs if log to file is active
+	LogFile *os.File
 )
 
 func Init(
@@ -25,7 +27,7 @@ func Init(
 	infoWriter = infoHandle
 	EnableInfo()
 
-	warningWriter = warningWriter
+	warningWriter = warningHandle
 	EnableWarning()
 
 	errorWriter = errorHandle
@@ -64,4 +66,23 @@ func DisableWarning() {
 
 func DisableError() {
 	Error = disableLogger()
+}
+
+func SetLogPath(path string) *os.File {
+	buffer, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		Error.Println("Error while opining Log file:", err)
+		return nil
+	}
+	Init(buffer, buffer, buffer)
+	return buffer
+}
+
+func Close() {
+	if LogFile != nil {
+		err := LogFile.Close()
+		if err != nil {
+			Error.Println("Error while closing LogFile Pointer: ", err)
+		}
+	}
 }
