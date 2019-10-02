@@ -76,15 +76,20 @@ func CreateConfig(localPort string, proxyUrl string, username string, password s
 		Config.Log = "INFO"
 		Config.verbose = true
 		utils.EnableInfo()
+		utils.EnableWarning()
+		utils.EnableError()
 		break
 	case "ERROR":
 		Config.Log = "ERROR"
 		Config.verbose = false
+		utils.EnableError()
 		break
 	case "WARNING":
 	default:
 		Config.Log = "WARNING"
 		Config.verbose = true
+		utils.EnableWarning()
+		utils.EnableError()
 	}
 
 	Config.proxyRedirectList = strings.Split(skipHosts, ",")
@@ -101,14 +106,14 @@ func Run(config Yaml) {
 	utils.Info.Println(config)
 	utils.Info.Println("Creating Configuration")
 	CreateConfig(config.LocalPort, config.ProxyURL, config.Username, config.Password, config.CheckAddress, int(config.HealthTime), config.HostList, config.Log)
-	utils.Info.Println("Starting Proxy with the following flags:")
-	utils.Info.Println("Username: ", Config.Username)
-	utils.Info.Println("Password: ", Config.Password)
-	utils.Info.Println("ProxyUrl: ", Config.ProxyURL)
-	utils.Info.Println("Health Address: ", Config.CheckAddress)
-	utils.Info.Println("Health Time: ", Config.health)
-	utils.Info.Println("Skip Cascade for Hosts: ", Config.proxyRedirectList)
-	utils.Info.Println("Log Level: ", Config.Log)
+	utils.Warning.Println("Starting Proxy with the following flags:")
+	utils.Warning.Println("Username: ", Config.Username)
+	utils.Warning.Println("Password: ", Config.Password)
+	utils.Warning.Println("ProxyUrl: ", Config.ProxyURL)
+	utils.Warning.Println("Health Address: ", Config.CheckAddress)
+	utils.Warning.Println("Health Time: ", Config.health)
+	utils.Warning.Println("Skip Cascade for Hosts: ", Config.proxyRedirectList)
+	utils.Warning.Println("Log Level: ", Config.Log)
 
 	lastTime := time.Now()
 	utils.Info.Println("Starting Selection Process")
