@@ -78,21 +78,14 @@ func CreateConfig(localPort string, proxyUrl string, username string, password s
 		utils.EnableInfo()
 		utils.EnableWarning()
 		utils.EnableError()
-		break
 	case "ERROR":
 		Config.Log = "ERROR"
 		Config.verbose = false
 		utils.DisableInfo()
 		utils.DisableWarning()
 		utils.EnableError()
-		break
 	case "WARNING":
-		Config.Log = "WARNING"
-		Config.verbose = true
-		utils.DisableInfo()
-		utils.EnableWarning()
-		utils.EnableError()
-		break
+		fallthrough
 	default:
 		Config.Log = "WARNING"
 		Config.verbose = true
