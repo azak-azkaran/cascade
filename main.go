@@ -25,7 +25,7 @@ type Yaml struct {
 	health            time.Duration
 	verbose           bool
 	CascadeMode       bool   `yaml:"CascadeMode"`
-	Log               string `yaml:"Log"`
+	Log               string `yaml:"log"`
 }
 
 var Config Yaml
