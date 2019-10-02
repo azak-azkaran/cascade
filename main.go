@@ -115,10 +115,6 @@ func Run(config Yaml) {
 	ModeSelection(Config.CheckAddress)
 	utils.Info.Println("Starting Running Server")
 
-	if !config.verbose {
-		utils.DisableInfo()
-	}
-
 	RunServer()
 
 	for !closeChan {
