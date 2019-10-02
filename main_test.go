@@ -167,19 +167,3 @@ func TestMain(t *testing.T) {
 		t.Error("Server was not closed")
 	}
 }
-
-func TestExportConfiguration(t *testing.T) {
-	fmt.Println("Running: TestExportConfiguration")
-	// currently unsupported
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
-	conf, _ := GetConf("./test/test.yml")
-	json, err := ExportConfiguration(conf)
-	if err != nil {
-		t.Error("Error while creating JSON")
-	}
-
-	utils.Info.Println("JSON:\n", json)
-	if !strings.Contains(json, "Username") {
-		t.Error("Error checking json content")
-	}
-}

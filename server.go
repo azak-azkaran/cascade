@@ -5,8 +5,10 @@ import (
 	"crypto/tls"
 	"github.com/azak-azkaran/cascade/utils"
 	"github.com/azak-azkaran/goproxy"
+	"github.com/urfave/negroni"
 	"net/http"
 	"syscall"
+
 	"time"
 )
 
@@ -64,9 +66,20 @@ func shutdown(timeout time.Duration, server *http.Server) {
 }
 
 func createServer(proxy *goproxy.ProxyHttpServer, addr string, port string) *http.Server {
+	CreateRestEndpoint(addr, port)
+
+	var n *negroni.Negroni
+	if Config.verbose {
+		n = negroni.Classic()
+	} else {
+		n = negroni.New()
+	}
+	n.UseFunc(HandleConfig)
+	//n.UseHandler(CreateRestRouter())
+	n.UseHandler(proxy)
 	return &http.Server{
 		Addr:    addr + ":" + port,
-		Handler: proxy,
+		Handler: n,
 		// Disable HTTP/2.
 		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
 		ReadTimeout:  5 * time.Second,
@@ -76,10 +89,10 @@ func createServer(proxy *goproxy.ProxyHttpServer, addr string, port string) *htt
 }
 
 // CreateServer creates a proxy server on addr:port
-func CreateServer(config config) *http.Server {
+func CreateServer(config Yaml) *http.Server {
 	utils.Info.Println("Creating Proxy on: localhost", ":", config.LocalPort)
-	proxy := CASCADE.Run(config.Verbose, config.ProxyURL, config.Username, config.Password)
-	HandleCustomProxies(config.ProxyRedirectList)
+	proxy := CASCADE.Run(config.verbose, config.ProxyURL, config.Username, config.Password)
+	HandleCustomProxies(config.proxyRedirectList)
 	CurrentServer = createServer(proxy, "localhost", config.LocalPort)
 	return CurrentServer
 }

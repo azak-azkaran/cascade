@@ -28,6 +28,7 @@ var DirectOverrideChan bool
 var LoginRequired bool
 var HostList cmap.ConcurrentMap = cmap.New()
 var cascadeMode bool = true
+var DialTimeout time.Duration = 5 * time.Second
 
 const (
 	httpPrefix      = "http://"
@@ -121,7 +122,6 @@ func directRedirect(Host string, proxyURL string) (bool, string) {
 func CustomProxy(proxyURL string) func(req *http.Request) (*url.URL, error) {
 	return func(reg *http.Request) (*url.URL, error) {
 		if directOverride() {
-			utils.Info.Println("Using direct connection")
 			return nil, nil
 		}
 
@@ -138,13 +138,12 @@ func CustomProxy(proxyURL string) func(req *http.Request) (*url.URL, error) {
 func CustomConnectDial(proxyURL string, connectReqHandler func(req *http.Request), server *goproxy.ProxyHttpServer) func(network string, addr string) (net.Conn, error) {
 	return func(network string, addr string) (conn net.Conn, e error) {
 		if directOverride() {
-			utils.Info.Println("Using direct connection")
-			return net.DialTimeout(network, addr, 5*time.Second)
+			return net.DialTimeout(network, addr, DialTimeout)
 		}
 
 		directly, redirectAddr := directRedirect(addr, proxyURL)
 		if directly {
-			return net.DialTimeout(network, addr, 5*time.Second)
+			return net.DialTimeout(network, addr, DialTimeout)
 		}
 		f := server.NewConnectDialToProxyWithHandler(redirectAddr, connectReqHandler)
 		return f(network, addr)
@@ -154,7 +153,8 @@ func CustomConnectDial(proxyURL string, connectReqHandler func(req *http.Request
 func (cascadeProxy) Run(verbose bool, proxyURL string, username string, password string) *goproxy.ProxyHttpServer {
 	proxy := goproxy.NewProxyHttpServer()
 	proxy.Verbose = verbose
-	proxy.Logger = utils.Info
+	//proxy.Logger = utils.Info
+	proxy.Logger = utils.Discard
 	proxy.KeepHeader = true
 
 	if !strings.HasPrefix(proxyURL, httpPrefix) {

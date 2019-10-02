@@ -2,6 +2,7 @@ package utils
 
 import (
 	"io"
+	"io/ioutil"
 	"log"
 )
 
@@ -9,6 +10,7 @@ var (
 	Info    *log.Logger
 	Warning *log.Logger
 	Error   *log.Logger
+	Discard *log.Logger
 )
 
 func Init(
@@ -27,4 +29,6 @@ func Init(
 	Error = log.New(errorHandle,
 		"ERROR: ",
 		log.Ldate|log.Ltime|log.Lshortfile)
+
+	Discard = log.New(ioutil.Discard, "", 0)
 }

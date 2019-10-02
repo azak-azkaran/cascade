@@ -13,10 +13,10 @@ func TestChangeMode(t *testing.T) {
 	fmt.Println("Running: TestChangeMode")
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
 
-	CONFIG.CascadeMode = true
-	CONFIG.ProxyURL = "something"
+	Config.CascadeMode = true
+	Config.ProxyURL = "something"
 	ChangeMode(true)
-	if CONFIG.CascadeMode {
+	if Config.CascadeMode {
 		t.Error("Mode was not changed")
 	}
 
@@ -26,24 +26,24 @@ func TestChangeMode(t *testing.T) {
 	}
 
 	ChangeMode(false)
-	if !CONFIG.CascadeMode {
+	if !Config.CascadeMode {
 		t.Error("Mode was not changed")
 	}
 	time.Sleep(1 * time.Second)
 	if DirectOverrideChan {
 		t.Error("DirectOverride is not active")
 	}
-	CONFIG.ProxyURL = ""
+	Config.ProxyURL = ""
 }
 
 func TestModeSelection(t *testing.T) {
 	fmt.Println("Running: TestModeSelection")
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
 
-	CONFIG.Verbose = true
-	CONFIG.CascadeMode = true
-	CONFIG.ProxyURL = "something"
-	CONFIG.ProxyRedirectList = strings.Split("golang.org,youtube.com", ",")
+	Config.verbose = true
+	Config.CascadeMode = true
+	Config.ProxyURL = "something"
+	Config.proxyRedirectList = strings.Split("golang.org,youtube.com", ",")
 
 	ModeSelection("https://www.asda12313.de")
 	time.Sleep(1 * time.Second)
@@ -57,24 +57,24 @@ func TestModeSelection(t *testing.T) {
 		t.Error("DirectOverride is not active")
 	}
 
-	CONFIG = config{}
+	Config = Yaml{}
 }
 
 func TestCreateConfig(t *testing.T) {
 	fmt.Println("Running: TestCreateConfig")
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
-	CONFIG = config{}
+	Config = Yaml{}
 	CreateConfig("8888", "", "", "", "https://www.google.de", 5, "google,eclipse")
 
 	if CurrentServer == nil {
 		t.Error("Server was not created")
 	}
 
-	if len(CONFIG.ProxyRedirectList) != 2 {
+	if len(Config.proxyRedirectList) != 2 {
 		t.Error("SkipHosts was not split correctly")
 	}
 
-	CONFIG = config{}
+	Config = Yaml{}
 }
 
 func TestHandleCustomProxies(t *testing.T) {

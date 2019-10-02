@@ -118,7 +118,7 @@ func TestAddDirectConnection(t *testing.T) {
 		t.Error("Error while requesting google", err)
 	}
 
-	CONFIG.LocalPort = "8801"
+	Config.LocalPort = "8801"
 	AddDirectConnection("google")
 	resp, err := utils.GetResponse("http://localhost:8081", "https://www.google.de")
 	if err != nil {
@@ -187,7 +187,7 @@ func TestAddDifferentProxyConnection(t *testing.T) {
 	}()
 
 	time.Sleep(1 * time.Second)
-	CONFIG.LocalPort = "8801"
+	Config.LocalPort = "8801"
 	utils.Info.Println("starting HTTPS test to fail")
 	_, err := utils.GetResponse("http://localhost:8081", "https://www.google.de")
 	if err == nil {

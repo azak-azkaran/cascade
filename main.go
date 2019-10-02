@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/azak-azkaran/cascade/utils"
@@ -9,19 +8,36 @@ import (
 	"io/ioutil"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 )
 
 type Yaml struct {
-	Username     string `yaml:"username"`
-	Password     string `yaml:"password"`
-	ProxyURL     string `yaml:"host"`
-	LocalPort    string `yaml:"port"`
-	CheckAddress string `yaml:"health"`
-	HealthTime   int64  `yaml:"health-time"`
-	HostList     string `yaml:"host-list"`
-	LogPath      string `yaml:"log-path"`
+	Username          string `yaml:"username"`
+	Password          string `yaml:"password"`
+	ProxyURL          string `yaml:"host"`
+	LocalPort         string `yaml:"port"`
+	CheckAddress      string `yaml:"health"`
+	HealthTime        int64  `yaml:"health-time"`
+	HostList          string `yaml:"host-list"`
+	LogPath           string `yaml:"log-path"`
+	proxyRedirectList []string
+	health            time.Duration
+	verbose           bool
+	CascadeMode       bool `yaml:"CascadeMode"`
 }
+
+//type config struct {
+//	CascadeMode  bool   `json:"CascadeMode"`
+//	Username     string `json:"Username"`
+//	Password     string `json:"Password"`
+//	ProxyURL     string `json:"ProxyURL"`
+//	LocalPort    string
+//	Verbose      bool
+//	CheckAddress string `json:"CheckAddress"`
+//}
+
+var Config Yaml
 
 var version = "undefined"
 var closeChan bool
@@ -29,15 +45,6 @@ var stopChan = make(chan os.Signal, 2)
 
 // LogFile File for logs if log to file is active
 var LogFile *os.File
-
-func ExportConfiguration(config *Yaml) (string, error) {
-	bytes, err := json.Marshal(&config)
-	if err != nil {
-		utils.Error.Println("Error while creating JSON from Configuration: ", err)
-		return "", err
-	}
-	return string(bytes), nil
-}
 
 // GetConf reads the Configuration from a yaml file at @path
 func GetConf(path string) (*Yaml, error) {
@@ -66,30 +73,47 @@ func GetConf(path string) (*Yaml, error) {
 	return &config, nil
 }
 
+func CreateConfig(localPort string, proxyUrl string, username string, password string, checkAddress string, healthTime int, skipHosts string) {
+	Config.LocalPort = localPort
+	Config.ProxyURL = proxyUrl
+	Config.Username = username
+	Config.Password = password
+	Config.verbose = true
+	Config.proxyRedirectList = strings.Split(skipHosts, ",")
+
+	Config.CascadeMode = true
+	Config.CheckAddress = checkAddress
+	Config.health = time.Duration(healthTime) * time.Second
+
+	utils.Info.Println("Creating Server")
+	//switchMode(server, "Cascade Mode")
+	CurrentServer = CreateServer(Config)
+}
+
 func Run(config Yaml) {
 	utils.Info.Println(config)
 	utils.Info.Println("Creating Configuration")
 	CreateConfig(config.LocalPort, config.ProxyURL, config.Username, config.Password, config.CheckAddress, int(config.HealthTime), config.HostList)
 	utils.Info.Println("Starting Proxy with the following flags:")
-	utils.Info.Println("Username: ", CONFIG.Username)
-	utils.Info.Println("Password: ", CONFIG.Password)
-	utils.Info.Println("ProxyUrl: ", CONFIG.ProxyURL)
-	utils.Info.Println("Health Address: ", CONFIG.CheckAddress)
-	utils.Info.Println("Health Time: ", CONFIG.Health)
-	utils.Info.Println("Skip Cascade for Hosts: ", CONFIG.ProxyRedirectList)
+	utils.Info.Println("Username: ", Config.Username)
+	utils.Info.Println("Password: ", Config.Password)
+	utils.Info.Println("ProxyUrl: ", Config.ProxyURL)
+	utils.Info.Println("Health Address: ", Config.CheckAddress)
+	utils.Info.Println("Health Time: ", Config.health)
+	utils.Info.Println("Skip Cascade for Hosts: ", Config.proxyRedirectList)
 
 	lastTime := time.Now()
 	utils.Info.Println("Starting Selection Process")
-	ModeSelection(CONFIG.CheckAddress)
+	ModeSelection(Config.CheckAddress)
 	utils.Info.Println("Starting Running Server")
 	RunServer()
 
 	for !closeChan {
 		currentDuration := time.Since(lastTime)
-		if currentDuration > CONFIG.Health {
+		if currentDuration > Config.health {
 			lastTime = time.Now()
-			go ModeSelection(CONFIG.CheckAddress)
-			time.Sleep(CONFIG.Health)
+			go ModeSelection(Config.CheckAddress)
+			time.Sleep(Config.health)
 		}
 	}
 

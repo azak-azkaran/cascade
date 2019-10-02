@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-var test_config config = config{LocalPort: "8082", Verbose: true}
+var test_config Yaml = Yaml{LocalPort: "8082", verbose: true}
 
 func TestCreateServer(t *testing.T) {
 	fmt.Println("Running: TestCreateServer")
@@ -116,7 +116,7 @@ func TestCreateBrokenServer(t *testing.T) {
 		t.Error("Server was not started")
 	}
 
-	if len(CONFIG.ProxyRedirectList) != 2 {
+	if len(Config.proxyRedirectList) != 2 {
 		t.Error("Skip for Cascade list was not separated correctly")
 	}
 
@@ -140,5 +140,46 @@ func TestCreateBrokenServer(t *testing.T) {
 	}
 	if CurrentServer != nil {
 		t.Error("Server was not removed")
+	}
+}
+
+func TestRestRequest(t *testing.T) {
+	fmt.Println("Running: TestCreateBrokenServer")
+	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	testServer := CreateServer(test_config)
+
+	RunServer()
+	time.Sleep(1 * time.Second)
+	if !running {
+		t.Error("Server was not started")
+	}
+	DirectOverrideChan = true
+
+	client, err := utils.GetClient("", 2)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	resp, err := client.Get("http://localhost:8082/config")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if resp == nil || resp.StatusCode != 200 {
+		t.Error("Response should be 200", resp.StatusCode)
+	}
+
+	resp, err = utils.GetResponse("http://localhost:8082", "https://www.google.de")
+	if err != nil {
+		t.Error("Error while client request over proxy server", err)
+	}
+	if resp == nil || resp.StatusCode != 200 {
+		t.Error("Error while client request over proxy server", resp)
+	}
+
+	err = testServer.Shutdown(context.TODO())
+	if err != nil {
+		t.Error("Error while shutting down", err)
 	}
 }
