@@ -38,13 +38,11 @@ func ModeSelection(checkAddress string) {
 		}
 	}
 
-	if Config.verbose {
-		utils.Info.Println("Check returns: ", success)
-		if Config.CascadeMode {
-			utils.Info.Println("Current Mode: CascadeMode")
-		} else {
-			utils.Info.Println("Current Mode: DirectMode")
-		}
+	utils.Info.Println("Check returns: ", success)
+	if Config.CascadeMode {
+		utils.Info.Println("Current Mode: CascadeMode")
+	} else {
+		utils.Info.Println("Current Mode: DirectMode")
 	}
 	ChangeMode(success)
 }

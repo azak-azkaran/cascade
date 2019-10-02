@@ -4,13 +4,17 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"os"
 )
 
 var (
-	Info    *log.Logger
-	Warning *log.Logger
-	Error   *log.Logger
-	Discard *log.Logger
+	Info          *log.Logger = disableLogger()
+	Warning       *log.Logger = disableLogger()
+	Error         *log.Logger = disableLogger()
+	Discard       *log.Logger = disableLogger()
+	infoWriter    io.Writer   = os.Stdout
+	warningWriter io.Writer   = os.Stdout
+	errorWriter   io.Writer   = os.Stderr
 )
 
 func Init(
@@ -18,17 +22,46 @@ func Init(
 	warningHandle io.Writer,
 	errorHandle io.Writer) {
 
-	Info = log.New(infoHandle,
-		"INFO: ",
-		log.Ldate|log.Ltime|log.Lshortfile)
+	infoWriter = infoHandle
+	EnableInfo()
 
-	Warning = log.New(warningHandle,
-		"WARNING: ",
-		log.Ldate|log.Ltime|log.Lshortfile)
+	warningWriter = warningWriter
+	EnableWarning()
 
-	Error = log.New(errorHandle,
+	errorWriter = errorHandle
+	EnableError()
+}
+
+func EnableError() {
+	Error = log.New(errorWriter,
 		"ERROR: ",
 		log.Ldate|log.Ltime|log.Lshortfile)
+}
 
-	Discard = log.New(ioutil.Discard, "", 0)
+func EnableWarning() {
+	Warning = log.New(warningWriter,
+		"WARNING: ",
+		log.Ldate|log.Ltime|log.Lshortfile)
+}
+
+func EnableInfo() {
+	Info = log.New(infoWriter,
+		"INFO: ",
+		log.Ldate|log.Ltime|log.Lshortfile)
+}
+
+func disableLogger() *log.Logger {
+	return log.New(ioutil.Discard, "", 0)
+}
+
+func DisableInfo() {
+	Info = disableLogger()
+}
+
+func DisableWarning() {
+	Warning = disableLogger()
+}
+
+func DisableError() {
+	Error = disableLogger()
 }
