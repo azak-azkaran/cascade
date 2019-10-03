@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/azak-azkaran/cascade/utils"
+	"github.com/stretchr/testify/assert"
+	"net/http"
 	"os"
 	"syscall"
 	"testing"
@@ -15,34 +17,16 @@ func TestGetConf(t *testing.T) {
 
 	conf, _ := GetConf("./test/test.yml")
 
-	if conf.CheckAddress != "TestHealth" {
-		t.Error("CheckAddress was not read correctly, was: ", conf.CheckAddress)
-	}
+	assert.Equal(t, "TestHealth", conf.CheckAddress)
+	assert.Equal(t, "8888", conf.LocalPort)
+	assert.Equal(t, "TestHost", conf.ProxyURL)
+	assert.Equal(t, "TestPassword", conf.Password)
+	assert.Equal(t, "TestUser", conf.Username)
+	assert.Equal(t, int64(5), conf.HealthTime)
 
-	if conf.LocalPort != "8888" {
-		t.Error("Port was not read correctly, was:", conf.LocalPort)
-	}
-
-	if conf.ProxyURL != "TestHost" {
-		t.Error("ProxyURL was not read correctly, was: ", conf.ProxyURL)
-	}
-
-	if conf.Password != "TestPassword" {
-		t.Error("Password was not read correctly, was: ", conf.Password)
-	}
-
-	if conf.Username != "TestUser" {
-		t.Error("Username was not read correctly, was: ", conf.Username)
-	}
-
-	if conf.HealthTime != int64(5) {
-		t.Error("HealthTime was not read correctly, was: ", conf.HealthTime)
-	}
-
-	conf, _ = GetConf("noname.yaml")
-	if conf != nil {
-		t.Error("Error could read YAML but should not be able to be")
-	}
+	conf, err := GetConf("noname.yaml")
+	assert.Error(t, err)
+	assert.Nil(t, conf, "Error could read YAML but should not be able to be")
 }
 
 func TestRun(t *testing.T) {
@@ -50,40 +34,30 @@ func TestRun(t *testing.T) {
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
 
 	config := Yaml{}
-	config.HealthTime = 5
+	config.HealthTime = 1
 	config.Username = "foo"
 	config.Password = "bar"
 	config.ProxyURL = "localhost:8082"
 	config.LocalPort = "8081"
+	config.Log = "info"
 	config.CheckAddress = "https://google.de"
 
 	go Run(config)
 
 	time.Sleep(1 * time.Second)
-	if CurrentServer == nil {
-		t.Error("No Server was created")
-	}
+	assert.NotNil(t, CurrentServer, "No Server was created")
 
-	if !DirectOverrideChan {
-		t.Error("Direct Override is not active")
-	}
+	assert.True(t, DirectOverrideChan, "Direct Override is not active")
 
 	resp, err := utils.GetResponse("http://localhost:8081", "https://www.google.de")
-	if err != nil {
-		t.Error("Error while client request over cascade", err)
-	}
-	if resp.StatusCode != 200 {
-		t.Error("Error while client https Request, ", resp.Status)
-	}
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	cleanup()
 	time.Sleep(1 * time.Second)
-	if running {
-		t.Error("Server is still running")
-	}
-	if CurrentServer != nil {
-		t.Error("Server was not created")
-	}
+
+	assert.False(t, running, "Server is still running")
+	assert.Nil(t, CurrentServer)
 }
 
 func TestMain(t *testing.T) {

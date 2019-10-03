@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/azak-azkaran/cascade/utils"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"os"
 	"testing"
@@ -150,36 +151,22 @@ func TestRestRequest(t *testing.T) {
 
 	RunServer()
 	time.Sleep(1 * time.Second)
-	if !running {
-		t.Error("Server was not started")
-	}
+
+	assert.True(t, running, "Server was not started")
 	DirectOverrideChan = true
 
 	client, err := utils.GetClient("", 2)
-	if err != nil {
-		t.Error(err)
-		return
-	}
+	assert.NoError(t, err)
 
 	resp, err := client.Get("http://localhost:8082/config")
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	if resp == nil || resp.StatusCode != 200 {
-		t.Error("Response should be 200", resp.StatusCode)
-	}
+	assert.NoError(t, err)
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	resp, err = utils.GetResponse("http://localhost:8082", "https://www.google.de")
-	if err != nil {
-		t.Error("Error while client request over proxy server", err)
-	}
-	if resp == nil || resp.StatusCode != 200 {
-		t.Error("Error while client request over proxy server", resp)
-	}
+	assert.NoError(t, err, "Error while client request over proxy server", err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode, "Error while client request over proxy server", resp)
 
 	err = testServer.Shutdown(context.TODO())
-	if err != nil {
-		t.Error("Error while shutting down", err)
-	}
+	assert.NoError(t, err, "Error while shutdown")
 }

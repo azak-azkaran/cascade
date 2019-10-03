@@ -66,7 +66,7 @@ func shutdown(timeout time.Duration, server *http.Server) {
 }
 
 func createServer(proxy *goproxy.ProxyHttpServer, addr string, port string, classic bool) *http.Server {
-	CreateRestEndpoint(addr, port)
+	CreateRestEndpoint(addr, port, false)
 
 	var n *negroni.Negroni
 	if classic {
@@ -75,8 +75,9 @@ func createServer(proxy *goproxy.ProxyHttpServer, addr string, port string, clas
 	} else {
 		n = negroni.New()
 	}
-	n.UseFunc(HandleConfig)
+	n.Use(negroni.Wrap(RestRouter))
 	n.UseHandler(proxy)
+
 	return &http.Server{
 		Addr:    addr + ":" + port,
 		Handler: n,
