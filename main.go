@@ -166,6 +166,7 @@ func cleanup() {
 
 	time.Sleep(1 * time.Second)
 	utils.Info.Println("Happy Death")
+	utils.Close()
 }
 
 func main() {
