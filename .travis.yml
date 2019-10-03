@@ -16,6 +16,7 @@ before_install:
   - sudo apt-get update
   - sudo apt-get install findutils
 script:
+  - go get ./...
   - make coverage
   # other script steps might be done before running the actual analysis
   - $GOPATH/bin/goveralls -service=travis-ci
