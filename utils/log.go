@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/gin-gonic/gin"
 	"io"
 	"io/ioutil"
 	"log"
@@ -32,6 +33,11 @@ func Init(
 
 	errorWriter = errorHandle
 	EnableError()
+
+	gin.SetMode(gin.ReleaseMode)
+	gin.DisableConsoleColor()
+	gin.DefaultErrorWriter = errorHandle
+	gin.DefaultWriter = infoWriter
 }
 
 func EnableError() {

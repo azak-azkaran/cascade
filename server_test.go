@@ -109,7 +109,8 @@ func TestShutdownCurrentServer(t *testing.T) {
 func TestCreateBrokenServer(t *testing.T) {
 	fmt.Println("Running: TestCreateBrokenServer")
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
-	CreateConfig("8082", "", "", "", "https://www.google.de", 5, "golang.org,youtube.com", "info")
+	Config = Yaml{LocalPort: "8082", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "golang.org,youtube.com", Log: "info"}
+	CreateConfig()
 
 	RunServer()
 	time.Sleep(1 * time.Second)
@@ -158,12 +159,18 @@ func TestRestRequest(t *testing.T) {
 	client, err := utils.GetClient("", 2)
 	assert.NoError(t, err)
 
+	fmt.Println("Direct Config Call")
 	resp, err := client.Get("http://localhost:8082/config")
 	assert.NoError(t, err)
-
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	resp, err = utils.GetResponse("http://localhost:8082", "https://www.google.de")
+	fmt.Println("Proxied Config Call")
+	resp, err = utils.GetResponse("http://localhost:8082", "http://localhost:8082/config")
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	fmt.Println("Proxied Google Call")
+	resp, err = utils.GetResponse("http://localhost:8082", "https://www.github.com")
 	assert.NoError(t, err, "Error while client request over proxy server", err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode, "Error while client request over proxy server", resp)
 

@@ -63,8 +63,8 @@ func TestModeSelection(t *testing.T) {
 func TestCreateConfig(t *testing.T) {
 	fmt.Println("Running: TestCreateConfig")
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
-	Config = Yaml{}
-	CreateConfig("8888", "", "", "", "https://www.google.de", 5, "google,eclipse", "info")
+	Config = Yaml{LocalPort: "8888", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "google,eclipse", Log: "info"}
+	CreateConfig()
 
 	if CurrentServer == nil {
 		t.Error("Server was not created")

@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/azak-azkaran/cascade/utils"
+	"net/http"
 	"strings"
 )
 
@@ -29,7 +30,7 @@ func ModeSelection(checkAddress string) {
 		utils.Info.Println("Error while checking,", checkAddress, " , ", err)
 		success = false
 	} else {
-		if rep.StatusCode == 200 {
+		if rep.StatusCode == http.StatusOK {
 			utils.Info.Println("Response was: ", rep.Status, "\t", rep.StatusCode)
 			success = true
 		} else {

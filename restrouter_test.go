@@ -5,27 +5,66 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/azak-azkaran/cascade/utils"
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/urfave/negroni"
 	"net/http"
 	"os"
 	"testing"
 	"time"
 )
 
+func TestRestRouter_RouteToOtherLocalhost(t *testing.T) {
+	fmt.Println("Running: TestRestRouter_RouteToOtherLocalhost")
+	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	endProxy := DIRECT.Run(true)
+
+	endServer := &http.Server{
+		Addr:    "localhost:8081",
+		Handler: ConfigureRouter(endProxy, "localhost", true),
+	}
+	go func() {
+		err := endServer.ListenAndServe()
+		assert.Equal(t, http.ErrServerClosed, err)
+	}()
+
+	r := gin.Default()
+	r.GET("/someJSON", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"message": "hey", "status": http.StatusOK})
+	})
+	otherServer := &http.Server{
+		Addr:    "localhost:3000",
+		Handler: r,
+	}
+	go func() {
+		err := otherServer.ListenAndServe()
+		assert.Equal(t, http.ErrServerClosed, err)
+	}()
+
+	time.Sleep(1 * time.Second)
+
+	resp, err := utils.GetResponse("", "http://localhost:3000/someJSON")
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	resp, err = utils.GetResponse("http://localhost:8081", "http://localhost:3000/someJSON")
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	err = endServer.Shutdown(context.Background())
+	assert.NoError(t, err)
+
+	err = otherServer.Shutdown(context.Background())
+	assert.NoError(t, err)
+}
+
 func TestRestRouter_GetConfigWithProxy(t *testing.T) {
 	fmt.Println("Running: TestRestRouter_GetConfigWithProxy")
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
 	endProxy := DIRECT.Run(true)
 
-	n := negroni.Classic()
-
-	CreateRestEndpoint("localhost", "8081", false)
-	n.Use(negroni.Wrap(RestRouter))
-	n.UseHandler(endProxy)
 	endServer := &http.Server{
 		Addr:    "localhost:8081",
-		Handler: n,
+		Handler: ConfigureRouter(endProxy, "localhost", true),
 	}
 	go func() {
 		err := endServer.ListenAndServe()
@@ -45,18 +84,16 @@ func TestRestRouter_GetConfigWithProxy(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestRestRouter_GetConfigWithNegroni(t *testing.T) {
-	fmt.Println("Running: TestRestRouter_GetConfigWithNegroni")
+func TestRestRouter_GetConfigWithMiddleware(t *testing.T) {
+	fmt.Println("Running: TestRestRouter_GetConfigWithMiddleware")
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
 
-	CreateConfig("8082", "", "", "", "https://www.google.de", 5, "golang.org,youtube.com", "info")
-	CreateRestEndpoint("localhost", "8081", true)
-	n := negroni.Classic()
-	n.Use(negroni.Wrap(RestRouter))
+	Config = Yaml{LocalPort: "8082", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "golang.org,youtube.com", Log: "info"}
+	CreateConfig()
 
 	endServer := &http.Server{
 		Addr:    "localhost:8081",
-		Handler: n,
+		Handler: ConfigureRouter(DIRECT.Run(true), "localhost", true),
 	}
 	go func() {
 		err := endServer.ListenAndServe()
@@ -77,7 +114,7 @@ func TestRestRouter_GetConfigWithNegroni(t *testing.T) {
 
 	resp, err = client.Get("http://www.google.com")
 	assert.NoError(t, err)
-	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	err = endServer.Shutdown(context.Background())
 	assert.NoError(t, err)
@@ -86,14 +123,14 @@ func TestRestRouter_GetConfigWithNegroni(t *testing.T) {
 func TestRestRouter_GetConfigOnlyMux(t *testing.T) {
 	fmt.Println("Running: TestRestRouter_GetConfigOnlyMux")
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
-	CreateConfig("8082", "", "", "", "https://www.google.de", 5, "golang.org,youtube.com", "info")
-	CreateRestEndpoint("localhost", "8081", true)
+	Config = Yaml{LocalPort: "8082", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "golang.org,youtube.com", Log: "info"}
+	CreateConfig()
 
 	//n.UseFunc(HandleConfig)
 
 	endServer := &http.Server{
 		Addr:    "localhost:8081",
-		Handler: RestRouter,
+		Handler: ConfigureRouter(DIRECT.Run(true), "localhost", true),
 	}
 
 	go func() {

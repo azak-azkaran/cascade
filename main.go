@@ -65,13 +65,9 @@ func GetConf(path string) (*Yaml, error) {
 	return &config, nil
 }
 
-func CreateConfig(localPort string, proxyUrl string, username string, password string, checkAddress string, healthTime int, skipHosts string, logLevel string) {
-	Config.LocalPort = localPort
-	Config.ProxyURL = proxyUrl
-	Config.Username = username
-	Config.Password = password
+func CreateConfig() {
 
-	switch strings.ToUpper(logLevel) {
+	switch strings.ToUpper(Config.Log) {
 	case "INFO":
 		Config.Log = "INFO"
 		Config.verbose = true
@@ -94,11 +90,10 @@ func CreateConfig(localPort string, proxyUrl string, username string, password s
 		utils.EnableError()
 	}
 
-	Config.proxyRedirectList = strings.Split(skipHosts, ",")
+	Config.proxyRedirectList = strings.Split(Config.HostList, ",")
 
 	Config.CascadeMode = true
-	Config.CheckAddress = checkAddress
-	Config.health = time.Duration(healthTime) * time.Second
+	Config.health = time.Duration(int(Config.HealthTime)) * time.Second
 
 	utils.Info.Println("Creating Server")
 	CurrentServer = CreateServer(Config)
@@ -106,7 +101,8 @@ func CreateConfig(localPort string, proxyUrl string, username string, password s
 
 func Run(config Yaml) {
 	utils.Warning.Println("Creating Configuration")
-	CreateConfig(config.LocalPort, config.ProxyURL, config.Username, config.Password, config.CheckAddress, int(config.HealthTime), config.HostList, config.Log)
+	Config = config
+	CreateConfig()
 	utils.Info.Println(config)
 	utils.Warning.Println("Starting Proxy with the following flags:")
 	utils.Warning.Println("Username: ", Config.Username)
@@ -174,6 +170,7 @@ func cleanup() {
 
 func main() {
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+
 	stopChan = make(chan os.Signal, 2)
 	signal.Notify(stopChan, os.Interrupt)
 	go func() {
