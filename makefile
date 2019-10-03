@@ -2,6 +2,7 @@ VERSION := $(shell git describe --always --long --dirty)
 all: install
 
 fetch:
+	@go get -u github.com/stretchr/testify
 	@go get -u ./...
 
 build: fetch
