@@ -14,7 +14,9 @@ func ConfigureRouter(proxy *goproxy.ProxyHttpServer, addr string, verbose bool) 
 		gin.DisableConsoleColor()
 	}
 
-	r := gin.Default()
+	r := gin.New()
+	r.Use(gin.LoggerWithFormatter(utils.DefaultLogFormatter))
+	r.Use(gin.Recovery())
 	r.NoRoute(func(c *gin.Context) {
 		proxy.ServeHTTP(c.Writer, c.Request)
 	})
