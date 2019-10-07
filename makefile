@@ -5,7 +5,7 @@ fetch:
 	@go get -u github.com/stretchr/testify
 	@go get -u ./...
 
-build: fetch
+build: 
 	@echo Building to current folder
 	go build -i -v -ldflags="-X main.version=${VERSION}" 
 
