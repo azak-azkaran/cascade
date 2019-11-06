@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -60,33 +61,6 @@ func TestRestRouter_RouteToOtherLocalhost(t *testing.T) {
 func TestRestRouter_GetConfigWithProxy(t *testing.T) {
 	fmt.Println("Running: TestRestRouter_GetConfigWithProxy")
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
-	endProxy := DIRECT.Run(true)
-
-	endServer := &http.Server{
-		Addr:    "localhost:8081",
-		Handler: ConfigureRouter(endProxy, "localhost", true),
-	}
-	go func() {
-		err := endServer.ListenAndServe()
-		assert.Equal(t, http.ErrServerClosed, err)
-	}()
-
-	time.Sleep(1 * time.Second)
-	resp, err := utils.GetResponse("http://localhost:8081", "https://www.google.com")
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
-
-	resp, err = utils.GetResponse("http://localhost:8081", "http://www.google.com")
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
-
-	err = endServer.Shutdown(context.Background())
-	assert.NoError(t, err)
-}
-
-func TestRestRouter_GetConfigWithMiddleware(t *testing.T) {
-	fmt.Println("Running: TestRestRouter_GetConfigWithMiddleware")
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
 
 	Config = Yaml{LocalPort: "8082", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "golang.org,youtube.com", Log: "info"}
 	CreateConfig()
@@ -108,48 +82,6 @@ func TestRestRouter_GetConfigWithMiddleware(t *testing.T) {
 	resp, err := client.Get("http://localhost:8081/config")
 	assert.NoError(t, err)
 
-	assert.NotNil(t, resp)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assert.NotNil(t, resp.Body)
-
-	resp, err = client.Get("http://www.google.com")
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
-
-	err = endServer.Shutdown(context.Background())
-	assert.NoError(t, err)
-}
-
-func TestRestRouter_GetConfigOnlyMux(t *testing.T) {
-	fmt.Println("Running: TestRestRouter_GetConfigOnlyMux")
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
-	Config = Yaml{LocalPort: "8082", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "golang.org,youtube.com", Log: "info"}
-	CreateConfig()
-
-	//n.UseFunc(HandleConfig)
-
-	endServer := &http.Server{
-		Addr:    "localhost:8081",
-		Handler: ConfigureRouter(DIRECT.Run(true), "localhost", true),
-	}
-
-	go func() {
-		err := endServer.ListenAndServe()
-		assert.Equal(t, http.ErrServerClosed, err)
-	}()
-
-	time.Sleep(1 * time.Second)
-
-	client, err := utils.GetClient("", 2)
-	assert.NoError(t, err)
-
-	resp, err := client.Get("http://localhost:8081/config")
-	assert.NoError(t, err)
-
-	assert.NotNil(t, resp)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assert.NotNil(t, resp.Body)
-
 	decoder := json.NewDecoder(resp.Body)
 	var decodedConfig Yaml
 	assert.NoError(t, decoder.Decode(&decodedConfig))
@@ -160,6 +92,146 @@ func TestRestRouter_GetConfigOnlyMux(t *testing.T) {
 	assert.Equal(t, Config.HostList, decodedConfig.HostList)
 	assert.Equal(t, Config.LocalPort, decodedConfig.LocalPort)
 
+	assert.NotNil(t, resp)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.NotNil(t, resp.Body)
+
+	resp, err = utils.GetResponse("", "http://www.google.com")
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	resp, err = utils.GetResponse("http://localhost:8081", "http://www.google.com")
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	resp, err = utils.GetResponse("http://localhost:8081", "https://www.google.com")
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
 	err = endServer.Shutdown(context.Background())
 	assert.NoError(t, err)
+	Config = Yaml{}
+}
+
+func TestRestRouter_AddRedirect(t *testing.T) {
+	fmt.Println("Running: TestRestRouter_AddReddirect")
+	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	Config = Yaml{LocalPort: "8082", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "golang.org,youtube.com", Log: "info", ConfigFile: "test.yml"}
+	CreateConfig()
+
+	r := gin.Default()
+	endServer := &http.Server{
+		Addr:    "localhost:8081",
+		Handler: r,
+	}
+
+	r.POST("/add", addRedirectFunc)
+	go endServer.ListenAndServe()
+
+	time.Sleep(1 * time.Second)
+	client, err := utils.GetClient("", 2)
+	assert.NoError(t, err)
+	jsonRequest := AddRedirect{
+		Proxy:   "test.dlh.de",
+		Address: "10.20.10.20",
+	}
+
+	var buf bytes.Buffer
+	encoder := json.NewEncoder(&buf)
+	err = encoder.Encode(&jsonRequest)
+	assert.NoError(t, err)
+	//var jsonRequest = []byte(`{"proxy":"test.dlh.de", "address":"10.20.10.20"}`)
+
+	resp, err := client.Post("http://localhost:8081/add", "application/json", &buf)
+	assert.NoError(t, err)
+
+	assert.NotNil(t, resp)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	defer resp.Body.Close()
+	assert.NotNil(t, resp.Body)
+
+	decoder := json.NewDecoder(resp.Body)
+	var responesMessage AddRedirect
+	assert.NoError(t, decoder.Decode(&responesMessage))
+	assert.Equal(t, jsonRequest.Proxy, responesMessage.Proxy)
+	assert.Equal(t, jsonRequest.Address, responesMessage.Address)
+
+	utils.Info.Println("Config: ", Config)
+
+	value, available := HostList.Get(jsonRequest.Proxy)
+	assert.True(t, available)
+	assert.NotNil(t, value)
+
+	err = endServer.Shutdown(context.Background())
+	assert.NoError(t, err)
+
+	config, err := GetConf("test.yml")
+	assert.NoError(t, err)
+	assert.Equal(t, config.LocalPort, Config.LocalPort)
+	assert.Equal(t, config.HealthTime, Config.HealthTime)
+	assert.Equal(t, config.HostList, Config.HostList)
+	assert.Equal(t, config.CheckAddress, Config.CheckAddress)
+	assert.NotEqual(t, config.HostList, "golang.org,youtube.com")
+
+	err = os.Remove("test.yml")
+	assert.NoError(t, err)
+	Config = Yaml{}
+}
+
+func TestRestRouter_ChangeOnlineCheck(t *testing.T) {
+	fmt.Println("Running: TestRestRouter_ChangeOnlineCheck")
+	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+
+	Config = Yaml{OnlineCheck: false}
+	CreateConfig()
+
+	endServer := &http.Server{
+		Addr:    "localhost:8081",
+		Handler: ConfigureRouter(DIRECT.Run(true), "localhost", true),
+	}
+	go func() {
+		err := endServer.ListenAndServe()
+		assert.Equal(t, http.ErrServerClosed, err)
+	}()
+
+	time.Sleep(1 * time.Second)
+
+	client, err := utils.GetClient("", 2)
+	assert.NoError(t, err)
+
+	resp, err := client.Get("http://localhost:8081/getOnlineCheck")
+	assert.NoError(t, err)
+	assert.NotNil(t, resp.Body)
+	defer resp.Body.Close()
+	decoder := json.NewDecoder(resp.Body)
+	var decodedBool bool
+	assert.NoError(t, decoder.Decode(&decodedBool))
+	assert.False(t, decodedBool)
+
+	jsonRequest := SetOnlineCheckRequest{
+		OnlineCheck: true,
+	}
+	var buf bytes.Buffer
+	encoder := json.NewEncoder(&buf)
+	err = encoder.Encode(&jsonRequest)
+	assert.NoError(t, err)
+	resp, err = client.Post("http://localhost:8081/setOnlineCheck", "application/json", &buf)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.NotNil(t, resp.Body)
+	defer resp.Body.Close()
+
+	decoder = json.NewDecoder(resp.Body)
+	assert.NoError(t, decoder.Decode(&jsonRequest))
+	assert.True(t, jsonRequest.OnlineCheck)
+
+	resp, err = client.Get("http://localhost:8081/getOnlineCheck")
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+	assert.NotNil(t, resp.Body)
+
+	decoder = json.NewDecoder(resp.Body)
+	assert.NoError(t, decoder.Decode(&decodedBool))
+	assert.True(t, decodedBool)
+	Config = Yaml{}
 }

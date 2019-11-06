@@ -45,24 +45,50 @@ func ModeSelection(checkAddress string) {
 	} else {
 		utils.Info.Println("Current Mode: DirectMode")
 	}
-	ChangeMode(success)
+	ChangeMode(success, Config.OnlineCheck)
 }
 
-func ChangeMode(selector bool) {
-	if (selector && Config.CascadeMode) || (selector && CurrentServer == nil) || len(Config.ProxyURL) == 0 {
-		if len(Config.ProxyURL) == 0 && !selector {
-			utils.Error.Println("ProxyURL was not set so staying in DirectMode")
-		}
+func ChangeMode(success bool, directCheck bool) {
+	if len(Config.ProxyURL) == 0 {
+		utils.Error.Println("ProxyURL was not set so staying in DirectMode")
+		Config.CascadeMode = false
+		DirectOverrideChan = true
+		return
+	}
+
+	if (!success && Config.CascadeMode && directCheck) ||
+		(!success && CurrentServer == nil && directCheck) {
+
 		// switch to direct mode
 		utils.Warning.Println("switch to: DirectMode")
 		Config.CascadeMode = false
 		DirectOverrideChan = true
-		//go Config.DirectFunction()
-	} else if (!selector && !Config.CascadeMode) || (!selector && CurrentServer == nil) {
+		return
+
+	} else if (success && !Config.CascadeMode && directCheck) ||
+		(success && CurrentServer == nil && directCheck) {
 		// switch to cascade mode
 		utils.Warning.Println("switch to: CascadeMode")
 		Config.CascadeMode = true
 		DirectOverrideChan = false
+		return
+
+	}
+
+	if (success && Config.CascadeMode) || (success && CurrentServer == nil) {
+		// switch to direct mode
+		utils.Warning.Println("switch to: DirectMode")
+		Config.CascadeMode = false
+		DirectOverrideChan = true
+		return
+		//go Config.DirectFunction()
+	} else if (!success && !Config.CascadeMode) || (!success && CurrentServer == nil) {
+
+		// switch to cascade mode
+		utils.Warning.Println("switch to: CascadeMode")
+		Config.CascadeMode = true
+		DirectOverrideChan = false
+		return
 		//go Config.CascadeFunction()
 	}
 }

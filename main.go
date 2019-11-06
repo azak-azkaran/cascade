@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"github.com/azak-azkaran/cascade/utils"
@@ -26,6 +27,8 @@ type Yaml struct {
 	verbose           bool
 	CascadeMode       bool   `yaml:"CascadeMode"`
 	Log               string `yaml:"log"`
+	OnlineCheck       bool   `yaml:"OnlineCheck"`
+	ConfigFile        string `yaml:"ConfigFile"`
 }
 
 var Config Yaml
@@ -34,10 +37,36 @@ var version = "undefined"
 var closeChan bool
 var stopChan = make(chan os.Signal, 2)
 
+func SetConf(config *Yaml) error {
+	f, err := os.Create(config.ConfigFile)
+	if err != nil {
+		return err
+	}
+
+	w := bufio.NewWriter(f)
+	encoder := yaml.NewEncoder(w)
+	err = encoder.Encode(config)
+	if err != nil {
+		return err
+	}
+
+	err = encoder.Close()
+	if err != nil {
+		return err
+	}
+	err = w.Flush()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetConf reads the Configuration from a yaml file at @path
 func GetConf(path string) (*Yaml, error) {
 	config := Yaml{}
 	yamlFile, err := ioutil.ReadFile(path)
+	config.ConfigFile = path
 	if err != nil {
 		return nil, fmt.Errorf("yamlFile.Get err   #%v ", err)
 	}

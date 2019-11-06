@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/azak-azkaran/cascade/utils"
+	"github.com/stretchr/testify/assert"
 	"os"
 	"strings"
 	"testing"
@@ -12,27 +13,46 @@ import (
 func TestChangeMode(t *testing.T) {
 	fmt.Println("Running: TestChangeMode")
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	assert.False(t, Config.OnlineCheck)
+
+	Config.verbose = true
+	Config.ProxyURL = "something"
 
 	Config.CascadeMode = true
-	Config.ProxyURL = "something"
-	ChangeMode(true)
-	if Config.CascadeMode {
-		t.Error("Mode was not changed")
-	}
+	DirectOverrideChan = false
+	fmt.Println("Test switch from\nCascadeMode: ", Config.CascadeMode, " DirectOverrideChan: ", DirectOverrideChan, " to DirectMode")
+	ChangeMode(true, Config.OnlineCheck)
+	assert.False(t, Config.CascadeMode)
+	assert.True(t, DirectOverrideChan)
+	fmt.Println("Result CascadeMode: ", Config.CascadeMode, " DirectOverrideChan: ", DirectOverrideChan)
 
-	time.Sleep(1 * time.Second)
-	if !DirectOverrideChan {
-		t.Error("DirectOverride is active")
-	}
+	Config.CascadeMode = false
+	DirectOverrideChan = true
+	fmt.Println("Test switch from\nCascadeMode: ", Config.CascadeMode, " DirectOverrideChan: ", DirectOverrideChan, " to CascadeMode")
 
-	ChangeMode(false)
-	if !Config.CascadeMode {
-		t.Error("Mode was not changed")
-	}
-	time.Sleep(1 * time.Second)
-	if DirectOverrideChan {
-		t.Error("DirectOverride is not active")
-	}
+	ChangeMode(false, Config.OnlineCheck)
+	assert.True(t, Config.CascadeMode)
+	assert.False(t, DirectOverrideChan)
+	fmt.Println("Result CascadeMode: ", Config.CascadeMode, " DirectOverrideChan: ", DirectOverrideChan)
+
+	Config.CascadeMode = true
+	DirectOverrideChan = false
+	fmt.Println("Test switch from\nCascadeMode: ", Config.CascadeMode, " DirectOverrideChan: ", DirectOverrideChan, " to DirectMode")
+
+	ChangeMode(false, true)
+	assert.False(t, Config.CascadeMode)
+	assert.True(t, DirectOverrideChan)
+	fmt.Println("Result CascadeMode: ", Config.CascadeMode, " DirectOverrideChan: ", DirectOverrideChan)
+
+	Config.CascadeMode = false
+	DirectOverrideChan = true
+	fmt.Println("Test switch from\nCascadeMode: ", Config.CascadeMode, " DirectOverrideChan: ", DirectOverrideChan, " to CascadeMode")
+
+	ChangeMode(true, true)
+	assert.True(t, Config.CascadeMode)
+	assert.False(t, DirectOverrideChan)
+	fmt.Println("Result CascadeMode: ", Config.CascadeMode, " DirectOverrideChan: ", DirectOverrideChan)
+
 	Config.ProxyURL = ""
 }
 
@@ -46,16 +66,12 @@ func TestModeSelection(t *testing.T) {
 	Config.proxyRedirectList = strings.Split("golang.org,youtube.com", ",")
 
 	ModeSelection("https://www.asda12313.de")
-	time.Sleep(1 * time.Second)
-	if DirectOverrideChan {
-		t.Error("DirectOverride is active")
-	}
+	time.Sleep(1 * time.Millisecond)
+	assert.False(t, DirectOverrideChan)
 
 	ModeSelection("https://www.google.de")
-	time.Sleep(1 * time.Second)
-	if !DirectOverrideChan {
-		t.Error("DirectOverride is not active")
-	}
+	time.Sleep(1 * time.Millisecond)
+	assert.True(t, DirectOverrideChan)
 
 	Config = Yaml{}
 }
@@ -66,13 +82,8 @@ func TestCreateConfig(t *testing.T) {
 	Config = Yaml{LocalPort: "8888", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "google,eclipse", Log: "info"}
 	CreateConfig()
 
-	if CurrentServer == nil {
-		t.Error("Server was not created")
-	}
-
-	if len(Config.proxyRedirectList) != 2 {
-		t.Error("SkipHosts was not split correctly")
-	}
+	assert.NotNil(t, CurrentServer)
+	assert.Equal(t, len(Config.proxyRedirectList), 2)
 
 	Config = Yaml{}
 }
@@ -84,47 +95,25 @@ func TestHandleCustomProxies(t *testing.T) {
 	HandleCustomProxies(list)
 
 	val, in := HostList.Get("")
-	if !in {
-		t.Error("Proxy redirect to eclipse not added")
-	}
+	assert.True(t, in)
 
 	value := val.(hostConfig)
-	if in && !value.reg.MatchString("eclipse2017.nasa.gov") {
-		t.Error("Proxy redirect regex does not match: ", value.regString)
-	}
-	if value.proxyAddr != "" && in {
-		t.Error("Proxy redirect regex does not match")
-
-	}
+	assert.True(t, value.reg.MatchString("eclipse2017.nasa.gov"))
+	assert.True(t, in)
+	assert.False(t, value.proxyAddr != "")
 
 	val, in = HostList.Get("test:8888")
-	if !in {
-		t.Error("Proxy redirect to google not added: ", value.regString)
-	}
+	assert.True(t, in)
 
-	if in {
-		value = val.(hostConfig)
-		if !value.reg.MatchString("www.google.de") {
-			t.Error("Proxy redirect regex does not match: ", value.regString)
-		}
-		if strings.Compare(value.proxyAddr, "http://test:8888") != 0 {
-			t.Error("Proxy redirect address does not match")
-		}
-	}
+	value = val.(hostConfig)
+	assert.True(t, value.reg.MatchString("www.google.de"))
+	assert.Equal(t, strings.Compare(value.proxyAddr, "http://test:8888"), 0)
 
 	val, in = HostList.Get("")
-	if !in {
-		t.Error("Proxy redirect to azure not added: ", value.regString)
-	}
+	assert.True(t, in)
 
-	if in {
-		value = val.(hostConfig)
+	value = val.(hostConfig)
 
-		if !value.reg.MatchString("https://azure.microsoft.com/en-us/") {
-			t.Error("Proxy redirect regex does not match: ", value.regString)
-		}
-		if value.proxyAddr != "" {
-			t.Error("Proxy redirect address does not match")
-		}
-	}
+	assert.True(t, value.reg.MatchString("https://azure.microsoft.com/en-us/"))
+	assert.False(t, value.proxyAddr != "")
 }
