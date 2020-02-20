@@ -30,14 +30,14 @@ Configuration can be done by file or command line arguments
 * __config__ : Path to configuration yaml file. If set all other command line parameters will be ignored
 * __version__: Just shows the current version
 
-## Health Check
+### Health Check
 A temporary client tries to connect to a certain address regularly.
 The Cascade mode is active if health check fails.
 
-## Direct Mode
+### Direct Mode
 Normal http internet Proxy Mode.
 
-## Cascade Mode
+### Cascade Mode
 Cascade Mode means that this proxy stands between the client and another Proxy.
 Basic Authentication can be enabled for Cascade Mode
 
@@ -51,6 +51,57 @@ Direct Configuration:
 * __DIRECT Connection__: eclipse
 * __DIRECT Connection__: azure->
 * __REDIRECT Connection to other Proxy__: google->test:8888
+
+## REST Interface
+
+Cascade comes with a REST Interface which can be used to control the application.
+Currently the following REST Endpoints are available:
+
+* __/config__ : is used to return the current configuration
+* __/getOnlineCheck__ : is used to get if the check is used to check for up 
+* __/getAutoMode__ : is used to get if automatically switching between modes is activated
+* __/addRedirect__ : adds another redirect rule
+* __/setOnlineCheck__ : used to configure check is used to check for a website being online
+* __/setAutoMode__ : used to disable automatically switching between modes
+* __/setCascadeMode__ : used to force a certain mode
+
+### Curl Examples
+These examples use curl to use the REST Endpoints
+
+#### Config
+To get the current configuration
+```
+curl -D- localhost/config
+```
+
+#### SetCascadeMode
+To set the Mode by hand to DirectMode:
+```
+curl -D- --request POST \
+  --data '{"cascadeMode":false}' \
+  localhost/setCascadeMode
+```
+To set the Mode by hand to Cascade mode:
+```
+curl -D- --request POST \
+  --data '{"cascadeMode":true}' \ 
+  localhost/setCascadeMode
+```
+
+#### SetAutoMode
+To disable the automatically switch between modes:
+```
+curl -D- --request POST \
+  --data '{"autoChangeMode":false}' \
+  localhost/setAutoMode
+```
+To enable the automatically switch between modes:
+```
+curl -D- --request POST \
+  --data '{"autoChangeMode":true}' \
+  localhost/setAutoMode
+```
+
 
 ## Systemd
 
@@ -74,3 +125,4 @@ The logs can be viewed by using:
 ```
 journalctl -f -u cascade
 ```
+
