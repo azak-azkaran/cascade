@@ -175,6 +175,8 @@ func TestRestRouter_AddRedirect(t *testing.T) {
 
 	err = os.Remove("test.yml")
 	assert.NoError(t, err)
+	err = endServer.Shutdown(context.Background())
+	assert.NoError(t, err)
 	Config = Yaml{}
 }
 
@@ -233,6 +235,9 @@ func TestRestRouter_ChangeOnlineCheck(t *testing.T) {
 	decoder = json.NewDecoder(resp.Body)
 	assert.NoError(t, decoder.Decode(&decodedBool))
 	assert.True(t, decodedBool)
+
+	err = endServer.Shutdown(context.Background())
+	assert.NoError(t, err)
 	Config = Yaml{}
 }
 
@@ -307,5 +312,7 @@ func TestRestRouter_DisableAutomaticChange(t *testing.T) {
 	assert.True(t, Config.DisableAutoChangeMode)
 	assert.False(t, Config.CascadeMode)
 
+	err = endServer.Shutdown(context.Background())
+	assert.NoError(t, err)
 	Config = Yaml{}
 }
