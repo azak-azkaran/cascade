@@ -72,10 +72,10 @@ func setCascadeModeFunc(c *gin.Context) {
 	}
 
 	if req.CascadeMode {
-		utils.Info.Println("Setting Cascade to: DirectMode")
+		utils.Info.Println("Setting Cascade to: CascadeMode")
 		ChangeMode(true, true)
 	} else {
-		utils.Info.Println("Setting Cascade to: CascadeMode")
+		utils.Info.Println("Setting Cascade to: DirectMode")
 		ChangeMode(false, true)
 	}
 
