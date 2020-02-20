@@ -125,6 +125,7 @@ func TestDisableAutoChangeMode(t *testing.T) {
 	Config.verbose = true
 	Config.CascadeMode = true
 	Config.ProxyURL = "something"
+	DirectOverrideChan = false
 	Config.proxyRedirectList = strings.Split("golang.org,youtube.com", ",")
 	Config.DisableAutoChangeMode = true
 
