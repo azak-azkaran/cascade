@@ -235,3 +235,77 @@ func TestRestRouter_ChangeOnlineCheck(t *testing.T) {
 	assert.True(t, decodedBool)
 	Config = Yaml{}
 }
+
+func TestRestRouter_DisableAutomaticChange(t *testing.T) {
+	fmt.Println("Running: TestRestRouter_DisableAutomaticChange")
+	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+
+	Config = Yaml{DisableAutoChangeMode: false, ProxyURL: "http://localhost", Log: "DEBUG"}
+	CreateConfig()
+
+	endServer := &http.Server{
+		Addr:    "localhost:8081",
+		Handler: ConfigureRouter(DIRECT.Run(true), "localhost", true),
+	}
+	go func() {
+		err := endServer.ListenAndServe()
+		assert.Equal(t, http.ErrServerClosed, err)
+	}()
+
+	time.Sleep(1 * time.Second)
+	client, err := utils.GetClient("", 2)
+	assert.NoError(t, err)
+
+	resp, err := client.Get("http://localhost:8081/getAutoMode")
+	assert.NoError(t, err)
+	assert.NotNil(t, resp.Body)
+	defer resp.Body.Close()
+	decoder := json.NewDecoder(resp.Body)
+	var decodedBool bool
+	assert.NoError(t, decoder.Decode(&decodedBool))
+	assert.True(t, decodedBool)
+
+	jsonRequest := SetDisableAutoChangeModeRequest{
+		AutoChangeMode: false,
+	}
+	var buf bytes.Buffer
+	encoder := json.NewEncoder(&buf)
+	err = encoder.Encode(&jsonRequest)
+	assert.NoError(t, err)
+	resp, err = client.Post("http://localhost:8081/setAutoMode", "application/json", &buf)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.NotNil(t, resp.Body)
+	defer resp.Body.Close()
+
+	decoder = json.NewDecoder(resp.Body)
+	assert.NoError(t, decoder.Decode(&jsonRequest))
+	assert.False(t, jsonRequest.AutoChangeMode)
+	assert.True(t, Config.DisableAutoChangeMode)
+	assert.True(t, Config.CascadeMode)
+	assert.False(t, Config.OnlineCheck)
+
+	ModeSelection("https://www.asda12313.de")
+	time.Sleep(1 * time.Millisecond)
+	assert.True(t, Config.CascadeMode)
+
+	cascadeModeReq := SetCascadeModeRequest{
+		CascadeMode: false,
+	}
+
+	err = encoder.Encode(&cascadeModeReq)
+	assert.NoError(t, err)
+	resp, err = client.Post("http://localhost:8081/setCascadeMode", "application/json", &buf)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.NotNil(t, resp.Body)
+	defer resp.Body.Close()
+
+	decoder = json.NewDecoder(resp.Body)
+	assert.NoError(t, decoder.Decode(&cascadeModeReq))
+	assert.False(t, cascadeModeReq.CascadeMode)
+	assert.True(t, Config.DisableAutoChangeMode)
+	assert.False(t, Config.CascadeMode)
+
+	Config = Yaml{}
+}

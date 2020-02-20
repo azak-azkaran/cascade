@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/base64"
 	"github.com/azak-azkaran/cascade/utils"
-	"github.com/elazarl/goproxy"
+	"github.com/azak-azkaran/goproxy"
 	"github.com/orcaman/concurrent-map"
 	"net"
 	"net/http"

@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"github.com/azak-azkaran/cascade/utils"
-	"github.com/elazarl/goproxy"
+	"github.com/azak-azkaran/goproxy"
 	//"github.com/urfave/negroni"
 	"net/http"
 	"syscall"

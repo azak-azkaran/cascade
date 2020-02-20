@@ -117,3 +117,20 @@ func TestHandleCustomProxies(t *testing.T) {
 	assert.True(t, value.reg.MatchString("https://azure.microsoft.com/en-us/"))
 	assert.False(t, value.proxyAddr != "")
 }
+
+func TestDisableAutoChangeMode(t *testing.T) {
+	fmt.Println("Running: TestDisableAutoChangeMode")
+	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+
+	Config.verbose = true
+	Config.CascadeMode = true
+	Config.ProxyURL = "something"
+	Config.proxyRedirectList = strings.Split("golang.org,youtube.com", ",")
+	Config.DisableAutoChangeMode = true
+
+	ModeSelection("https://www.asda12313.de")
+	time.Sleep(1 * time.Millisecond)
+	assert.False(t, DirectOverrideChan)
+
+	Config = Yaml{}
+}

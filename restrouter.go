@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"github.com/azak-azkaran/cascade/utils"
-	"github.com/elazarl/goproxy"
+	"github.com/azak-azkaran/goproxy"
 	"github.com/gin-gonic/gin"
 	"html"
 	"net/http"
@@ -19,6 +19,14 @@ type AddRedirect struct {
 
 type SetOnlineCheckRequest struct {
 	OnlineCheck bool `json:"onlineCheck"`
+}
+
+type SetDisableAutoChangeModeRequest struct {
+	AutoChangeMode bool `json:"autoChangeMode"`
+}
+
+type SetCascadeModeRequest struct {
+	CascadeMode bool `json:"cascadeMode"`
 }
 
 func ConfigureRouter(proxy *goproxy.ProxyHttpServer, addr string, verbose bool) http.Handler {
@@ -42,9 +50,57 @@ func ConfigureRouter(proxy *goproxy.ProxyHttpServer, addr string, verbose bool) 
 		c.JSON(http.StatusOK, Config.OnlineCheck)
 	})
 
+	r.GET("/getAutoMode", func(c *gin.Context) {
+		c.JSON(http.StatusOK, !Config.DisableAutoChangeMode)
+	})
+
 	r.POST("/addRedirect", addRedirectFunc)
 	r.POST("/setOnlineCheck", setOnlineCheckFunc)
+	r.POST("/setAutoMode", setDisableAutoChangeModeFunc)
+	r.POST("/setCascadeMode", setCascadeModeFunc)
 	return r
+}
+
+func setCascadeModeFunc(c *gin.Context) {
+	decoder := json.NewDecoder(c.Request.Body)
+	var req SetCascadeModeRequest
+	err := decoder.Decode(&req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": html.EscapeString("Problem with Decoding Body"),
+		})
+	}
+	utils.Info.Println("Setting CascadeMode to:", req.CascadeMode)
+	if Config.OnlineCheck {
+		ChangeMode(false, Config.OnlineCheck)
+	} else {
+		ChangeMode(true, Config.OnlineCheck)
+	}
+
+	post := gin.H{
+		"CascadeMode": Config.CascadeMode,
+	}
+	c.JSON(http.StatusOK, post)
+
+}
+
+func setDisableAutoChangeModeFunc(c *gin.Context) {
+	decoder := json.NewDecoder(c.Request.Body)
+	var req SetDisableAutoChangeModeRequest
+	err := decoder.Decode(&req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": html.EscapeString("Problem with Decoding Body"),
+		})
+	}
+	utils.Info.Println("Setting AutoChangeMode to:", req.AutoChangeMode)
+
+	Config.DisableAutoChangeMode = !req.AutoChangeMode
+
+	post := gin.H{
+		"AutoChangeMode": !Config.DisableAutoChangeMode,
+	}
+	c.JSON(http.StatusOK, post)
 }
 
 func setOnlineCheckFunc(c *gin.Context) {
@@ -64,7 +120,6 @@ func setOnlineCheckFunc(c *gin.Context) {
 		"OnlineCheck": Config.OnlineCheck,
 	}
 	c.JSON(http.StatusOK, post)
-
 }
 
 func addRedirectFunc(c *gin.Context) {

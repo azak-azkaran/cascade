@@ -45,7 +45,12 @@ func ModeSelection(checkAddress string) {
 	} else {
 		utils.Info.Println("Current Mode: DirectMode")
 	}
-	ChangeMode(success, Config.OnlineCheck)
+
+	if !Config.DisableAutoChangeMode {
+		ChangeMode(success, Config.OnlineCheck)
+	} else {
+		utils.Info.Println("Automatic Change Mode is disabled")
+	}
 }
 
 func ChangeMode(success bool, directCheck bool) {
@@ -72,7 +77,6 @@ func ChangeMode(success bool, directCheck bool) {
 		Config.CascadeMode = true
 		DirectOverrideChan = false
 		return
-
 	}
 
 	if (success && Config.CascadeMode) || (success && CurrentServer == nil) {
