@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"github.com/azak-azkaran/cascade/utils"
-	"github.com/azak-azkaran/goproxy"
+	"github.com/elazarl/goproxy"
 	"github.com/gin-gonic/gin"
 	"html"
 	"net/http"

@@ -2,7 +2,7 @@ package utils
 
 import (
 	"context"
-	"github.com/azak-azkaran/goproxy"
+	"github.com/elazarl/goproxy"
 	"net"
 	"net/http"
 	"os"

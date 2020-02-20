@@ -7,7 +7,11 @@ fetch:
 
 build: 
 	@echo Building to current folder
-	go build -i -v -ldflags="-X main.version=${VERSION}" 
+	go build -v -ldflags="-X main.version=${VERSION}" 
+
+build_windows:
+	@echo Building for Windows to current folder
+	env GOOS=windows GOARCH=amd64 go build -v -ldflags="-X main.version=${VERSION}" -o cascade.exe
 
 install: build
 	@echo Installing to ${GOPATH}/bin
