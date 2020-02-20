@@ -245,7 +245,7 @@ func TestRestRouter_DisableAutomaticChange(t *testing.T) {
 	fmt.Println("Running: TestRestRouter_DisableAutomaticChange")
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
 
-	Config = Yaml{DisableAutoChangeMode: false, ProxyURL: "http://localhost", Log: "DEBUG"}
+	Config = Yaml{DisableAutoChangeMode: false, ProxyURL: "http://localhost", Log: "DEBUG", OnlineCheck: false}
 	CreateConfig()
 
 	endServer := &http.Server{
@@ -298,6 +298,7 @@ func TestRestRouter_DisableAutomaticChange(t *testing.T) {
 		CascadeMode: false,
 	}
 
+	assert.False(t, DirectOverrideChan)
 	err = encoder.Encode(&cascadeModeReq)
 	assert.NoError(t, err)
 	resp, err = client.Post("http://localhost:8081/setCascadeMode", "application/json", &buf)
@@ -311,6 +312,7 @@ func TestRestRouter_DisableAutomaticChange(t *testing.T) {
 	assert.False(t, cascadeModeReq.CascadeMode)
 	assert.True(t, Config.DisableAutoChangeMode)
 	assert.False(t, Config.CascadeMode)
+	assert.True(t, DirectOverrideChan)
 
 	err = endServer.Shutdown(context.Background())
 	assert.NoError(t, err)

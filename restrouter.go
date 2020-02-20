@@ -70,11 +70,13 @@ func setCascadeModeFunc(c *gin.Context) {
 			"message": html.EscapeString("Problem with Decoding Body"),
 		})
 	}
-	utils.Info.Println("Setting CascadeMode to:", req.CascadeMode)
-	if Config.OnlineCheck {
-		ChangeMode(false, Config.OnlineCheck)
+
+	if req.CascadeMode {
+		utils.Info.Println("Setting Cascade to: DirectMode")
+		ChangeMode(true, true)
 	} else {
-		ChangeMode(true, Config.OnlineCheck)
+		utils.Info.Println("Setting Cascade to: CascadeMode")
+		ChangeMode(false, true)
 	}
 
 	post := gin.H{
