@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/azak-azkaran/cascade/utils"
 	"github.com/azak-azkaran/goproxy"
+	"github.com/gin-contrib/expvar"
 	"github.com/gin-gonic/gin"
 	"html"
 	"net/http"
@@ -38,9 +39,14 @@ func ConfigureRouter(proxy *goproxy.ProxyHttpServer, addr string, verbose bool) 
 	r := gin.New()
 	r.Use(gin.LoggerWithFormatter(utils.DefaultLogFormatter))
 	r.Use(gin.Recovery())
+
+	//p := ginprometheus.NewPrometheus("gin", []string{})
+
 	r.NoRoute(func(c *gin.Context) {
 		proxy.ServeHTTP(c.Writer, c.Request)
 	})
+	//p.Use(r, "/metrics")
+	r.GET("/debug/vars", expvar.Handler())
 
 	r.GET("/config", func(c *gin.Context) {
 		c.JSON(http.StatusOK, Config)
