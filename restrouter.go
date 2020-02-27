@@ -30,6 +30,10 @@ type SetCascadeModeRequest struct {
 	CascadeMode bool `json:"cascadeMode"`
 }
 
+var error_decode string = html.EscapeString("Problem with Decoding Body")
+var error_proxy_parse string = html.EscapeString("Proxy URL could not be parsed")
+var error_url_parse string = html.EscapeString("Address URL could not be parsed")
+
 func ConfigureRouter(proxy *goproxy.ProxyHttpServer, addr string, verbose bool) http.Handler {
 	utils.Info.Println("Configurating gin Router")
 	if verbose {
@@ -73,7 +77,7 @@ func setCascadeModeFunc(c *gin.Context) {
 	err := decoder.Decode(&req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": html.EscapeString("Problem with Decoding Body"),
+			"message": error_decode,
 		})
 	}
 
@@ -98,7 +102,7 @@ func setDisableAutoChangeModeFunc(c *gin.Context) {
 	err := decoder.Decode(&req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": html.EscapeString("Problem with Decoding Body"),
+			"message": error_decode,
 		})
 	}
 	utils.Info.Println("Setting AutoChangeMode to:", req.AutoChangeMode)
@@ -117,7 +121,7 @@ func setOnlineCheckFunc(c *gin.Context) {
 	err := decoder.Decode(&req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": html.EscapeString("Problem with Decoding Body"),
+			"message": error_decode,
 		})
 	}
 	utils.Info.Println("Setting OnlineCheck to:", req.OnlineCheck)
@@ -136,7 +140,7 @@ func addRedirectFunc(c *gin.Context) {
 	err := decoder.Decode(&req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": html.EscapeString("Problem with Decoding Body"),
+			"message": error_decode,
 		})
 	}
 
@@ -145,14 +149,14 @@ func addRedirectFunc(c *gin.Context) {
 	proxyURL, err := url.Parse(req.Proxy)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": html.EscapeString("Proxy URL could not be parsed"),
+			"message": error_proxy_parse,
 		})
 	}
 
 	addressURL, err := url.Parse(req.Address)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": html.EscapeString("Address URL could not be parsed"),
+			"message": error_url_parse,
 		})
 	}
 

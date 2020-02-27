@@ -227,6 +227,17 @@ func TestRestRouter_ChangeOnlineCheck(t *testing.T) {
 	assert.NoError(t, decoder.Decode(&jsonRequest))
 	assert.True(t, jsonRequest.OnlineCheck)
 
+	jsonWrongRequest := SetDisableAutoChangeModeRequest{
+		AutoChangeMode: false,
+	}
+	err = encoder.Encode(&jsonWrongRequest)
+	assert.NoError(t, err)
+	resp, err = client.Post("http://localhost:8081/setOnlineCheck", "application/json", &buf)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	assert.NotNil(t, resp.Body)
+	defer resp.Body.Close()
+
 	resp, err = client.Get("http://localhost:8081/getOnlineCheck")
 	assert.NoError(t, err)
 	defer resp.Body.Close()
