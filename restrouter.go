@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"github.com/azak-azkaran/cascade/utils"
 	"github.com/azak-azkaran/goproxy"
 	"github.com/gin-contrib/expvar"
@@ -33,6 +32,7 @@ type SetCascadeModeRequest struct {
 var error_decode string = html.EscapeString("Problem with Decoding Body")
 var error_proxy_parse string = html.EscapeString("Proxy URL could not be parsed")
 var error_url_parse string = html.EscapeString("Address URL could not be parsed")
+var error_binding string = html.EscapeString("Error while binding JSON: ")
 
 func ConfigureRouter(proxy *goproxy.ProxyHttpServer, addr string, verbose bool) http.Handler {
 	utils.Info.Println("Configurating gin Router")
@@ -44,12 +44,9 @@ func ConfigureRouter(proxy *goproxy.ProxyHttpServer, addr string, verbose bool) 
 	r.Use(gin.LoggerWithFormatter(utils.DefaultLogFormatter))
 	r.Use(gin.Recovery())
 
-	//p := ginprometheus.NewPrometheus("gin", []string{})
-
 	r.NoRoute(func(c *gin.Context) {
 		proxy.ServeHTTP(c.Writer, c.Request)
 	})
-	//p.Use(r, "/metrics")
 	r.GET("/debug/vars", expvar.Handler())
 
 	r.GET("/config", func(c *gin.Context) {
@@ -72,12 +69,13 @@ func ConfigureRouter(proxy *goproxy.ProxyHttpServer, addr string, verbose bool) 
 }
 
 func setCascadeModeFunc(c *gin.Context) {
-	decoder := json.NewDecoder(c.Request.Body)
+	defer c.Request.Body.Close()
 	var req SetCascadeModeRequest
-	err := decoder.Decode(&req)
+
+	err := c.BindJSON(&req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": error_decode,
+			"message": error_binding + err.Error(),
 		})
 	}
 
@@ -97,13 +95,15 @@ func setCascadeModeFunc(c *gin.Context) {
 }
 
 func setDisableAutoChangeModeFunc(c *gin.Context) {
-	decoder := json.NewDecoder(c.Request.Body)
+	defer c.Request.Body.Close()
 	var req SetDisableAutoChangeModeRequest
-	err := decoder.Decode(&req)
+
+	err := c.BindJSON(&req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": error_decode,
+			"message": error_binding + err.Error(),
 		})
+		return
 	}
 	utils.Info.Println("Setting AutoChangeMode to:", req.AutoChangeMode)
 
@@ -116,14 +116,17 @@ func setDisableAutoChangeModeFunc(c *gin.Context) {
 }
 
 func setOnlineCheckFunc(c *gin.Context) {
-	decoder := json.NewDecoder(c.Request.Body)
+	defer c.Request.Body.Close()
 	var req SetOnlineCheckRequest
-	err := decoder.Decode(&req)
+
+	err := c.BindJSON(&req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": error_decode,
+			"message": error_binding + err.Error(),
 		})
+		return
 	}
+
 	utils.Info.Println("Setting OnlineCheck to:", req.OnlineCheck)
 
 	Config.OnlineCheck = req.OnlineCheck
@@ -135,12 +138,13 @@ func setOnlineCheckFunc(c *gin.Context) {
 }
 
 func addRedirectFunc(c *gin.Context) {
-	decoder := json.NewDecoder(c.Request.Body)
+	defer c.Request.Body.Close()
 	var req AddRedirect
-	err := decoder.Decode(&req)
+
+	err := c.BindJSON(&req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": error_decode,
+			"message": error_binding + err.Error(),
 		})
 	}
 
@@ -149,15 +153,17 @@ func addRedirectFunc(c *gin.Context) {
 	proxyURL, err := url.Parse(req.Proxy)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": error_proxy_parse,
+			"message": error_proxy_parse + err.Error(),
 		})
+		return
 	}
 
 	addressURL, err := url.Parse(req.Address)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": error_url_parse,
+			"message": error_url_parse + err.Error(),
 		})
+		return
 	}
 
 	if len(Config.HostList) > 0 {
@@ -174,6 +180,7 @@ func addRedirectFunc(c *gin.Context) {
 			"proxy":   html.EscapeString(proxyURL.String()),
 			"message": html.EscapeString("Added to Redirect List but config file was not updated because:\n" + err.Error()),
 		})
+		return
 	}
 
 	post := gin.H{
