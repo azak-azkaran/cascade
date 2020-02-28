@@ -40,8 +40,13 @@ func ConfigureRouter(proxy *goproxy.ProxyHttpServer, addr string, verbose bool) 
 		gin.DisableConsoleColor()
 	}
 
+	config := gin.LoggerConfig{
+		Formatter: utils.DefaultLogFormatter,
+		SkipPaths: []string{"/debug/vars"},
+	}
+
 	r := gin.New()
-	r.Use(gin.LoggerWithFormatter(utils.DefaultLogFormatter))
+	r.Use(gin.LoggerWithConfig(config))
 	r.Use(gin.Recovery())
 
 	r.NoRoute(func(c *gin.Context) {
