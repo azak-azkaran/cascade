@@ -82,7 +82,9 @@ func setCascadeModeFunc(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": error_binding + err.Error(),
 		})
+		return
 	}
+	utils.Info.Println("Recieved Request: ", req)
 
 	if req.CascadeMode {
 		utils.Info.Println("Setting Cascade to: CascadeMode")
@@ -110,6 +112,7 @@ func setDisableAutoChangeModeFunc(c *gin.Context) {
 		})
 		return
 	}
+	utils.Info.Println("Recieved Request: ", req)
 	utils.Info.Println("Setting AutoChangeMode to:", req.AutoChangeMode)
 
 	Config.DisableAutoChangeMode = !req.AutoChangeMode
@@ -131,7 +134,7 @@ func setOnlineCheckFunc(c *gin.Context) {
 		})
 		return
 	}
-
+	utils.Info.Println("Recieved Request: ", req)
 	utils.Info.Println("Setting OnlineCheck to:", req.OnlineCheck)
 
 	Config.OnlineCheck = req.OnlineCheck
@@ -151,8 +154,9 @@ func addRedirectFunc(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": error_binding + err.Error(),
 		})
+		return
 	}
-
+	utils.Info.Println("Recieved Request: ", req)
 	utils.Info.Println("Got Address:", req.Address, "\tRedirect to:", req.Proxy, "\n", req)
 
 	proxyURL, err := url.Parse(req.Proxy)

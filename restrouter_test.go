@@ -163,9 +163,6 @@ func TestRestRouter_AddRedirect(t *testing.T) {
 	assert.True(t, available)
 	assert.NotNil(t, value)
 
-	err = endServer.Shutdown(context.Background())
-	assert.NoError(t, err)
-
 	config, err := GetConf("test.yml")
 	assert.NoError(t, err)
 	assert.Equal(t, config.LocalPort, Config.LocalPort)
@@ -173,6 +170,11 @@ func TestRestRouter_AddRedirect(t *testing.T) {
 	assert.Equal(t, config.HostList, Config.HostList)
 	assert.Equal(t, config.CheckAddress, Config.CheckAddress)
 	assert.NotEqual(t, config.HostList, "golang.org,youtube.com")
+
+	buf = *bytes.NewBufferString("hallo")
+	resp, err = client.Post("http://localhost:8081/add", "application/json", &buf)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
 	err = os.Remove("test.yml")
 	assert.NoError(t, err)
@@ -231,9 +233,7 @@ func TestRestRouter_ChangeOnlineCheck(t *testing.T) {
 	buf = *bytes.NewBufferString("[ hallo ]")
 	resp, err = client.Post("http://localhost:8081/setOnlineCheck", "application/json", &buf)
 	assert.NoError(t, err)
-	//assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-	//assert.NotNil(t, resp.Body)
-	//defer resp.Body.Close()
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
 	resp, err = client.Get("http://localhost:8081/getOnlineCheck")
 	assert.NoError(t, err)
@@ -301,26 +301,80 @@ func TestRestRouter_DisableAutomaticChange(t *testing.T) {
 	ModeSelection("https://www.asda12313.de")
 	time.Sleep(1 * time.Millisecond)
 	assert.True(t, Config.CascadeMode)
+	assert.True(t, Config.DisableAutoChangeMode)
 
-	cascadeModeReq := SetCascadeModeRequest{
-		CascadeMode: false,
+	buf = *bytes.NewBufferString("hallo")
+	resp, err = client.Post("http://localhost:8081/setAutoMode", "application/json", &buf)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+	err = endServer.Shutdown(context.Background())
+	assert.NoError(t, err)
+	Config = Yaml{}
+
+}
+func TestRestRouter_ChangeCascadeMode(t *testing.T) {
+	fmt.Println("Running: TestRestRouter_ChangeCascadeMode")
+	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+
+	Config = Yaml{
+		DisableAutoChangeMode: true,
+		ProxyURL:              "http://localhost",
+		Log:                   "DEBUG",
+		OnlineCheck:           false,
+		CascadeMode:           false,
 	}
 
+	endServer := &http.Server{
+		Addr:    "localhost:8081",
+		Handler: ConfigureRouter(DIRECT.Run(true), "localhost", true),
+	}
+	go func() {
+		err := endServer.ListenAndServe()
+		assert.Equal(t, http.ErrServerClosed, err)
+	}()
+
+	time.Sleep(1 * time.Second)
+	client, err := utils.GetClient("", 2)
+	assert.NoError(t, err)
 	assert.False(t, DirectOverrideChan)
+	assert.False(t, Config.CascadeMode)
+
+	cascadeModeReq := SetCascadeModeRequest{
+		CascadeMode: true,
+	}
+
+	var buf bytes.Buffer
+	encoder := json.NewEncoder(&buf)
 	err = encoder.Encode(&cascadeModeReq)
 	assert.NoError(t, err)
-	resp, err = client.Post("http://localhost:8081/setCascadeMode", "application/json", &buf)
+	resp, err := client.Post("http://localhost:8081/setCascadeMode", "application/json", &buf)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.NotNil(t, resp.Body)
 	defer resp.Body.Close()
 
-	decoder = json.NewDecoder(resp.Body)
+	decoder := json.NewDecoder(resp.Body)
 	assert.NoError(t, decoder.Decode(&cascadeModeReq))
-	assert.False(t, cascadeModeReq.CascadeMode)
+	assert.True(t, cascadeModeReq.CascadeMode)
 	assert.True(t, Config.DisableAutoChangeMode)
+	assert.True(t, Config.CascadeMode)
+	assert.False(t, DirectOverrideChan)
+
+	cascadeModeReq.CascadeMode = false
+	err = encoder.Encode(&cascadeModeReq)
+	assert.NoError(t, err)
+	resp, err = client.Post("http://localhost:8081/setCascadeMode", "application/json", &buf)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.False(t, cascadeModeReq.CascadeMode)
 	assert.False(t, Config.CascadeMode)
 	assert.True(t, DirectOverrideChan)
+
+	buf = *bytes.NewBufferString("hallo")
+	resp, err = client.Post("http://localhost:8081/setCascadeMode", "application/json", &buf)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
 	err = endServer.Shutdown(context.Background())
 	assert.NoError(t, err)
