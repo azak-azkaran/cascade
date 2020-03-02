@@ -3,6 +3,7 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=azak-azkaran_cascade&metric=alert_status)](https://sonarcloud.io/dashboard?id=azak-azkaran_cascade)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=azak-azkaran_cascade&metric=coverage)](https://sonarcloud.io/dashboard?id=azak-azkaran_cascade)
 [![Coverage Status](https://coveralls.io/repos/github/azak-azkaran/cascade/badge.svg?branch=master)](https://coveralls.io/github/azak-azkaran/cascade?branch=master)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fazak-azkaran%2Fcascade.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fazak-azkaran%2Fcascade?ref=badge_shield)
 
 Go proxy which can switch between Direct mode and Cascade mode
 Switch is done according to health check.
@@ -126,3 +127,7 @@ The logs can be viewed by using:
 journalctl -f -u cascade
 ```
 
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fazak-azkaran%2Fcascade.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fazak-azkaran%2Fcascade?ref=badge_large)
