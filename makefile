@@ -28,7 +28,6 @@ coverage: test
 	go test -json > report.json
 	go test github.com/azak-azkaran/cascade/utils -coverprofile=./utils/cover.out
 	go test github.com/azak-azkaran/cascade/utils -json > ./utils/report.json
-	cd ../
 
 daemon: build
 	@echo Moving cascade to /usr/local/bin
