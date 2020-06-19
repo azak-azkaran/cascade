@@ -11,6 +11,7 @@ import (
 
 	"github.com/azak-azkaran/cascade/utils"
 	"github.com/azak-azkaran/goproxy"
+	cmap "github.com/orcaman/concurrent-map"
 )
 
 type cascadeProxy struct {
