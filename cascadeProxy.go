@@ -2,15 +2,15 @@ package main
 
 import (
 	"encoding/base64"
-	"github.com/azak-azkaran/cascade/utils"
-	"github.com/azak-azkaran/goproxy"
-	"github.com/orcaman/concurrent-map"
 	"net"
 	"net/http"
 	"net/url"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/azak-azkaran/cascade/utils"
+	"github.com/azak-azkaran/goproxy"
 )
 
 type cascadeProxy struct {
