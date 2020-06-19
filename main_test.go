@@ -48,6 +48,7 @@ func TestRun(t *testing.T) {
 func TestMain(t *testing.T) {
 	fmt.Println("Running: TestMain")
 	closeChan = false
+	args := os.Args
 	os.Args = append(os.Args, "-config=./test/config.yml")
 
 	go main()
@@ -82,4 +83,5 @@ func TestMain(t *testing.T) {
 	if !closeChan {
 		t.Error("Server was not closed")
 	}
+	os.Args = args
 }
