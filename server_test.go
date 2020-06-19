@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/azak-azkaran/cascade/utils"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/azak-azkaran/cascade/utils"
+	"github.com/stretchr/testify/assert"
 )
 
 var test_config Yaml = Yaml{LocalPort: "8082", verbose: true}
@@ -111,6 +112,9 @@ func TestCreateBrokenServer(t *testing.T) {
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
 	Config = Yaml{LocalPort: "8082", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "golang.org,youtube.com", Log: "info"}
 	CreateConfig()
+
+	utils.Info.Println("Creating Server")
+	CurrentServer = CreateServer(Config)
 
 	RunServer()
 	time.Sleep(1 * time.Second)
