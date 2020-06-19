@@ -48,11 +48,13 @@ func TestRun(t *testing.T) {
 func TestMain(t *testing.T) {
 	fmt.Println("Running: TestMain")
 	closeChan = false
+	os.Args = append(os.Args, "-config=./test/config.yml")
+
 	go main()
 
 	time.Sleep(2 * time.Second)
 	utils.Info.Println("calling HTTP")
-	resp, err := utils.GetResponse("http://localhost:8888", "http://www.google.de")
+	resp, err := utils.GetResponse("http://localhost:7777", "http://www.google.de")
 	if err != nil {
 		t.Error("http test failed: ", err)
 	}
@@ -61,7 +63,7 @@ func TestMain(t *testing.T) {
 	}
 
 	utils.Info.Println("calling HTTPs")
-	resp, err = utils.GetResponse("http://localhost:8888", "https://www.google.de")
+	resp, err = utils.GetResponse("http://localhost:7777", "https://www.google.de")
 	if err != nil {
 		t.Error("http test failed: ", err)
 	}
