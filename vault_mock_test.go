@@ -62,27 +62,29 @@ func StopServer() {
 	time.Sleep(1 * time.Millisecond)
 }
 
+func test_cascade(c *gin.Context) {
+	log.Println("MOCK-Server: called cascade")
+	var msg vault.Secret
+	data := make(map[string]interface{})
+	secret := make(map[string]string)
+	secret["username"] = VAULT_TEST_USERNAME
+	secret["password"] = VAULT_TEST_PASSWORD
+	secret["port"] = VAULT_TEST_PORT
+	secret["health-time"] = VAULT_TEST_HEALTH_TIME
+	secret["health"] = VAULT_TEST_HEALTH
+	secret["host"] = VAULT_TEST_HOST
+	secret["host-list"] = VAULT_TEST_HOST_LIST
+	secret["disableAutoChangeMode"] = VAULT_TEST_DISABLE_AUTO_CHANGE_MODE
+	secret["cascadeMode"] = VAULT_TEST_CASCADE_MODE
+	data["data"] = secret
+	msg.Data = data
+	c.JSON(http.StatusOK, msg)
+}
+
 func createHandler() http.Handler {
 	r := gin.Default()
 	r.GET("/v1/sys/seal-status", test_seal_status)
-	r.GET("/v1/cascade/data/random", func(c *gin.Context) {
-		log.Println("MOCK-Server: called resticpath")
-		var msg vault.Secret
-		data := make(map[string]interface{})
-		secret := make(map[string]string)
-		secret["username"] = VAULT_TEST_USERNAME
-		secret["password"] = VAULT_TEST_PASSWORD
-		secret["port"] = VAULT_TEST_PORT
-		secret["health-time"] = VAULT_TEST_HEALTH_TIME
-		secret["health"] = VAULT_TEST_HEALTH
-		secret["host"] = VAULT_TEST_HOST
-		secret["host-list"] = VAULT_TEST_HOST_LIST
-		secret["disableAutoChangeMode"] = VAULT_TEST_DISABLE_AUTO_CHANGE_MODE
-		secret["cascadeMode"] = VAULT_TEST_CASCADE_MODE
-		data["data"] = secret
-		msg.Data = data
-		c.JSON(http.StatusOK, msg)
-	})
+	r.GET("/v1/cascade/data/:name", test_cascade)
 	return r
 }
 
