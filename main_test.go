@@ -48,6 +48,18 @@ func TestRun(t *testing.T) {
 func TestMain(t *testing.T) {
 	fmt.Println("Running: TestMain")
 	closeChan = false
+	config := Yaml{}
+	config.HealthTime = 5
+	config.Username = "foo"
+	config.Password = "bar"
+	config.ProxyURL = "localhost:8082"
+	config.LocalPort = "8888"
+	config.Log = "info"
+	config.CheckAddress = "https://google.de"
+	config.ConfigFile = ""
+	config.VaultAddr = ""
+	Config = config
+
 	go main()
 
 	time.Sleep(2 * time.Second)
