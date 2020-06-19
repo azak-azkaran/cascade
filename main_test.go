@@ -24,6 +24,8 @@ func TestRun(t *testing.T) {
 	config.LocalPort = "8081"
 	config.Log = "info"
 	config.CheckAddress = "https://google.de"
+	config.ConfigFile = ""
+	config.VaultAddr = ""
 
 	go Run(config)
 

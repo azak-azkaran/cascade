@@ -182,11 +182,11 @@ func GetConfFromFile(path string) (*Yaml, error) {
 }
 
 func UpdateConfig(config Yaml) (*Yaml, error) {
-	if len(config.ConfigFile) > 0 {
+	if config.ConfigFile != "" {
 		return GetConfFromFile(config.ConfigFile)
 	}
 
-	if len(config.VaultAddr) > 0 {
+	if config.VaultAddr != "" {
 		utils.Info.Println("Found Vault server address")
 
 		hostname, err := os.Hostname()
