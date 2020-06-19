@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"github.com/azak-azkaran/cascade/utils"
-	"github.com/azak-azkaran/goproxy/ext/auth"
 	"net/http"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/azak-azkaran/cascade/utils"
+	"github.com/elazarl/goproxy/ext/auth"
 )
 
 func TestCascadeProxy_Run(t *testing.T) {
