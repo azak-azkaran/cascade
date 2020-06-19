@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/azak-azkaran/cascade/utils"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/azak-azkaran/cascade/utils"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestChangeMode(t *testing.T) {
@@ -81,6 +82,9 @@ func TestCreateConfig(t *testing.T) {
 	utils.Init(os.Stdout, os.Stdout, os.Stderr)
 	Config = Yaml{LocalPort: "8888", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "google,eclipse", Log: "info"}
 	CreateConfig()
+
+	utils.Info.Println("Creating Server")
+	CurrentServer = CreateServer(Config)
 
 	assert.NotNil(t, CurrentServer)
 	assert.Equal(t, len(Config.proxyRedirectList), 2)

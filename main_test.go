@@ -2,32 +2,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/azak-azkaran/cascade/utils"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"os"
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/azak-azkaran/cascade/utils"
+	"github.com/stretchr/testify/assert"
 )
-
-func TestGetConf(t *testing.T) {
-	fmt.Println("Running: TestGetConf")
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
-
-	conf, _ := GetConf("./test/test.yml")
-
-	assert.Equal(t, "TestHealth", conf.CheckAddress)
-	assert.Equal(t, "8888", conf.LocalPort)
-	assert.Equal(t, "TestHost", conf.ProxyURL)
-	assert.Equal(t, "TestPassword", conf.Password)
-	assert.Equal(t, "TestUser", conf.Username)
-	assert.Equal(t, int64(5), conf.HealthTime)
-
-	conf, err := GetConf("noname.yaml")
-	assert.Error(t, err)
-	assert.Nil(t, conf, "Error could read YAML but should not be able to be")
-}
 
 func TestRun(t *testing.T) {
 	fmt.Println("Running: TestRun")

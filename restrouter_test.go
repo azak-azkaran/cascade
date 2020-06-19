@@ -5,14 +5,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/azak-azkaran/cascade/utils"
-	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/azak-azkaran/cascade/utils"
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRestRouter_RouteToOtherLocalhost(t *testing.T) {
@@ -65,6 +66,9 @@ func TestRestRouter_GetConfigWithProxy(t *testing.T) {
 
 	Config = Yaml{LocalPort: "8082", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "golang.org,youtube.com", Log: "info"}
 	CreateConfig()
+
+	utils.Info.Println("Creating Server")
+	CurrentServer = CreateServer(Config)
 
 	endServer := &http.Server{
 		Addr:    "localhost:8081",
@@ -120,6 +124,9 @@ func TestRestRouter_AddRedirect(t *testing.T) {
 	Config = Yaml{LocalPort: "8082", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "golang.org,youtube.com", Log: "info", ConfigFile: "test.yml"}
 	CreateConfig()
 
+	utils.Info.Println("Creating Server")
+	CurrentServer = CreateServer(Config)
+
 	r := gin.Default()
 	endServer := &http.Server{
 		Addr:    "localhost:8081",
@@ -163,7 +170,7 @@ func TestRestRouter_AddRedirect(t *testing.T) {
 	assert.True(t, available)
 	assert.NotNil(t, value)
 
-	config, err := GetConf("test.yml")
+	config, err := GetConfFromFile("test.yml")
 	assert.NoError(t, err)
 	assert.Equal(t, config.LocalPort, Config.LocalPort)
 	assert.Equal(t, config.HealthTime, Config.HealthTime)
@@ -189,6 +196,9 @@ func TestRestRouter_ChangeOnlineCheck(t *testing.T) {
 
 	Config = Yaml{OnlineCheck: false}
 	CreateConfig()
+
+	utils.Info.Println("Creating Server")
+	CurrentServer = CreateServer(Config)
 
 	endServer := &http.Server{
 		Addr:    "localhost:8081",
@@ -255,6 +265,9 @@ func TestRestRouter_DisableAutomaticChange(t *testing.T) {
 
 	Config = Yaml{DisableAutoChangeMode: false, ProxyURL: "http://localhost", Log: "DEBUG", OnlineCheck: false}
 	CreateConfig()
+
+	utils.Info.Println("Creating Server")
+	CurrentServer = CreateServer(Config)
 
 	endServer := &http.Server{
 		Addr:    "localhost:8081",
