@@ -1,0 +1,6 @@
+username: "testuser"
+password: "testpassword"
+port: "7777"
+host: "testhost"
+health: "https://www.google.com"
+health-time: 5
