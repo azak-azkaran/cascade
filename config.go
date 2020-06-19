@@ -182,7 +182,7 @@ func GetConfFromFile(path string) (*Yaml, error) {
 }
 
 func UpdateConfig(config Yaml) (*Yaml, error) {
-	if config.ConfigFile != "" {
+	if config.ConfigFile != "" && config.ConfigFile != "config" {
 		return GetConfFromFile(config.ConfigFile)
 	}
 
@@ -260,7 +260,7 @@ func ParseCommandline() (*Yaml, error) {
 	flag.StringVar(&config.Log, "log", "WARNING", "Log level INFO, WARNING, ERROR")
 	flag.BoolVar(&config.DisableAutoChangeMode, "disableAutoChangeMode", false, "Disable the automatically change of the working Modes")
 
-	flag.StringVar(&config.VaultAddr, "vault-addr", "http://127.0.0.1:8200/", "Address to the Vault")
+	flag.StringVar(&config.VaultAddr, "vault-addr", "", "Address to the Vault")
 	flag.StringVar(&config.VaultToken, "vault-token", "", "Token to the Vault")
 
 	ver := flag.Bool("version", false, "prints out the version")
