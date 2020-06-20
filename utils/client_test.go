@@ -27,15 +27,13 @@ func TestGetResponse(t *testing.T) {
 
 	var server *http.Server
 	go func() {
-		Init()
 		Sugar.Info("serving end proxy server at localhost:8082")
 		server = &http.Server{
 			Addr:    "localhost:8082",
 			Handler: proxy,
 		}
 		err := server.ListenAndServe()
-		assert.Error(t, err)
-		assert.NotEqual(t, http.ErrServerClosed, err)
+		assert.EqualError(t, err, http.ErrServerClosed.Error())
 	}()
 
 	time.Sleep(1 * time.Second)
@@ -52,5 +50,5 @@ func TestGetResponseDump(t *testing.T) {
 
 	dump, err := GetResponseDump("", "https://www.google.de")
 	assert.NoError(t, err)
-	assert.Len(t, dump, 0)
+	assert.NotEmpty(t, dump)
 }

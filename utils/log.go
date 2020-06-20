@@ -34,8 +34,14 @@ func Init() {
 	gin.SetMode(gin.ReleaseMode)
 	//gin.DisableConsoleColor()
 	//gin.DefaultErrorWriter = errorHandle
-	std := zap.NewStdLog(logger)
-	gin.DefaultWriter = std.Writer()
+	//std := zap.NewStdLog(logger)
+	//var writer io.Writer
+	//gin.DefaultWriter = writer
+	//std.SetOutput(writer)
+}
+
+func GetLogger() *log.Logger {
+	return zap.NewStdLog(logger)
 }
 
 func EnableError() {
