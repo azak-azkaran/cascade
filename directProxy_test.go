@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/azak-azkaran/cascade/utils"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDirectProxy_Run(t *testing.T) {
@@ -21,34 +23,22 @@ func TestDirectProxy_Run(t *testing.T) {
 			Handler: directProxy,
 		}
 		err := directServer.ListenAndServe()
-		if err != http.ErrServerClosed {
-			t.Error("Other Error then ServerClose", err)
-		}
+		assert.EqualError(t, err, http.ErrServerClosed.Error())
 	}()
 
 	utils.Sugar.Info("waiting for running")
 	time.Sleep(1 * time.Second)
 
 	resp, err := utils.GetResponse("http://localhost:8082", "https://www.google.de")
-	if err != nil {
-		t.Error("Error while client https request resource", err)
-	}
-
-	if resp.StatusCode != 200 {
-		t.Error("Error while client https Request, ", resp.Status)
-	}
+	assert.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.Equal(t, resp.StatusCode, http.StatusOK)
 
 	resp, err = utils.GetResponse("http://localhost:8082", "http://www.google.de")
-	if err != nil {
-		t.Error("Error while client http request resource", err)
-	}
-
-	if resp.StatusCode != 200 {
-		t.Error("Error while client https Request, ", resp.Status)
-	}
+	assert.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.Equal(t, resp.StatusCode, http.StatusOK)
 
 	err = directServer.Shutdown(context.TODO())
-	if err != nil {
-		t.Error("Error while shutting down server")
-	}
+	assert.NoError(t, err)
 }
