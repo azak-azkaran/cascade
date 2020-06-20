@@ -2,24 +2,22 @@ package utils
 
 import (
 	"context"
-	"github.com/azak-azkaran/goproxy"
 	"net"
 	"net/http"
-	"os"
 	"testing"
 	"time"
+
+	"github.com/azak-azkaran/goproxy"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetResponse(t *testing.T) {
-	Init(os.Stdout, os.Stdout, os.Stderr)
+	Init()
 
 	resp, err := GetResponse("", "https://www.google.de")
-	if err != nil {
-		t.Error("Error while requesting without proxy, ", err)
-	}
-	if resp.StatusCode != 200 {
-		t.Error("Google could not be requested, ", resp.Status)
-	}
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	proxy := goproxy.NewProxyHttpServer()
 
@@ -29,41 +27,30 @@ func TestGetResponse(t *testing.T) {
 
 	var server *http.Server
 	go func() {
-		Init(os.Stdout, os.Stdout, os.Stderr)
-		Info.Println("serving end proxy server at localhost:8082")
+		Init()
+		Sugar.Info("serving end proxy server at localhost:8082")
 		server = &http.Server{
 			Addr:    "localhost:8082",
 			Handler: proxy,
 		}
 		err := server.ListenAndServe()
-		if err != http.ErrServerClosed {
-			t.Error("Other Error then ServerClose", err)
-		}
+		assert.Error(t, err)
+		assert.NotEqual(t, http.ErrServerClosed, err)
 	}()
 
 	time.Sleep(1 * time.Second)
 	resp, err = GetResponse("http://localhost:8082", "https://www.google.de")
-	if err != nil {
-		t.Error("Error while requesting without proxy, ", err)
-	}
-	if resp.StatusCode != 200 {
-		t.Error("Google could not be requested, ", resp.Status)
-	}
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	err = server.Shutdown(context.TODO())
-	if err != nil {
-		t.Error("Error while shutting down server")
-	}
+	assert.NoError(t, err)
 }
 
 func TestGetResponseDump(t *testing.T) {
-	Init(os.Stdout, os.Stdout, os.Stderr)
+	Init()
 
 	dump, err := GetResponseDump("", "https://www.google.de")
-	if err != nil {
-		t.Error("Error while requesting without proxy, ", err)
-	}
-	if len(dump) == 0 {
-		t.Error("Google response was empty")
-	}
+	assert.NoError(t, err)
+	assert.Len(t, dump, 0)
 }
