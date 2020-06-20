@@ -204,11 +204,11 @@ func UpdateConfig(config Yaml) (*Yaml, error) {
 }
 
 func CreateConfig() {
+	Config.CascadeMode = true
 	if conf, err := UpdateConfig(Config); err == nil {
 		Config = *conf
 	}
 	Config.proxyRedirectList = strings.Split(Config.HostList, ",")
-	Config.CascadeMode = true
 	Config.health = time.Duration(int(Config.HealthTime)) * time.Second
 
 	switch strings.ToUpper(Config.Log) {

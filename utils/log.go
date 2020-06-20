@@ -2,12 +2,13 @@ package utils
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 var (
@@ -44,20 +45,17 @@ func Init(
 
 func EnableError() {
 	Error = log.New(errorWriter,
-		"ERROR: ",
-		log.Ldate|log.Ltime|log.Lshortfile)
+		"ERROR: ", log.Lshortfile)
 }
 
 func EnableWarning() {
 	Warning = log.New(warningWriter,
-		"WARNING: ",
-		log.Ldate|log.Ltime|log.Lshortfile)
+		"WARNING: ", log.Lshortfile)
 }
 
 func EnableInfo() {
 	Info = log.New(infoWriter,
-		"INFO: ",
-		log.Ldate|log.Ltime|log.Lshortfile)
+		"INFO: ", log.Lshortfile)
 }
 
 func disableLogger() *log.Logger {
@@ -88,8 +86,8 @@ var DefaultLogFormatter = func(param gin.LogFormatterParams) string {
 		// Truncate in a golang < 1.8 safe way
 		param.Latency = param.Latency - param.Latency%time.Second
 	}
-	return fmt.Sprintf("GIN: %v |%s %-7s %s| %13v | %15s | %s\n%s",
-		param.TimeStamp.Format("2006/01/02 | 15:04:05"),
+	return fmt.Sprintf("GIN: %s %-7s %s| %13v | %15s | %s\n%s",
+		//param.TimeStamp.Format("2006/01/02 | 15:04:05"),
 		methodColor, param.Method, resetColor,
 		param.Latency,
 		param.Request.URL.Host,
