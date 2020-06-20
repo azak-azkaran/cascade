@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/azak-azkaran/cascade/utils"
 	"net/http"
 	"strings"
+
+	"github.com/azak-azkaran/cascade/utils"
 )
 
 func HandleCustomProxies(list []string) {
@@ -24,38 +25,38 @@ func HandleCustomProxies(list []string) {
 
 func ModeSelection(checkAddress string) {
 	var success bool
-	utils.Info.Println("Running check on: ", checkAddress)
+	utils.Sugar.Info("Running check on: ", checkAddress)
 	rep, err := utils.GetResponse("", checkAddress)
 	if err != nil {
-		utils.Info.Println("Error while checking,", checkAddress, " , ", err)
+		utils.Sugar.Info("Error while checking,", checkAddress, " , ", err)
 		success = false
 	} else {
 		if rep.StatusCode == http.StatusOK {
-			utils.Info.Println("Response was: ", rep.Status, "\t", rep.StatusCode)
+			utils.Sugar.Info("Response was: ", rep.Status, "\t", rep.StatusCode)
 			success = true
 		} else {
-			utils.Info.Println("Response was: ", rep.Status)
+			utils.Sugar.Info("Response was: ", rep.Status)
 			success = false
 		}
 	}
 
-	utils.Info.Println("Check returns: ", success)
+	utils.Sugar.Info("Check returns: ", success)
 	if Config.CascadeMode {
-		utils.Info.Println("Current Mode: CascadeMode")
+		utils.Sugar.Info("Current Mode: CascadeMode")
 	} else {
-		utils.Info.Println("Current Mode: DirectMode")
+		utils.Sugar.Info("Current Mode: DirectMode")
 	}
 
 	if !Config.DisableAutoChangeMode {
 		ChangeMode(success, Config.OnlineCheck)
 	} else {
-		utils.Info.Println("Automatic Change Mode is disabled")
+		utils.Sugar.Info("Automatic Change Mode is disabled")
 	}
 }
 
 func ChangeMode(success bool, directCheck bool) {
 	if len(Config.ProxyURL) == 0 {
-		utils.Error.Println("ProxyURL was not set so staying in DirectMode")
+		utils.Sugar.Error("ProxyURL was not set so staying in DirectMode")
 		Config.CascadeMode = false
 		DirectOverrideChan = true
 		return
@@ -65,7 +66,7 @@ func ChangeMode(success bool, directCheck bool) {
 		(!success && CurrentServer == nil && directCheck) {
 
 		// switch to direct mode
-		utils.Warning.Println("switch to: DirectMode")
+		utils.Sugar.Warn("switch to: DirectMode")
 		Config.CascadeMode = false
 		DirectOverrideChan = true
 		return
@@ -73,7 +74,7 @@ func ChangeMode(success bool, directCheck bool) {
 	} else if (success && !Config.CascadeMode && directCheck) ||
 		(success && CurrentServer == nil && directCheck) {
 		// switch to cascade mode
-		utils.Warning.Println("switch to: CascadeMode")
+		utils.Sugar.Warn("switch to: CascadeMode")
 		Config.CascadeMode = true
 		DirectOverrideChan = false
 		return
@@ -81,7 +82,7 @@ func ChangeMode(success bool, directCheck bool) {
 
 	if (success && Config.CascadeMode) || (success && CurrentServer == nil) {
 		// switch to direct mode
-		utils.Warning.Println("switch to: DirectMode")
+		utils.Sugar.Warn("switch to: DirectMode")
 		Config.CascadeMode = false
 		DirectOverrideChan = true
 		return
@@ -89,7 +90,7 @@ func ChangeMode(success bool, directCheck bool) {
 	} else if (!success && !Config.CascadeMode) || (!success && CurrentServer == nil) {
 
 		// switch to cascade mode
-		utils.Warning.Println("switch to: CascadeMode")
+		utils.Sugar.Warn("switch to: CascadeMode")
 		Config.CascadeMode = true
 		DirectOverrideChan = false
 		return

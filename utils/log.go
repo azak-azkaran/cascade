@@ -50,6 +50,10 @@ func EnableInfo() {
 	Atom.SetLevel(zap.InfoLevel)
 }
 
+func EnableDebug() {
+	Atom.SetLevel(zap.DebugLevel)
+}
+
 func disableLogger() *log.Logger {
 	return log.New(ioutil.Discard, "", 0)
 }

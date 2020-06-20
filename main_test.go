@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"syscall"
 	"testing"
 	"time"
@@ -14,7 +13,7 @@ import (
 
 func TestRun(t *testing.T) {
 	fmt.Println("Running: TestRun")
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	utils.Init()
 
 	config := Yaml{}
 	config.HealthTime = 1
@@ -54,7 +53,7 @@ func TestMain(t *testing.T) {
 	go main()
 
 	time.Sleep(2 * time.Second)
-	utils.Info.Println("calling HTTP")
+	utils.Sugar.Info("calling HTTP")
 	resp, err := utils.GetResponse("http://localhost:8888", "http://www.google.de")
 	if err != nil {
 		t.Error("http test failed: ", err)
@@ -63,7 +62,7 @@ func TestMain(t *testing.T) {
 		t.Error("http test failed: ", resp)
 	}
 
-	utils.Info.Println("calling HTTPs")
+	utils.Sugar.Info("calling HTTPs")
 	resp, err = utils.GetResponse("http://localhost:8888", "https://www.google.de")
 	if err != nil {
 		t.Error("http test failed: ", err)
@@ -72,7 +71,7 @@ func TestMain(t *testing.T) {
 		t.Error("http test failed: ", resp)
 	}
 
-	utils.Info.Println("Closing")
+	utils.Sugar.Info("Closing")
 	stopChan <- syscall.SIGINT
 	time.Sleep(2 * time.Second)
 

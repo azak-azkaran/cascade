@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"testing"
 	"time"
 
@@ -16,7 +15,7 @@ var test_config Yaml = Yaml{LocalPort: "8082", verbose: true}
 
 func TestCreateServer(t *testing.T) {
 	fmt.Println("Running: TestCreateServer")
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	utils.Init()
 
 	testServer := CreateServer(test_config) //CASCADE.Run(true, "", "", ""), "localhost", "8082")
 	go func() {
@@ -55,7 +54,7 @@ func TestCreateServer(t *testing.T) {
 
 func TestRunServer(t *testing.T) {
 	fmt.Println("Running: TestRunServer")
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	utils.Init()
 	testServer := CreateServer(test_config)
 	if running {
 		t.Error("Server already running")
@@ -91,7 +90,7 @@ func TestRunServer(t *testing.T) {
 
 func TestShutdownCurrentServer(t *testing.T) {
 	fmt.Println("Running: TestShutdownCurrentServer")
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	utils.Init()
 	CreateServer(test_config)
 	if running {
 		t.Error("Server already running")
@@ -109,11 +108,11 @@ func TestShutdownCurrentServer(t *testing.T) {
 
 func TestCreateBrokenServer(t *testing.T) {
 	fmt.Println("Running: TestCreateBrokenServer")
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	utils.Init()
 	Config = Yaml{LocalPort: "8082", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "golang.org,youtube.com", Log: "info"}
 	CreateConfig()
 
-	utils.Info.Println("Creating Server")
+	utils.Sugar.Info("Creating Server")
 	CurrentServer = CreateServer(Config)
 
 	RunServer()
@@ -151,7 +150,7 @@ func TestCreateBrokenServer(t *testing.T) {
 
 func TestRestRequest(t *testing.T) {
 	fmt.Println("Running: TestCreateBrokenServer")
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	utils.Init()
 	testServer := CreateServer(test_config)
 
 	RunServer()

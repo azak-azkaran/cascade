@@ -12,6 +12,7 @@ import (
 	"github.com/azak-azkaran/cascade/utils"
 	"github.com/azak-azkaran/goproxy"
 	cmap "github.com/orcaman/concurrent-map"
+	"go.uber.org/zap"
 )
 
 type cascadeProxy struct {
@@ -56,7 +57,7 @@ func basicAuth(username, password string) string {
 
 func AddDifferentProxyConnection(host string, proxyAddr string) {
 	if host == "" {
-		utils.Error.Println("Empty host in skiplist found, with redirect to: ", proxyAddr)
+		utils.Sugar.Error("Empty host in skiplist found, with redirect to: ", proxyAddr)
 		return
 	}
 
@@ -75,7 +76,7 @@ func AddDifferentProxyConnection(host string, proxyAddr string) {
 	} else {
 		value.proxyAddr = proxyAddr
 	}
-	utils.Info.Println("Adding Redirect: ", proxyAddr, " for: ", host, " Regex:", value.regString)
+	utils.Sugar.Info("Adding Redirect: ", proxyAddr, " for: ", host, " Regex:", value.regString)
 	HostList.Set(proxyAddr, value)
 }
 
@@ -105,14 +106,14 @@ func directRedirect(Host string, proxyURL string) (bool, string) {
 	for content := range HostList.IterBuffered() {
 		val := content.Val.(hostConfig)
 		if val.reg.MatchString(Host) {
-			utils.Warning.Println("Matching Host found: ", Host, " for: ", val.regString)
-			utils.Info.Println("Regex: ", val.reg)
+			utils.Sugar.Warn("Matching Host found: ", Host, " for: ", val.regString)
+			utils.Sugar.Debug("Regex: ", val.reg)
 
 			if len(val.proxyAddr) != 0 {
-				utils.Info.Println("with redirect to: ", val.proxyAddr)
+				utils.Sugar.Info("with redirect to: ", val.proxyAddr)
 				return false, val.proxyAddr
 			} else {
-				utils.Info.Println("Using direct connection")
+				utils.Sugar.Info("Using direct connection")
 				return true, ""
 			}
 		}
@@ -155,7 +156,7 @@ func (cascadeProxy) Run(verbose bool, proxyURL string, username string, password
 	proxy := goproxy.NewProxyHttpServer()
 	proxy.Verbose = verbose
 	//proxy.Logger = utils.Info
-	proxy.Logger = utils.Discard
+	proxy.Logger = zap.NewStdLog(utils.Sugar.Desugar())
 	proxy.KeepHeader = true
 
 	if !strings.HasPrefix(proxyURL, httpPrefix) {

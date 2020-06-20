@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"testing"
 	"time"
 
@@ -13,7 +12,7 @@ import (
 
 func TestGetConfFromFile(t *testing.T) {
 	fmt.Println("Running: TestGetConfFromFile")
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	utils.Init()
 
 	conf, err := GetConfFromFile("./test/test.yml")
 	assert.NoError(t, err)
@@ -33,7 +32,7 @@ func TestGetConfFromFile(t *testing.T) {
 
 func TestGetConfFromVault(t *testing.T) {
 	fmt.Println("Running: TestGetConfFromVault")
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	utils.Init()
 	StartServer(t, "http://localhost:2000")
 	time.Sleep(1 * time.Millisecond)
 
@@ -57,7 +56,7 @@ func TestGetConfFromVault(t *testing.T) {
 
 func TestUpdateConfig(t *testing.T) {
 	fmt.Println("Running: TestUpdateConfig")
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	utils.Init()
 	StartServer(t, "http://localhost:2000")
 	time.Sleep(1 * time.Millisecond)
 	sealStatus = false
@@ -74,7 +73,7 @@ func TestUpdateConfig(t *testing.T) {
 	assert.Equal(t, int64(5), conf.HealthTime)
 	assert.Equal(t, "http://localhost:2000", conf.VaultAddr)
 	assert.Equal(t, "random", conf.VaultToken)
-	conf, err = UpdateConfig(*conf)
+	conf, err = UpdateConfig(conf)
 	assert.NoError(t, err)
 	require.NotNil(t, conf)
 

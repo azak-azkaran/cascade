@@ -1,14 +1,15 @@
 package main
 
 import (
-	"github.com/azak-azkaran/cascade/utils"
-	"github.com/azak-azkaran/goproxy"
-	"github.com/gin-contrib/expvar"
-	"github.com/gin-gonic/gin"
 	"html"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/azak-azkaran/cascade/utils"
+	"github.com/azak-azkaran/goproxy"
+	"github.com/gin-contrib/expvar"
+	"github.com/gin-gonic/gin"
 )
 
 type AddRedirect struct {
@@ -35,7 +36,7 @@ var error_url_parse string = html.EscapeString("Address URL could not be parsed"
 var error_binding string = html.EscapeString("Error while binding JSON: ")
 
 func ConfigureRouter(proxy *goproxy.ProxyHttpServer, addr string, verbose bool) http.Handler {
-	utils.Info.Println("Configurating gin Router")
+	utils.Sugar.Info("Configurating gin Router")
 	if verbose {
 		gin.DisableConsoleColor()
 	}
@@ -84,13 +85,13 @@ func setCascadeModeFunc(c *gin.Context) {
 		})
 		return
 	}
-	utils.Info.Println("Recieved Request: ", req)
+	utils.Sugar.Info("Recieved Request: ", req)
 
 	if req.CascadeMode {
-		utils.Info.Println("Setting Cascade to: CascadeMode")
+		utils.Sugar.Info("Setting Cascade to: CascadeMode")
 		ChangeMode(true, true)
 	} else {
-		utils.Info.Println("Setting Cascade to: DirectMode")
+		utils.Sugar.Info("Setting Cascade to: DirectMode")
 		ChangeMode(false, true)
 	}
 
@@ -112,8 +113,7 @@ func setDisableAutoChangeModeFunc(c *gin.Context) {
 		})
 		return
 	}
-	utils.Info.Println("Recieved Request: ", req)
-	utils.Info.Println("Setting AutoChangeMode to:", req.AutoChangeMode)
+	utils.Sugar.Info("Recieved Request: ", req, " Setting AutoChangeMode to:", req.AutoChangeMode)
 
 	Config.DisableAutoChangeMode = !req.AutoChangeMode
 
@@ -134,8 +134,7 @@ func setOnlineCheckFunc(c *gin.Context) {
 		})
 		return
 	}
-	utils.Info.Println("Recieved Request: ", req)
-	utils.Info.Println("Setting OnlineCheck to:", req.OnlineCheck)
+	utils.Sugar.Info("Recieved Request: ", req, " Setting OnlineCheck to:", req.OnlineCheck)
 
 	Config.OnlineCheck = req.OnlineCheck
 
@@ -156,8 +155,9 @@ func addRedirectFunc(c *gin.Context) {
 		})
 		return
 	}
-	utils.Info.Println("Recieved Request: ", req)
-	utils.Info.Println("Got Address:", req.Address, "\tRedirect to:", req.Proxy, "\n", req)
+	utils.Sugar.Info("Recieved Request: ", req,
+		"\nGot Address:", req.Address,
+		"\nRedirect to:", req.Proxy)
 
 	proxyURL, err := url.Parse(req.Proxy)
 	if err != nil {
@@ -183,7 +183,7 @@ func addRedirectFunc(c *gin.Context) {
 	AddDifferentProxyConnection(req.Address, req.Proxy)
 	err = SetConf(&Config)
 	if err != nil {
-		utils.Info.Println(err)
+		utils.Sugar.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"address": html.EscapeString(addressURL.String()),
 			"proxy":   html.EscapeString(proxyURL.String()),
