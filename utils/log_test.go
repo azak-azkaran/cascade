@@ -1,10 +1,15 @@
 package utils
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -16,6 +21,33 @@ func TestInit(t *testing.T) {
 
 	Sugar.Info(message)
 	Sugar.Error(message)
+
+	config := gin.LoggerConfig{
+		Formatter: DefaultLogFormatter,
+		SkipPaths: []string{"/debug/vars"},
+		Output:    GetLogger().Writer(),
+	}
+
+	r := gin.New()
+	r.Use(gin.LoggerWithConfig(config))
+	r.GET("/ping", func(c *gin.Context) {
+		c.String(200, "pong "+fmt.Sprint(time.Now().Unix()))
+	})
+
+	server := &http.Server{
+		Addr:    "localhost:2000",
+		Handler: r,
+	}
+	go server.ListenAndServe()
+	time.Sleep(10 * time.Millisecond)
+
+	resp, err := GetResponse("", "http://localhost:2000/ping")
+	assert.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	err = server.Shutdown(context.Background())
+	assert.NoError(t, err)
 
 	//Info.Println(message)
 	//s := infobuffer.String()

@@ -133,17 +133,17 @@ func GetConfFromVault(vaultAddr string, vaultToken string, path string) (*Yaml, 
 	}
 	config.HealthTime = health
 
-	//disableAutoChangeMode, err := strconv.ParseBool(data["disableAutoChangeMode"].(string))
-	//if err != nil {
-	//	return nil, err
-	//}
+	disableAutoChangeMode, err := strconv.ParseBool(data["disableAutoChangeMode"].(string))
+	if err != nil {
+		return nil, err
+	}
 
 	//cascadeMode, err := strconv.ParseBool(data["cascadeMode"].(string))
 	//if err != nil {
 	//	return nil, err
 	//}
 
-	//config.DisableAutoChangeMode = disableAutoChangeMode
+	config.DisableAutoChangeMode = disableAutoChangeMode
 	//config.CascadeMode = cascadeMode
 
 	return &config, nil

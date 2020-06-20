@@ -44,6 +44,7 @@ func ConfigureRouter(proxy *goproxy.ProxyHttpServer, addr string, verbose bool) 
 	config := gin.LoggerConfig{
 		Formatter: utils.DefaultLogFormatter,
 		SkipPaths: []string{"/debug/vars"},
+		Output:    utils.GetLogger().Writer(),
 	}
 
 	r := gin.New()
