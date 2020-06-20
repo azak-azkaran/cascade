@@ -66,7 +66,7 @@ func TestCascadeProxy_Run(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	_, err = utils.GetResponse("http://localhost:8082", "https://www.google.de")
-	assert.NoError(t, err)
+	assert.Error(t, err)
 
 	err = middleServer.Shutdown(context.TODO())
 	assert.NoError(t, err)
@@ -93,7 +93,7 @@ func TestAddDirectConnection(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 	_, err := utils.GetResponse("http://localhost:8081", "https://www.google.de")
-	assert.NoError(t, err)
+	assert.Error(t, err)
 
 	Config.LocalPort = "8801"
 	AddDirectConnection("google")
@@ -109,7 +109,7 @@ func TestAddDirectConnection(t *testing.T) {
 
 	ClearHostList()
 	_, err = utils.GetResponse("http://localhost:8081", "https://www.google.de")
-	assert.NoError(t, err)
+	assert.Error(t, err)
 
 	err = middleServer.Shutdown(context.TODO())
 	assert.NoError(t, err)
@@ -151,7 +151,7 @@ func TestAddDifferentProxyConnection(t *testing.T) {
 	Config.LocalPort = "8801"
 	utils.Sugar.Info("starting HTTPS test to fail")
 	_, err := utils.GetResponse("http://localhost:8081", "https://www.google.de")
-	assert.NoError(t, err)
+	assert.Error(t, err)
 
 	utils.Sugar.Info("starting HTTP test to fail")
 	resp, err := utils.GetResponse("http://localhost:8081", "http://www.google.de")
@@ -201,7 +201,7 @@ func TestAddDifferentProxyConnection(t *testing.T) {
 
 	ClearHostList()
 	_, err = utils.GetResponse("http://localhost:8081", "https://www.google.de")
-	assert.NoError(t, err)
+	assert.Error(t, err)
 
 	err = middleServer.Shutdown(context.TODO())
 	assert.NoError(t, err)
@@ -226,7 +226,7 @@ func TestCascadeProxy_ModeSwitch(t *testing.T) {
 
 	time.Sleep(1 * time.Millisecond)
 	_, err := utils.GetResponse("http://localhost:8081", "https://www.google.de")
-	assert.NoError(t, err)
+	assert.Error(t, err)
 
 	utils.Sugar.Info("writing to DirectOverrideChan")
 	DirectOverrideChan = true

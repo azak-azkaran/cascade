@@ -39,8 +39,7 @@ func TestCreateServer(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 	resp, err = utils.GetResponse("http://localhost:8082", "http://www.google.de")
-	assert.NoError(t, err)
-	require.NotNil(t, resp)
+	assert.Error(t, err)
 	DirectOverrideChan = false
 }
 
@@ -83,7 +82,11 @@ func TestShutdownCurrentServer(t *testing.T) {
 func TestCreateBrokenServer(t *testing.T) {
 	fmt.Println("Running: TestCreateBrokenServer")
 	utils.Init()
-	Config = Yaml{LocalPort: "8082", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "golang.org,youtube.com", Log: "info"}
+	Config = Yaml{LocalPort: "8082",
+		CheckAddress: "https://www.google.de",
+		HealthTime:   5,
+		HostList:     "golang.org,youtube.com",
+		Log:          "info"}
 	CreateConfig()
 
 	utils.Sugar.Info("Creating Server")
@@ -95,7 +98,7 @@ func TestCreateBrokenServer(t *testing.T) {
 	assert.Len(t, Config.proxyRedirectList, 2)
 
 	_, err := utils.GetResponse("http://localhost:8082", "https://www.google.de")
-	assert.NoError(t, err)
+	assert.Error(t, err)
 
 	resp, err := utils.GetResponse("http://localhost:8082", "http://golang.org/doc/")
 	assert.NoError(t, err)
@@ -109,7 +112,7 @@ func TestCreateBrokenServer(t *testing.T) {
 }
 
 func TestRestRequest(t *testing.T) {
-	fmt.Println("Running: TestCreateBrokenServer")
+	fmt.Println("Running: TestRestRequest")
 	utils.Init()
 	testServer := CreateServer(test_config)
 
