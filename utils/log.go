@@ -2,76 +2,56 @@ package utils
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
-	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 var (
-	Info          *log.Logger = disableLogger()
-	Warning       *log.Logger = disableLogger()
-	Error         *log.Logger = disableLogger()
-	Discard       *log.Logger = disableLogger()
-	infoWriter    io.Writer   = os.Stdout
-	warningWriter io.Writer   = os.Stdout
-	errorWriter   io.Writer   = os.Stderr
-	// LogFile File for logs if log to file is active
-	LogFile *os.File
+	Atom   = zap.NewAtomicLevel()
+	config = zap.NewProductionConfig()
+	logger *zap.Logger
+	Sugar  *zap.SugaredLogger
 )
 
-func Init(
-	infoHandle io.Writer,
-	warningHandle io.Writer,
-	errorHandle io.Writer) {
-
-	infoWriter = infoHandle
-	EnableInfo()
-
-	warningWriter = warningHandle
-	EnableWarning()
-
-	errorWriter = errorHandle
-	EnableError()
+func Init() {
+	var err error
+	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	config.EncoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
+	config.Encoding = "console"
+	config.Level = Atom
+	logger, err = config.Build()
+	if err != nil {
+		fmt.Println("Error building logger:", err)
+	}
+	defer logger.Sync() // flushes buffer, if any
+	Sugar = logger.Sugar()
 
 	gin.SetMode(gin.ReleaseMode)
 	//gin.DisableConsoleColor()
-	gin.DefaultErrorWriter = errorHandle
-	//gin.DefaultWriter = infoWriter
+	//gin.DefaultErrorWriter = errorHandle
+	std := zap.NewStdLog(logger)
+	gin.DefaultWriter = std.Writer()
 }
 
 func EnableError() {
-	Error = log.New(errorWriter,
-		"ERROR: ", log.Lshortfile)
+	Atom.SetLevel(zap.ErrorLevel)
 }
 
 func EnableWarning() {
-	Warning = log.New(warningWriter,
-		"WARNING: ", log.Lshortfile)
+	Atom.SetLevel(zap.WarnLevel)
 }
 
 func EnableInfo() {
-	Info = log.New(infoWriter,
-		"INFO: ", log.Lshortfile)
+	Atom.SetLevel(zap.InfoLevel)
 }
 
 func disableLogger() *log.Logger {
 	return log.New(ioutil.Discard, "", 0)
-}
-
-func DisableInfo() {
-	Info = disableLogger()
-}
-
-func DisableWarning() {
-	Warning = disableLogger()
-}
-
-func DisableError() {
-	Error = disableLogger()
 }
 
 // defaultLogFormatter is the default log format function Logger middleware uses.
@@ -96,21 +76,22 @@ var DefaultLogFormatter = func(param gin.LogFormatterParams) string {
 	)
 }
 
-func SetLogPath(path string) *os.File {
-	buffer, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		Error.Println("Error while opining Log file:", err)
-		return nil
-	}
-	Init(buffer, buffer, buffer)
-	return buffer
-}
+//func SetLogPath(path string) *os.File {
+//	buffer, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+//	zap.Open(path)
+//	if err != nil {
+//		Error.Println("Error while opining Log file:", err)
+//		return nil
+//	}
+//	Init(buffer, buffer, buffer)
+//	return buffer
+//}
 
-func Close() {
-	if LogFile != nil {
-		err := LogFile.Close()
-		if err != nil {
-			Error.Println("Error while closing LogFile Pointer: ", err)
-		}
-	}
-}
+//func Close() {
+//	if LogFile != nil {
+//		err := LogFile.Close()
+//		if err != nil {
+//			Error.Println("Error while closing LogFile Pointer: ", err)
+//		}
+//	}
+//}
