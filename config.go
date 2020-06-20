@@ -126,6 +126,7 @@ func GetConfFromVault(vaultAddr string, vaultToken string, path string) (*Yaml, 
 	config.ProxyURL = data["host"].(string)
 	config.HostList = data["host-list"].(string)
 	config.CheckAddress = data["health"].(string)
+	config.Log = data["log"].(string)
 
 	health, err := strconv.ParseInt(data["health-time"].(string), 10, 0)
 	if err != nil {
