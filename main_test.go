@@ -9,6 +9,7 @@ import (
 
 	"github.com/azak-azkaran/cascade/utils"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRun(t *testing.T) {
@@ -55,32 +56,21 @@ func TestMain(t *testing.T) {
 	time.Sleep(2 * time.Second)
 	utils.Sugar.Info("calling HTTP")
 	resp, err := utils.GetResponse("http://localhost:8888", "http://www.google.de")
-	if err != nil {
-		t.Error("http test failed: ", err)
-	}
-	if resp == nil || resp.StatusCode != 200 {
-		t.Error("http test failed: ", resp)
-	}
+	assert.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	utils.Sugar.Info("calling HTTPs")
 	resp, err = utils.GetResponse("http://localhost:8888", "https://www.google.de")
-	if err != nil {
-		t.Error("http test failed: ", err)
-	}
-	if resp == nil || resp.StatusCode != 200 {
-		t.Error("http test failed: ", resp)
-	}
+
+	assert.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	utils.Sugar.Info("Closing")
 	stopChan <- syscall.SIGINT
 	time.Sleep(2 * time.Second)
 
-	if CurrentServer != nil {
-		t.Error("Server was not reset")
-	}
-
-	if !closeChan {
-		t.Error("Server was not closed")
-	}
-	//os.Args = args
+	assert.Nil(t, CurrentServer)
+	assert.True(t, closeChan)
 }
