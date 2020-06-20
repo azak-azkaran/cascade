@@ -50,8 +50,8 @@ func TestGetConfFromVault(t *testing.T) {
 	assert.Equal(t, "TestPassword", conf.Password)
 	assert.Equal(t, "TestUser", conf.Username)
 	assert.Equal(t, int64(30), conf.HealthTime)
-	assert.Equal(t, true, conf.CascadeMode)
-	assert.Equal(t, false, conf.DisableAutoChangeMode)
+	//assert.Equal(t, true, conf.CascadeMode)
+	//assert.Equal(t, false, conf.DisableAutoChangeMode)
 }
 
 func TestUpdateConfig(t *testing.T) {
@@ -78,6 +78,6 @@ func TestUpdateConfig(t *testing.T) {
 	require.NotNil(t, conf)
 
 	assert.Equal(t, int64(30), conf.HealthTime)
-	assert.Equal(t, true, conf.CascadeMode)
-	assert.Equal(t, false, conf.DisableAutoChangeMode)
+	//assert.Equal(t, true, conf.CascadeMode)
+	//assert.Equal(t, false, conf.DisableAutoChangeMode)
 }

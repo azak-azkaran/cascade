@@ -263,7 +263,11 @@ func TestRestRouter_DisableAutomaticChange(t *testing.T) {
 	fmt.Println("Running: TestRestRouter_DisableAutomaticChange")
 	utils.Init()
 
-	Config = Yaml{DisableAutoChangeMode: false, ProxyURL: "http://localhost", Log: "DEBUG", OnlineCheck: false}
+	Config = Yaml{DisableAutoChangeMode: false,
+		ProxyURL:    "http://localhost",
+		Log:         "DEBUG",
+		OnlineCheck: false,
+		CascadeMode: true}
 	CreateConfig()
 
 	utils.Sugar.Info("Creating Server")
