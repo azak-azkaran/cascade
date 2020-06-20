@@ -120,32 +120,77 @@ func GetConfFromVault(vaultAddr string, vaultToken string, path string) (*Yaml, 
 		return nil, errors.New("Data of secret with path: " + path + " is empty")
 	}
 
-	config.Username = data["username"].(string)
-	config.Password = data["password"].(string)
-	config.LocalPort = data["port"].(string)
-	config.ProxyURL = data["host"].(string)
-	config.HostList = data["host-list"].(string)
-	config.CheckAddress = data["health"].(string)
-	config.Log = data["log"].(string)
-
-	health, err := strconv.ParseInt(data["health-time"].(string), 10, 0)
-	if err != nil {
-		return nil, err
-	}
-	config.HealthTime = health
-
-	disableAutoChangeMode, err := strconv.ParseBool(data["disableAutoChangeMode"].(string))
-	if err != nil {
-		return nil, err
+	if data["username"] != nil {
+		config.Username = data["username"].(string)
+	} else {
+		return nil, errors.New("Username is missing in Vault")
 	}
 
-	//cascadeMode, err := strconv.ParseBool(data["cascadeMode"].(string))
-	//if err != nil {
-	//	return nil, err
-	//}
+	if data["password"] != nil {
+		config.Password = data["password"].(string)
+	} else {
+		return nil, errors.New("Password is missing in Vault")
+	}
 
-	config.DisableAutoChangeMode = disableAutoChangeMode
-	//config.CascadeMode = cascadeMode
+	if data["host"] != nil {
+		config.ProxyURL = data["host"].(string)
+	} else {
+		return nil, errors.New("Host is missing in Vault")
+	}
+
+	if data["port"] != nil {
+		config.LocalPort = data["port"].(string)
+	} else {
+		utils.Sugar.Warn("Port is missing in Vault")
+		config.LocalPort = "8888"
+	}
+
+	if data["host-list"] != nil {
+		config.HostList = data["host-list"].(string)
+	} else {
+		utils.Sugar.Warn("Host list is missing in Vault")
+		config.HostList = ""
+	}
+
+	if data["health"] != nil {
+		config.CheckAddress = data["health"].(string)
+	} else {
+		config.CheckAddress = "https://www.google.de"
+	}
+
+	if data["log"] != nil {
+		config.Log = data["log"].(string)
+	} else {
+		config.Log = "WARNING"
+	}
+
+	if data["health-time"] != nil {
+		health, err := strconv.ParseInt(data["health-time"].(string), 10, 0)
+		if err != nil {
+			return nil, err
+		}
+		config.HealthTime = health
+	} else {
+		config.HealthTime = 5
+	}
+
+	if data["disableAutoChangeMode"] != nil {
+		disableAutoChangeMode, err := strconv.ParseBool(data["disableAutoChangeMode"].(string))
+		if err != nil {
+			return nil, err
+		}
+		config.DisableAutoChangeMode = disableAutoChangeMode
+	} else {
+		config.DisableAutoChangeMode = false
+	}
+
+	if data["cascadeMode"] != nil {
+		cascadeMode, err := strconv.ParseBool(data["cascadeMode"].(string))
+		if err != nil {
+			return nil, err
+		}
+		config.CascadeMode = cascadeMode
+	}
 
 	return &config, nil
 }
