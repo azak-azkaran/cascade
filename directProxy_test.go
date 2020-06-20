@@ -2,21 +2,20 @@ package main
 
 import (
 	"context"
-	"github.com/azak-azkaran/cascade/utils"
 	"net/http"
-	"os"
 	"testing"
 	"time"
+
+	"github.com/azak-azkaran/cascade/utils"
 )
 
 func TestDirectProxy_Run(t *testing.T) {
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	utils.Init()
 	time.Sleep(1 * time.Second)
 	directProxy := DIRECT.Run(true)
 	var directServer *http.Server
 	go func() {
-		utils.Init(os.Stdout, os.Stdout, os.Stderr)
-		utils.Info.Println("serving end proxy server at localhost:8082")
+		utils.Sugar.Info("serving end proxy server at localhost:8082")
 		directServer = &http.Server{
 			Addr:    "localhost:8082",
 			Handler: directProxy,
@@ -27,7 +26,7 @@ func TestDirectProxy_Run(t *testing.T) {
 		}
 	}()
 
-	utils.Info.Println("waiting for running")
+	utils.Sugar.Info("waiting for running")
 	time.Sleep(1 * time.Second)
 
 	resp, err := utils.GetResponse("http://localhost:8082", "https://www.google.de")

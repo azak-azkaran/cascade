@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -13,7 +12,7 @@ import (
 
 func TestChangeMode(t *testing.T) {
 	fmt.Println("Running: TestChangeMode")
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	utils.Init()
 	assert.False(t, Config.OnlineCheck)
 
 	Config.verbose = true
@@ -59,7 +58,7 @@ func TestChangeMode(t *testing.T) {
 
 func TestModeSelection(t *testing.T) {
 	fmt.Println("Running: TestModeSelection")
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	utils.Init()
 
 	Config.verbose = true
 	Config.CascadeMode = true
@@ -79,11 +78,11 @@ func TestModeSelection(t *testing.T) {
 
 func TestCreateConfig(t *testing.T) {
 	fmt.Println("Running: TestCreateConfig")
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	utils.Init()
 	Config = Yaml{LocalPort: "8888", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "google,eclipse", Log: "info"}
 	CreateConfig()
 
-	utils.Info.Println("Creating Server")
+	utils.Sugar.Info("Creating Server")
 	CurrentServer = CreateServer(Config)
 
 	assert.NotNil(t, CurrentServer)
@@ -94,7 +93,7 @@ func TestCreateConfig(t *testing.T) {
 
 func TestHandleCustomProxies(t *testing.T) {
 	fmt.Println("Running: TestHandleCustomProxies")
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	utils.Init()
 	list := strings.Split("eclipse,google->test:8888,azure->", ",")
 	HandleCustomProxies(list)
 
@@ -124,7 +123,7 @@ func TestHandleCustomProxies(t *testing.T) {
 
 func TestDisableAutoChangeMode(t *testing.T) {
 	fmt.Println("Running: TestDisableAutoChangeMode")
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	utils.Init()
 
 	Config.verbose = true
 	Config.CascadeMode = true

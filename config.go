@@ -131,20 +131,20 @@ func GetConfFromVault(vaultAddr string, vaultToken string, path string) (*Yaml, 
 	if err != nil {
 		return nil, err
 	}
-
-	disableAutoChangeMode, err := strconv.ParseBool(data["disableAutoChangeMode"].(string))
-	if err != nil {
-		return nil, err
-	}
-
-	cascadeMode, err := strconv.ParseBool(data["cascadeMode"].(string))
-	if err != nil {
-		return nil, err
-	}
-
-	config.DisableAutoChangeMode = disableAutoChangeMode
 	config.HealthTime = health
-	config.CascadeMode = cascadeMode
+
+	//disableAutoChangeMode, err := strconv.ParseBool(data["disableAutoChangeMode"].(string))
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	//cascadeMode, err := strconv.ParseBool(data["cascadeMode"].(string))
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	//config.DisableAutoChangeMode = disableAutoChangeMode
+	//config.CascadeMode = cascadeMode
 
 	return &config, nil
 }
@@ -178,38 +178,46 @@ func GetConfFromFile(path string) (*Yaml, error) {
 		config.HealthTime = 5
 	}
 
+	config.proxyRedirectList = strings.Split(config.HostList, ",")
 	return &config, nil
 }
 
-func UpdateConfig(config Yaml) (*Yaml, error) {
+func UpdateConfig(config *Yaml) (*Yaml, error) {
+	var err error
 	if config.ConfigFile != "" && config.ConfigFile != "config" {
-		return GetConfFromFile(config.ConfigFile)
+		config, err = GetConfFromFile(config.ConfigFile)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if config.VaultAddr != "" {
-		utils.Info.Println("Found Vault server address")
+		utils.Sugar.Info("Found Vault server address")
 
 		hostname, err := os.Hostname()
 		if err != nil {
-			utils.Error.Println("Error with hostname")
+			utils.Sugar.Error("Error getting hostname: ", err)
 		}
 
 		if len(config.VaultToken) == 0 {
 			return nil, errors.New("Vault token is not provided")
 		}
 
-		return GetConfFromVault(config.VaultAddr, config.VaultToken, hostname)
+		config, err = GetConfFromVault(config.VaultAddr, config.VaultToken, hostname)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return &config, nil
+
+	config.proxyRedirectList = strings.Split(config.HostList, ",")
+	config.health = time.Duration(int(Config.HealthTime)) * time.Second
+	return config, nil
 }
 
 func CreateConfig() {
-	Config.CascadeMode = true
-	if conf, err := UpdateConfig(Config); err == nil {
+	if conf, err := UpdateConfig(&Config); err == nil {
 		Config = *conf
 	}
-	Config.proxyRedirectList = strings.Split(Config.HostList, ",")
-	Config.health = time.Duration(int(Config.HealthTime)) * time.Second
 
 	switch strings.ToUpper(Config.Log) {
 	case "DEBUG":
@@ -222,27 +230,23 @@ func CreateConfig() {
 		fmt.Println("Health Time: ", Config.health)
 		fmt.Println("Skip Cascade for Hosts: ", Config.proxyRedirectList)
 		fmt.Println("Log Level: ", Config.Log)
-		fallthrough
+		utils.EnableDebug()
+		Config.Log = "DEBUG"
+		Config.verbose = true
 	case "INFO":
 		Config.Log = "INFO"
 		Config.verbose = true
 		utils.EnableInfo()
-		utils.EnableWarning()
-		utils.EnableError()
 	case "ERROR":
 		Config.Log = "ERROR"
 		Config.verbose = false
-		utils.DisableInfo()
-		utils.DisableWarning()
 		utils.EnableError()
 	case "WARNING":
 		fallthrough
 	default:
 		Config.Log = "WARNING"
 		Config.verbose = true
-		utils.DisableInfo()
 		utils.EnableWarning()
-		utils.EnableError()
 	}
 }
 
@@ -269,5 +273,5 @@ func ParseCommandline() (*Yaml, error) {
 	if *ver {
 		return nil, nil
 	}
-	return UpdateConfig(config)
+	return UpdateConfig(&config)
 }

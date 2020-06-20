@@ -18,7 +18,7 @@ import (
 
 func TestRestRouter_RouteToOtherLocalhost(t *testing.T) {
 	fmt.Println("Running: TestRestRouter_RouteToOtherLocalhost")
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	utils.Init()
 	endProxy := DIRECT.Run(true)
 
 	endServer := &http.Server{
@@ -62,12 +62,12 @@ func TestRestRouter_RouteToOtherLocalhost(t *testing.T) {
 
 func TestRestRouter_GetConfigWithProxy(t *testing.T) {
 	fmt.Println("Running: TestRestRouter_GetConfigWithProxy")
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	utils.Init()
 
 	Config = Yaml{LocalPort: "8082", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "golang.org,youtube.com", Log: "info"}
 	CreateConfig()
 
-	utils.Info.Println("Creating Server")
+	utils.Sugar.Info("Creating Server")
 	CurrentServer = CreateServer(Config)
 
 	endServer := &http.Server{
@@ -120,11 +120,11 @@ func TestRestRouter_GetConfigWithProxy(t *testing.T) {
 
 func TestRestRouter_AddRedirect(t *testing.T) {
 	fmt.Println("Running: TestRestRouter_AddReddirect")
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	utils.Init()
 	Config = Yaml{LocalPort: "8082", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "golang.org,youtube.com", Log: "info", ConfigFile: "test.yml"}
 	CreateConfig()
 
-	utils.Info.Println("Creating Server")
+	utils.Sugar.Info("Creating Server")
 	CurrentServer = CreateServer(Config)
 
 	r := gin.Default()
@@ -164,7 +164,7 @@ func TestRestRouter_AddRedirect(t *testing.T) {
 	assert.Equal(t, jsonRequest.Proxy, responesMessage.Proxy)
 	assert.Equal(t, jsonRequest.Address, responesMessage.Address)
 
-	utils.Info.Println("Config: ", Config)
+	utils.Sugar.Info("Config: ", Config)
 
 	value, available := HostList.Get(jsonRequest.Proxy)
 	assert.True(t, available)
@@ -192,12 +192,12 @@ func TestRestRouter_AddRedirect(t *testing.T) {
 
 func TestRestRouter_ChangeOnlineCheck(t *testing.T) {
 	fmt.Println("Running: TestRestRouter_ChangeOnlineCheck")
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	utils.Init()
 
 	Config = Yaml{OnlineCheck: false}
 	CreateConfig()
 
-	utils.Info.Println("Creating Server")
+	utils.Sugar.Info("Creating Server")
 	CurrentServer = CreateServer(Config)
 
 	endServer := &http.Server{
@@ -261,12 +261,12 @@ func TestRestRouter_ChangeOnlineCheck(t *testing.T) {
 
 func TestRestRouter_DisableAutomaticChange(t *testing.T) {
 	fmt.Println("Running: TestRestRouter_DisableAutomaticChange")
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	utils.Init()
 
 	Config = Yaml{DisableAutoChangeMode: false, ProxyURL: "http://localhost", Log: "DEBUG", OnlineCheck: false}
 	CreateConfig()
 
-	utils.Info.Println("Creating Server")
+	utils.Sugar.Info("Creating Server")
 	CurrentServer = CreateServer(Config)
 
 	endServer := &http.Server{
@@ -328,7 +328,7 @@ func TestRestRouter_DisableAutomaticChange(t *testing.T) {
 }
 func TestRestRouter_ChangeCascadeMode(t *testing.T) {
 	fmt.Println("Running: TestRestRouter_ChangeCascadeMode")
-	utils.Init(os.Stdout, os.Stdout, os.Stderr)
+	utils.Init()
 
 	Config = Yaml{
 		DisableAutoChangeMode: true,

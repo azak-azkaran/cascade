@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"crypto/tls"
+
 	"github.com/azak-azkaran/cascade/utils"
 	"github.com/azak-azkaran/goproxy"
+
 	//"github.com/urfave/negroni"
 	"net/http"
 	"syscall"
@@ -23,11 +25,11 @@ func RunServer() {
 	go func() {
 		counter := 5
 		for CurrentServer == nil {
-			utils.Warning.Println("Server was not created waiting for a one second")
+			utils.Sugar.Warn("Server was not created waiting for a one second")
 			time.Sleep(1 * time.Second)
 			counter = counter - 1
 			if counter <= 0 {
-				utils.Error.Println("Server was not created in time")
+				utils.Sugar.Error("Server was not created in time")
 				stopChan <- syscall.SIGINT
 			}
 		}
@@ -36,14 +38,14 @@ func RunServer() {
 		err := CurrentServer.ListenAndServe()
 		if err != nil {
 			if err == http.ErrServerClosed {
-				utils.Info.Println("Server was closed")
+				utils.Sugar.Info("Server was closed")
 			} else {
-				utils.Error.Println("Error while running server: ", err)
+				utils.Sugar.Error("Error while running server: ", err)
 			}
 		}
 		running = false
 	}()
-	utils.Info.Println("Server started")
+	utils.Sugar.Info("Server started")
 }
 
 //ShutdownCurrentServer Shuts down the current server with a 1 Second timeout
@@ -56,12 +58,12 @@ func ShutdownCurrentServer() {
 }
 
 func shutdown(timeout time.Duration, server *http.Server) {
-	utils.Info.Println("Starting shutdown with Timout: ", timeout)
+	utils.Sugar.Info("Starting shutdown with Timout: ", timeout)
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	err := server.Shutdown(ctx)
 	if err != nil {
-		utils.Error.Println("Error while shutdown: ", err)
+		utils.Sugar.Error("Error while shutdown: ", err)
 	}
 }
 
@@ -79,7 +81,7 @@ func createServer(proxy *goproxy.ProxyHttpServer, addr string, config Yaml) *htt
 
 // CreateServer creates a proxy server on addr:port
 func CreateServer(config Yaml) *http.Server {
-	utils.Info.Println("Creating Proxy on: localhost", ":", config.LocalPort)
+	utils.Sugar.Info("Creating Proxy on: localhost", ":", config.LocalPort)
 	proxy := CASCADE.Run(config.verbose, config.ProxyURL, config.Username, config.Password)
 	HandleCustomProxies(config.proxyRedirectList)
 	CurrentServer = createServer(proxy, "localhost", config)
