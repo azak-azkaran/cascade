@@ -32,10 +32,10 @@ func ModeSelection(checkAddress string) {
 		success = false
 	} else {
 		if rep.StatusCode == http.StatusOK {
-			utils.Sugar.Info("Response was: ", rep.Status, "\t", rep.StatusCode)
+			utils.Sugar.Debug("Response was: ", rep.Status, "\t", rep.StatusCode)
 			success = true
 		} else {
-			utils.Sugar.Info("Response was: ", rep.Status)
+			utils.Sugar.Debug("Response was: ", rep.Status)
 			success = false
 		}
 	}
