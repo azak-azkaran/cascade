@@ -24,6 +24,7 @@ const (
 	VAULT_TEST_PORT                     = "8888"
 	VAULT_TEST_DISABLE_AUTO_CHANGE_MODE = "false"
 	VAULT_TEST_CASCADE_MODE             = "true"
+	VAULT_TEST_LOG_LEVEL                = "info"
 )
 
 var server *http.Server
@@ -76,6 +77,7 @@ func test_cascade(c *gin.Context) {
 	secret["host-list"] = VAULT_TEST_HOST_LIST
 	secret["disableAutoChangeMode"] = VAULT_TEST_DISABLE_AUTO_CHANGE_MODE
 	secret["cascadeMode"] = VAULT_TEST_CASCADE_MODE
+	secret["log"] = VAULT_TEST_LOG_LEVEL
 	data["data"] = secret
 	msg.Data = data
 	c.JSON(http.StatusOK, msg)
