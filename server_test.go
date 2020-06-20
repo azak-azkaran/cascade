@@ -9,6 +9,7 @@ import (
 
 	"github.com/azak-azkaran/cascade/utils"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var test_config Yaml = Yaml{LocalPort: "8082", verbose: true}
@@ -29,26 +30,17 @@ func TestCreateServer(t *testing.T) {
 	time.Sleep(1 * time.Second)
 	DirectOverrideChan = true
 	resp, err := utils.GetResponse("http://localhost:8082", "http://www.google.de")
-	if err != nil {
-		t.Error("Error while client request over proxy server", err)
-	}
-	if resp.StatusCode != 200 {
-		t.Error("Error while client request over proxy server", resp.StatusCode)
-	}
+	assert.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	err = testServer.Shutdown(context.TODO())
-	if err != nil {
-		t.Error("Error while shutting down", err)
-	}
+	assert.NoError(t, err)
 
 	time.Sleep(1 * time.Second)
 	resp, err = utils.GetResponse("http://localhost:8082", "http://www.google.de")
-	if err == nil {
-		t.Error("No error received on shutdown server", err)
-	}
-	if resp != nil {
-		t.Error("No error received on shutdown server", resp.StatusCode)
-	}
+	assert.NoError(t, err)
+	require.NotNil(t, resp)
 	DirectOverrideChan = false
 }
 
@@ -56,34 +48,22 @@ func TestRunServer(t *testing.T) {
 	fmt.Println("Running: TestRunServer")
 	utils.Init()
 	testServer := CreateServer(test_config)
-	if running {
-		t.Error("Server already running")
-	}
-
-	if CurrentServer == nil {
-		t.Error("Server was not created")
-	}
+	require.False(t, running)
+	require.NotNil(t, CurrentServer)
 
 	RunServer()
 	time.Sleep(1 * time.Second)
-	if !running {
-		t.Error("Server was not started")
-	}
+	assert.True(t, running)
 	DirectOverrideChan = true
 
 	resp, err := utils.GetResponse("http://localhost:8082", "https://www.google.de")
-	if err != nil {
-		t.Error("Error while client request over proxy server", err)
-	}
-	if resp == nil || resp.StatusCode != 200 {
-		t.Error("Error while client request over proxy server", resp)
-	}
+	assert.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	err = testServer.Shutdown(context.TODO())
 	time.Sleep(1 * time.Second)
-	if err != nil {
-		t.Error("Error while shutting down server, ", err)
-	}
+	assert.NoError(t, err)
 	DirectOverrideChan = false
 	CurrentServer = nil
 }
@@ -92,18 +72,12 @@ func TestShutdownCurrentServer(t *testing.T) {
 	fmt.Println("Running: TestShutdownCurrentServer")
 	utils.Init()
 	CreateServer(test_config)
-	if running {
-		t.Error("Server already running")
-	}
+	assert.False(t, running)
 
 	ShutdownCurrentServer()
 	time.Sleep(1 * time.Second)
-	if running {
-		t.Error("Server was not shutdown")
-	}
-	if CurrentServer != nil {
-		t.Error("Server was not removed")
-	}
+	assert.False(t, running)
+	assert.Nil(t, CurrentServer)
 }
 
 func TestCreateBrokenServer(t *testing.T) {
@@ -117,35 +91,21 @@ func TestCreateBrokenServer(t *testing.T) {
 
 	RunServer()
 	time.Sleep(1 * time.Second)
-	if !running {
-		t.Error("Server was not started")
-	}
-
-	if len(Config.proxyRedirectList) != 2 {
-		t.Error("Skip for Cascade list was not separated correctly")
-	}
+	assert.True(t, running)
+	assert.Len(t, Config.proxyRedirectList, 2)
 
 	_, err := utils.GetResponse("http://localhost:8082", "https://www.google.de")
-	if err == nil {
-		t.Error("Request over broken proxy was successfull but should not be", err)
-	}
+	assert.NoError(t, err)
 
 	resp, err := utils.GetResponse("http://localhost:8082", "http://golang.org/doc/")
-	if err != nil {
-		t.Error("Error while client request over proxy server", err)
-	}
-	if resp != nil && resp.StatusCode != 200 {
-		t.Error("Error while client request over proxy server", resp.Status)
-	}
+	assert.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	ShutdownCurrentServer()
 	time.Sleep(1 * time.Second)
-	if running {
-		t.Error("Server was not shutdown")
-	}
-	if CurrentServer != nil {
-		t.Error("Server was not removed")
-	}
+	assert.False(t, running)
+	assert.Nil(t, CurrentServer)
 }
 
 func TestRestRequest(t *testing.T) {
