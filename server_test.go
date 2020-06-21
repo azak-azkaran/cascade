@@ -147,6 +147,8 @@ func TestRestRequest(t *testing.T) {
 func TestRestServerLateCreation(t *testing.T) {
 	fmt.Println("Running: TestRestServerNegative")
 	utils.Init()
+	CurrentServer = nil
+	running = false
 
 	RunServer()
 	time.Sleep(3 * time.Second)
