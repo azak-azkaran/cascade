@@ -152,7 +152,7 @@ func TestRestServerLateCreation(t *testing.T) {
 	time.Sleep(3 * time.Second)
 	assert.False(t, running)
 	testServer := CreateServer(test_config)
-	time.Sleep(3 * time.Second)
+	assert.Eventually(t, func() bool { return running }, 5*time.Second, 10*time.Millisecond)
 	assert.True(t, running)
 	assert.NotNil(t, CurrentServer)
 
