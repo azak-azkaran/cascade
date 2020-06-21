@@ -143,3 +143,19 @@ func TestRestRequest(t *testing.T) {
 	err = testServer.Shutdown(context.TODO())
 	assert.NoError(t, err, "Error while shutdown")
 }
+
+func TestRestServerLateCreation(t *testing.T) {
+	fmt.Println("Running: TestRestServerNegative")
+	utils.Init()
+
+	RunServer()
+	time.Sleep(3 * time.Second)
+	assert.False(t, running)
+	testServer := CreateServer(test_config)
+	time.Sleep(3 * time.Second)
+	assert.True(t, running)
+	assert.NotNil(t, CurrentServer)
+
+	err := testServer.Shutdown(context.TODO())
+	assert.NoError(t, err, "Error while shutdown")
+}
