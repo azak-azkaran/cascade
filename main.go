@@ -25,7 +25,7 @@ func Run(config Yaml) {
 
 	lastTime := time.Now()
 	utils.Sugar.Info("Starting Selection Process")
-	ModeSelection(Config.CheckAddress)
+	ModeSelection(Config.CheckAddress, false)
 	utils.Sugar.Info("Starting Running Server")
 
 	RunServer()
@@ -35,7 +35,7 @@ func Run(config Yaml) {
 		if currentDuration > Config.health {
 			lastTime = time.Now()
 			CreateConfig()
-			go ModeSelection(Config.CheckAddress)
+			go ModeSelection(Config.CheckAddress, config.DisableAutoChangeMode)
 			time.Sleep(Config.health)
 		}
 	}

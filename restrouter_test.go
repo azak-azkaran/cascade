@@ -315,7 +315,7 @@ func TestRestRouter_DisableAutomaticChange(t *testing.T) {
 	assert.True(t, Config.CascadeMode)
 	assert.False(t, Config.OnlineCheck)
 
-	ModeSelection("https://www.asda12313.de")
+	ModeSelection("https://www.asda12313.de", Config.DisableAutoChangeMode)
 	time.Sleep(1 * time.Millisecond)
 	assert.True(t, Config.CascadeMode)
 	assert.True(t, Config.DisableAutoChangeMode)

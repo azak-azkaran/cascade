@@ -65,11 +65,11 @@ func TestModeSelection(t *testing.T) {
 	Config.ProxyURL = "something"
 	Config.proxyRedirectList = strings.Split("golang.org,youtube.com", ",")
 
-	ModeSelection("https://www.asda12313.de")
+	ModeSelection("https://www.asda12313.de", false)
 	time.Sleep(1 * time.Millisecond)
 	assert.False(t, DirectOverrideChan)
 
-	ModeSelection("https://www.google.de")
+	ModeSelection("https://www.google.de", false)
 	time.Sleep(1 * time.Millisecond)
 	assert.True(t, DirectOverrideChan)
 
@@ -132,7 +132,7 @@ func TestDisableAutoChangeMode(t *testing.T) {
 	Config.proxyRedirectList = strings.Split("golang.org,youtube.com", ",")
 	Config.DisableAutoChangeMode = true
 
-	ModeSelection("https://www.asda12313.de")
+	ModeSelection("https://www.asda12313.de", Config.DisableAutoChangeMode)
 	time.Sleep(1 * time.Millisecond)
 	assert.False(t, DirectOverrideChan)
 

@@ -23,7 +23,7 @@ func HandleCustomProxies(list []string) {
 	}
 }
 
-func ModeSelection(checkAddress string) {
+func ModeSelection(checkAddress string, disableAutoChangeMode bool) {
 	var success bool
 	utils.Sugar.Info("Running check on: ", checkAddress)
 	rep, err := utils.GetResponse("", checkAddress)
@@ -47,7 +47,7 @@ func ModeSelection(checkAddress string) {
 		utils.Sugar.Info("Current Mode: DirectMode")
 	}
 
-	if !Config.DisableAutoChangeMode {
+	if !disableAutoChangeMode {
 		ChangeMode(success, Config.OnlineCheck)
 	} else {
 		utils.Sugar.Info("Automatic Change Mode is disabled")

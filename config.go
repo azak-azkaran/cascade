@@ -90,6 +90,10 @@ func GetSecret(config *vault.Config, token string, path string) (*vault.Secret, 
 	if err != nil {
 		return nil, err
 	}
+
+	if secret == nil || secret.Data["data"] == nil {
+		return nil, errors.New("cascade/data/" + path + " was empty")
+	}
 	return secret, nil
 }
 
