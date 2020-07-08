@@ -8,35 +8,33 @@ import (
 	"github.com/azak-azkaran/cascade/utils"
 )
 
-var Config Yaml
-
 var version = "undefined"
 var closeChan bool
 var stopChan = make(chan os.Signal, 2)
 
-func Run(config Yaml) {
+func Run(config *Yaml) {
 	utils.Sugar.Warn("Creating Configuration")
-	Config = config
-	Config.CascadeMode = true
-	CreateConfig()
+	config.CascadeMode = true
+	config = CreateConfig(config)
 
 	utils.Sugar.Info("Creating Server")
-	CurrentServer = CreateServer(Config)
+	CurrentServer = CreateServer(config)
 
 	lastTime := time.Now()
 	utils.Sugar.Info("Starting Selection Process")
-	ModeSelection(Config.CheckAddress, false)
+	ModeSelection(config)
 	utils.Sugar.Info("Starting Running Server")
 
 	RunServer()
 
 	for !closeChan {
 		currentDuration := time.Since(lastTime)
-		if currentDuration > Config.health {
+		if currentDuration > config.health {
+			conf := GetConfig()
 			lastTime = time.Now()
-			CreateConfig()
-			go ModeSelection(Config.CheckAddress, config.DisableAutoChangeMode)
-			time.Sleep(Config.health)
+			config = CreateConfig(&conf)
+			go ModeSelection(config)
+			time.Sleep(config.health)
 		}
 	}
 
@@ -68,7 +66,7 @@ func main() {
 	if err != nil {
 		utils.Sugar.Error("Dying Horribly because problems with Configuration: ", err)
 	} else if config != nil {
-		Run(*config)
+		Run(config)
 	} else {
 		utils.Sugar.Info("Version: ", version)
 	}

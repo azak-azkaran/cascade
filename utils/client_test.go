@@ -27,9 +27,9 @@ func TestGetResponse(t *testing.T) {
 
 	var server *http.Server
 	go func() {
-		Sugar.Info("serving end proxy server at localhost:8082")
+		Sugar.Info("serving end proxy server at localhost:7082")
 		server = &http.Server{
-			Addr:    "localhost:8082",
+			Addr:    "localhost:7082",
 			Handler: proxy,
 		}
 		err := server.ListenAndServe()
@@ -37,7 +37,7 @@ func TestGetResponse(t *testing.T) {
 	}()
 
 	time.Sleep(1 * time.Second)
-	resp, err = GetResponse("http://localhost:8082", "https://www.google.de")
+	resp, err = GetResponse("http://localhost:7082", "https://www.google.de")
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 

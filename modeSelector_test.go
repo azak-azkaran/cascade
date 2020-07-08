@@ -13,6 +13,7 @@ import (
 func TestChangeMode(t *testing.T) {
 	fmt.Println("Running: TestChangeMode")
 	utils.Init()
+	Config := GetConfig()
 	assert.False(t, Config.OnlineCheck)
 
 	Config.verbose = true
@@ -21,7 +22,7 @@ func TestChangeMode(t *testing.T) {
 	Config.CascadeMode = true
 	DirectOverrideChan = false
 	fmt.Println("Test switch from\nCascadeMode: ", Config.CascadeMode, " DirectOverrideChan: ", DirectOverrideChan, " to DirectMode")
-	ChangeMode(true, Config.OnlineCheck)
+	ChangeMode(true, &Config)
 	assert.False(t, Config.CascadeMode)
 	assert.True(t, DirectOverrideChan)
 	fmt.Println("Result CascadeMode: ", Config.CascadeMode, " DirectOverrideChan: ", DirectOverrideChan)
@@ -30,7 +31,7 @@ func TestChangeMode(t *testing.T) {
 	DirectOverrideChan = true
 	fmt.Println("Test switch from\nCascadeMode: ", Config.CascadeMode, " DirectOverrideChan: ", DirectOverrideChan, " to CascadeMode")
 
-	ChangeMode(false, Config.OnlineCheck)
+	ChangeMode(false, &Config)
 	assert.True(t, Config.CascadeMode)
 	assert.False(t, DirectOverrideChan)
 	fmt.Println("Result CascadeMode: ", Config.CascadeMode, " DirectOverrideChan: ", DirectOverrideChan)
@@ -39,7 +40,8 @@ func TestChangeMode(t *testing.T) {
 	DirectOverrideChan = false
 	fmt.Println("Test switch from\nCascadeMode: ", Config.CascadeMode, " DirectOverrideChan: ", DirectOverrideChan, " to DirectMode")
 
-	ChangeMode(false, true)
+	Config.OnlineCheck = true
+	ChangeMode(false, &Config)
 	assert.False(t, Config.CascadeMode)
 	assert.True(t, DirectOverrideChan)
 	fmt.Println("Result CascadeMode: ", Config.CascadeMode, " DirectOverrideChan: ", DirectOverrideChan)
@@ -48,7 +50,8 @@ func TestChangeMode(t *testing.T) {
 	DirectOverrideChan = true
 	fmt.Println("Test switch from\nCascadeMode: ", Config.CascadeMode, " DirectOverrideChan: ", DirectOverrideChan, " to CascadeMode")
 
-	ChangeMode(true, true)
+	Config.OnlineCheck = true
+	ChangeMode(true, &Config)
 	assert.True(t, Config.CascadeMode)
 	assert.False(t, DirectOverrideChan)
 	fmt.Println("Result CascadeMode: ", Config.CascadeMode, " DirectOverrideChan: ", DirectOverrideChan)
@@ -60,16 +63,19 @@ func TestModeSelection(t *testing.T) {
 	fmt.Println("Running: TestModeSelection")
 	utils.Init()
 
+	Config := GetConfig()
 	Config.verbose = true
 	Config.CascadeMode = true
 	Config.ProxyURL = "something"
 	Config.proxyRedirectList = strings.Split("golang.org,youtube.com", ",")
-
-	ModeSelection("https://www.asda12313.de", false)
+	Config.CheckAddress = "https://www.asda12313.de"
+	Config.OnlineCheck = false
+	ModeSelection(&Config)
 	time.Sleep(1 * time.Millisecond)
 	assert.False(t, DirectOverrideChan)
 
-	ModeSelection("https://www.google.de", false)
+	Config.CheckAddress = "https://www.google.de"
+	ModeSelection(&Config)
 	time.Sleep(1 * time.Millisecond)
 	assert.True(t, DirectOverrideChan)
 
@@ -79,16 +85,14 @@ func TestModeSelection(t *testing.T) {
 func TestCreateConfig(t *testing.T) {
 	fmt.Println("Running: TestCreateConfig")
 	utils.Init()
-	Config = Yaml{LocalPort: "8888", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "google,eclipse", Log: "info"}
-	CreateConfig()
+	Config := Yaml{LocalPort: "8888", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "google,eclipse", Log: "info"}
+	conf := CreateConfig(&Config)
 
 	utils.Sugar.Info("Creating Server")
-	CurrentServer = CreateServer(Config)
+	CurrentServer = CreateServer(conf)
 
 	assert.NotNil(t, CurrentServer)
 	assert.Equal(t, len(Config.proxyRedirectList), 2)
-
-	Config = Yaml{}
 }
 
 func TestHandleCustomProxies(t *testing.T) {
@@ -125,16 +129,16 @@ func TestDisableAutoChangeMode(t *testing.T) {
 	fmt.Println("Running: TestDisableAutoChangeMode")
 	utils.Init()
 
+	Config := GetConfig()
 	Config.verbose = true
 	Config.CascadeMode = true
 	Config.ProxyURL = "something"
 	DirectOverrideChan = false
 	Config.proxyRedirectList = strings.Split("golang.org,youtube.com", ",")
 	Config.DisableAutoChangeMode = true
+	Config.CheckAddress = "https://www.asda12313.de"
 
-	ModeSelection("https://www.asda12313.de", Config.DisableAutoChangeMode)
+	ModeSelection(&Config)
 	time.Sleep(1 * time.Millisecond)
 	assert.False(t, DirectOverrideChan)
-
-	Config = Yaml{}
 }

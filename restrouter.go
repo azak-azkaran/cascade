@@ -57,15 +57,16 @@ func ConfigureRouter(proxy *goproxy.ProxyHttpServer, addr string, verbose bool) 
 	r.GET("/debug/vars", expvar.Handler())
 
 	r.GET("/config", func(c *gin.Context) {
-		c.JSON(http.StatusOK, Config)
+
+		c.JSON(http.StatusOK, GetConfig())
 	})
 
 	r.GET("/getOnlineCheck", func(c *gin.Context) {
-		c.JSON(http.StatusOK, Config.OnlineCheck)
+		c.JSON(http.StatusOK, GetConfig().OnlineCheck)
 	})
 
 	r.GET("/getAutoMode", func(c *gin.Context) {
-		c.JSON(http.StatusOK, !Config.DisableAutoChangeMode)
+		c.JSON(http.StatusOK, !GetConfig().DisableAutoChangeMode)
 	})
 
 	r.POST("/addRedirect", addRedirectFunc)
@@ -88,17 +89,21 @@ func setCascadeModeFunc(c *gin.Context) {
 	}
 	utils.Sugar.Info("Recieved Request: ", req)
 
+	config := GetConfig()
 	if req.CascadeMode {
 		utils.Sugar.Info("Setting Cascade to: CascadeMode")
-		ChangeMode(true, true)
+		config.CascadeMode = false
+		ChangeMode(false, &config)
 	} else {
 		utils.Sugar.Info("Setting Cascade to: DirectMode")
-		ChangeMode(false, true)
+		config.CascadeMode = true
+		ChangeMode(true, &config)
+	}
+	conf := CreateConfig(&config)
+	post := gin.H{
+		"CascadeMode": conf.CascadeMode,
 	}
 
-	post := gin.H{
-		"CascadeMode": Config.CascadeMode,
-	}
 	c.JSON(http.StatusOK, post)
 
 }
@@ -115,11 +120,12 @@ func setDisableAutoChangeModeFunc(c *gin.Context) {
 		return
 	}
 	utils.Sugar.Info("Recieved Request: ", req, " Setting AutoChangeMode to:", req.AutoChangeMode)
+	config := GetConfig()
+	config.DisableAutoChangeMode = !req.AutoChangeMode
 
-	Config.DisableAutoChangeMode = !req.AutoChangeMode
-
+	conf := CreateConfig(&config)
 	post := gin.H{
-		"AutoChangeMode": !Config.DisableAutoChangeMode,
+		"AutoChangeMode": !conf.DisableAutoChangeMode,
 	}
 	c.JSON(http.StatusOK, post)
 }
@@ -136,17 +142,18 @@ func setOnlineCheckFunc(c *gin.Context) {
 		return
 	}
 	utils.Sugar.Info("Recieved Request: ", req, " Setting OnlineCheck to:", req.OnlineCheck)
+	config := GetConfig()
+	config.OnlineCheck = req.OnlineCheck
 
-	Config.OnlineCheck = req.OnlineCheck
-
+	conf := CreateConfig(&config)
 	post := gin.H{
-		"OnlineCheck": Config.OnlineCheck,
+		"OnlineCheck": conf.OnlineCheck,
 	}
+
 	c.JSON(http.StatusOK, post)
 }
 
 func addRedirectFunc(c *gin.Context) {
-	defer c.Request.Body.Close()
 	var req AddRedirect
 
 	err := c.BindJSON(&req)
@@ -156,6 +163,7 @@ func addRedirectFunc(c *gin.Context) {
 		})
 		return
 	}
+
 	utils.Sugar.Info("Recieved Request: ", req,
 		"\nGot Address:", req.Address,
 		"\nRedirect to:", req.Proxy)
@@ -176,13 +184,14 @@ func addRedirectFunc(c *gin.Context) {
 		return
 	}
 
-	if len(Config.HostList) > 0 {
-		Config.HostList += ","
+	config := GetConfig()
+	if len(config.HostList) > 0 {
+		config.HostList += ","
 	}
-	Config.HostList += req.Address + "->" + req.Proxy
-	Config.proxyRedirectList = strings.Split(Config.HostList, ",")
+	config.HostList += req.Address + "->" + req.Proxy
+	config.proxyRedirectList = strings.Split(config.HostList, ",")
 	AddDifferentProxyConnection(req.Address, req.Proxy)
-	err = SetConf(&Config)
+	conf, err := UpdateConfig(&config)
 	if err != nil {
 		utils.Sugar.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -192,11 +201,12 @@ func addRedirectFunc(c *gin.Context) {
 		})
 		return
 	}
+	CreateConfig(conf)
 
 	post := gin.H{
 		"address": html.EscapeString(addressURL.String()),
 		"proxy":   html.EscapeString(proxyURL.String()),
-		"message": html.EscapeString("Added to Redirect List, updated File at: " + Config.ConfigFile),
+		"message": html.EscapeString("Added to Redirect List, updated File at: " + conf.ConfigFile),
 	}
 	c.JSON(http.StatusOK, post)
 }

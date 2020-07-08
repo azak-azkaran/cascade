@@ -12,13 +12,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var test_config Yaml = Yaml{LocalPort: "8082", verbose: true}
+var test_config Yaml = Yaml{LocalPort: "7082", verbose: true}
 
 func TestCreateServer(t *testing.T) {
 	fmt.Println("Running: TestCreateServer")
 	utils.Init()
 
-	testServer := CreateServer(test_config) //CASCADE.Run(true, "", "", ""), "localhost", "8082")
+	conf := CreateConfig(&test_config)
+	testServer := CreateServer(conf) //CASCADE.Run(true, "", "", ""), "localhost", "7082")
 	go func() {
 		err := testServer.ListenAndServe()
 		if err != http.ErrServerClosed {
@@ -28,8 +29,9 @@ func TestCreateServer(t *testing.T) {
 	}()
 
 	time.Sleep(1 * time.Second)
+	assert.NotNil(t, CurrentServer)
 	DirectOverrideChan = true
-	resp, err := utils.GetResponse("http://localhost:8082", "http://www.google.de")
+	resp, err := utils.GetResponse("http://localhost:7082", "http://www.google.de")
 	assert.NoError(t, err)
 	require.NotNil(t, resp)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -38,15 +40,19 @@ func TestCreateServer(t *testing.T) {
 	assert.NoError(t, err)
 
 	time.Sleep(1 * time.Second)
-	resp, err = utils.GetResponse("http://localhost:8082", "http://www.google.de")
+	resp, err = utils.GetResponse("http://localhost:7082", "http://www.google.de")
 	assert.Error(t, err)
 	DirectOverrideChan = false
+
+	//err = utils.Sugar.Sync()
+	//assert.NoError(t, err)
 }
 
 func TestRunServer(t *testing.T) {
 	fmt.Println("Running: TestRunServer")
 	utils.Init()
-	testServer := CreateServer(test_config)
+	conf := CreateConfig(&test_config)
+	testServer := CreateServer(conf)
 	require.False(t, running)
 	require.NotNil(t, CurrentServer)
 
@@ -55,7 +61,7 @@ func TestRunServer(t *testing.T) {
 	assert.True(t, running)
 	DirectOverrideChan = true
 
-	resp, err := utils.GetResponse("http://localhost:8082", "https://www.google.de")
+	resp, err := utils.GetResponse("http://localhost:7082", "https://www.google.de")
 	assert.NoError(t, err)
 	require.NotNil(t, resp)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -70,7 +76,8 @@ func TestRunServer(t *testing.T) {
 func TestShutdownCurrentServer(t *testing.T) {
 	fmt.Println("Running: TestShutdownCurrentServer")
 	utils.Init()
-	CreateServer(test_config)
+	conf := CreateConfig(&test_config)
+	CreateServer(conf)
 	assert.False(t, running)
 
 	ShutdownCurrentServer()
@@ -82,25 +89,25 @@ func TestShutdownCurrentServer(t *testing.T) {
 func TestCreateBrokenServer(t *testing.T) {
 	fmt.Println("Running: TestCreateBrokenServer")
 	utils.Init()
-	Config = Yaml{LocalPort: "8082",
+	Config := Yaml{LocalPort: "7082",
 		CheckAddress: "https://www.google.de",
 		HealthTime:   5,
 		HostList:     "golang.org,youtube.com",
 		Log:          "info"}
-	CreateConfig()
+	conf := CreateConfig(&Config)
 
 	utils.Sugar.Info("Creating Server")
-	CurrentServer = CreateServer(Config)
+	CurrentServer = CreateServer(conf)
 
 	RunServer()
 	time.Sleep(1 * time.Second)
 	assert.True(t, running)
 	assert.Len(t, Config.proxyRedirectList, 2)
 
-	_, err := utils.GetResponse("http://localhost:8082", "https://www.google.de")
+	_, err := utils.GetResponse("http://localhost:7082", "https://www.google.de")
 	assert.Error(t, err)
 
-	resp, err := utils.GetResponse("http://localhost:8082", "http://golang.org/doc/")
+	resp, err := utils.GetResponse("http://localhost:7082", "http://golang.org/doc/")
 	assert.NoError(t, err)
 	require.NotNil(t, resp)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -114,7 +121,8 @@ func TestCreateBrokenServer(t *testing.T) {
 func TestRestRequest(t *testing.T) {
 	fmt.Println("Running: TestRestRequest")
 	utils.Init()
-	testServer := CreateServer(test_config)
+	conf := CreateConfig(&test_config)
+	testServer := CreateServer(conf)
 
 	RunServer()
 	time.Sleep(1 * time.Second)
@@ -126,17 +134,17 @@ func TestRestRequest(t *testing.T) {
 	assert.NoError(t, err)
 
 	fmt.Println("Direct Config Call")
-	resp, err := client.Get("http://localhost:8082/config")
+	resp, err := client.Get("http://localhost:7082/config")
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	fmt.Println("Proxied Config Call")
-	resp, err = utils.GetResponse("http://localhost:8082", "http://localhost:8082/config")
+	resp, err = utils.GetResponse("http://localhost:7082", "http://localhost:7082/config")
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	fmt.Println("Proxied Google Call")
-	resp, err = utils.GetResponse("http://localhost:8082", "https://www.github.com")
+	resp, err = utils.GetResponse("http://localhost:7082", "https://www.github.com")
 	assert.NoError(t, err, "Error while client request over proxy server", err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode, "Error while client request over proxy server", resp)
 
@@ -153,7 +161,8 @@ func TestRestServerLateCreation(t *testing.T) {
 	RunServer()
 	time.Sleep(3 * time.Second)
 	assert.False(t, running)
-	testServer := CreateServer(test_config)
+	conf := CreateConfig(&test_config)
+	testServer := CreateServer(conf)
 	assert.Eventually(t, func() bool { return running }, 5*time.Second, 10*time.Millisecond)
 	assert.True(t, running)
 	assert.NotNil(t, CurrentServer)

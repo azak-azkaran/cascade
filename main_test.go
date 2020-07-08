@@ -20,21 +20,21 @@ func TestRun(t *testing.T) {
 	config.HealthTime = 1
 	config.Username = "foo"
 	config.Password = "bar"
-	config.ProxyURL = "localhost:8082"
-	config.LocalPort = "8081"
+	config.ProxyURL = "localhost:7082"
+	config.LocalPort = "7081"
 	config.Log = "info"
 	config.CheckAddress = "https://google.de"
 	config.ConfigFile = ""
 	config.VaultAddr = ""
 
-	go Run(config)
+	go Run(&config)
 
 	time.Sleep(1 * time.Second)
 	assert.NotNil(t, CurrentServer, "No Server was created")
 
 	assert.True(t, DirectOverrideChan, "Direct Override is not active")
 
-	resp, err := utils.GetResponse("http://localhost:8081", "https://www.google.de")
+	resp, err := utils.GetResponse("http://localhost:7081", "https://www.google.de")
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 

@@ -16,7 +16,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const ()
+var currentConfig *Yaml
 
 type Yaml struct {
 	Username              string `yaml:"username"`
@@ -39,7 +39,7 @@ type Yaml struct {
 	VaultAddr             string `yaml:"vaultAddr"`
 }
 
-func SetConf(config *Yaml) error {
+func WriteConfig(config *Yaml) error {
 	f, err := os.Create(config.ConfigFile)
 	if err != nil {
 		return err
@@ -188,13 +188,13 @@ func GetConfFromVault(vaultAddr string, vaultToken string, path string) (*Yaml, 
 		config.DisableAutoChangeMode = false
 	}
 
-	if data["cascadeMode"] != nil {
-		cascadeMode, err := strconv.ParseBool(data["cascadeMode"].(string))
-		if err != nil {
-			return nil, err
-		}
-		config.CascadeMode = cascadeMode
-	}
+	//if data["cascadeMode"] != nil {
+	//	cascadeMode, err := strconv.ParseBool(data["cascadeMode"].(string))
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	config.CascadeMode = cascadeMode
+	//}
 
 	return &config, nil
 }
@@ -234,6 +234,7 @@ func GetConfFromFile(path string) (*Yaml, error) {
 
 func UpdateConfig(config *Yaml) (*Yaml, error) {
 	var err error
+	utils.Sugar.Info("Check for Configuration update")
 	if config.ConfigFile != "" && config.ConfigFile != "config" {
 		config, err = GetConfFromFile(config.ConfigFile)
 		if err != nil {
@@ -260,44 +261,48 @@ func UpdateConfig(config *Yaml) (*Yaml, error) {
 	}
 
 	config.proxyRedirectList = strings.Split(config.HostList, ",")
-	config.health = time.Duration(int(Config.HealthTime)) * time.Second
+	config.health = time.Duration(int(config.HealthTime)) * time.Second
 	return config, nil
 }
 
-func CreateConfig() {
-	if conf, err := UpdateConfig(&Config); err == nil {
-		Config = *conf
+func CreateConfig(config *Yaml) *Yaml {
+	conf, err := UpdateConfig(config)
+	if err != nil {
+		conf = config
 	}
 
-	switch strings.ToUpper(Config.Log) {
+	switch strings.ToUpper(conf.Log) {
 	case "DEBUG":
-		fmt.Println(Config)
+		fmt.Println(conf)
 		fmt.Println("Starting Proxy with the following flags:")
-		fmt.Println("Username: ", Config.Username)
-		fmt.Println("Password: ", Config.Password)
-		fmt.Println("ProxyUrl: ", Config.ProxyURL)
-		fmt.Println("Health Address: ", Config.CheckAddress)
-		fmt.Println("Health Time: ", Config.health)
-		fmt.Println("Skip Cascade for Hosts: ", Config.proxyRedirectList)
-		fmt.Println("Log Level: ", Config.Log)
+		fmt.Println("Username: ", conf.Username)
+		fmt.Println("Password: ", conf.Password)
+		fmt.Println("ProxyUrl: ", conf.ProxyURL)
+		fmt.Println("Health Address: ", conf.CheckAddress)
+		fmt.Println("Health Time: ", conf.health)
+		fmt.Println("Skip Cascade for Hosts: ", conf.proxyRedirectList)
+		fmt.Println("Log Level: ", conf.Log)
 		utils.EnableDebug()
-		Config.Log = "DEBUG"
-		Config.verbose = true
+		conf.Log = "DEBUG"
+		conf.verbose = true
 	case "INFO":
-		Config.Log = "INFO"
-		Config.verbose = true
+		conf.Log = "INFO"
+		conf.verbose = true
 		utils.EnableInfo()
 	case "ERROR":
-		Config.Log = "ERROR"
-		Config.verbose = false
+		conf.Log = "ERROR"
+		conf.verbose = false
 		utils.EnableError()
 	case "WARNING":
 		fallthrough
 	default:
-		Config.Log = "WARNING"
-		Config.verbose = true
+		conf.Log = "WARNING"
+		conf.verbose = true
 		utils.EnableWarning()
 	}
+
+	SetConfig(conf)
+	return conf
 }
 
 func ParseCommandline() (*Yaml, error) {
@@ -324,4 +329,13 @@ func ParseCommandline() (*Yaml, error) {
 		return nil, nil
 	}
 	return UpdateConfig(&config)
+}
+
+func GetConfig() Yaml {
+	config := *currentConfig
+	return config
+}
+
+func SetConfig(config *Yaml) {
+	currentConfig = config
 }

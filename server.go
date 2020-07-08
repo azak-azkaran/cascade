@@ -67,7 +67,7 @@ func shutdown(timeout time.Duration, server *http.Server) {
 	}
 }
 
-func createServer(proxy *goproxy.ProxyHttpServer, addr string, config Yaml) *http.Server {
+func create(proxy *goproxy.ProxyHttpServer, addr string, config *Yaml) *http.Server {
 	return &http.Server{
 		Addr:    addr + ":" + config.LocalPort,
 		Handler: ConfigureRouter(proxy, addr, config.verbose),
@@ -80,10 +80,10 @@ func createServer(proxy *goproxy.ProxyHttpServer, addr string, config Yaml) *htt
 }
 
 // CreateServer creates a proxy server on addr:port
-func CreateServer(config Yaml) *http.Server {
-	utils.Sugar.Info("Creating Proxy on: localhost", ":", config.LocalPort)
+func CreateServer(config *Yaml) *http.Server {
+	utils.Sugar.Warn("Creating Proxy on: localhost", ":", config.LocalPort)
 	proxy := CASCADE.Run(config.verbose, config.ProxyURL, config.Username, config.Password)
 	HandleCustomProxies(config.proxyRedirectList)
-	CurrentServer = createServer(proxy, "localhost", config)
+	CurrentServer = create(proxy, "localhost", config)
 	return CurrentServer
 }

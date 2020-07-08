@@ -7,13 +7,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"testing"
 	"time"
 
 	"github.com/azak-azkaran/cascade/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRestRouter_RouteToOtherLocalhost(t *testing.T) {
@@ -22,7 +22,7 @@ func TestRestRouter_RouteToOtherLocalhost(t *testing.T) {
 	endProxy := DIRECT.Run(true)
 
 	endServer := &http.Server{
-		Addr:    "localhost:8081",
+		Addr:    "localhost:7081",
 		Handler: ConfigureRouter(endProxy, "localhost", true),
 	}
 	go func() {
@@ -49,7 +49,7 @@ func TestRestRouter_RouteToOtherLocalhost(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	resp, err = utils.GetResponse("http://localhost:8081", "http://localhost:3000/someJSON")
+	resp, err = utils.GetResponse("http://localhost:7081", "http://localhost:3000/someJSON")
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -64,14 +64,14 @@ func TestRestRouter_GetConfigWithProxy(t *testing.T) {
 	fmt.Println("Running: TestRestRouter_GetConfigWithProxy")
 	utils.Init()
 
-	Config = Yaml{LocalPort: "8082", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "golang.org,youtube.com", Log: "info"}
-	CreateConfig()
+	Config := Yaml{LocalPort: "7082", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "golang.org,youtube.com", Log: "info"}
+	conf := CreateConfig(&Config)
 
 	utils.Sugar.Info("Creating Server")
-	CurrentServer = CreateServer(Config)
+	CurrentServer = CreateServer(conf)
 
 	endServer := &http.Server{
-		Addr:    "localhost:8081",
+		Addr:    "localhost:7081",
 		Handler: ConfigureRouter(DIRECT.Run(true), "localhost", true),
 	}
 	go func() {
@@ -81,10 +81,10 @@ func TestRestRouter_GetConfigWithProxy(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 
-	client, err := utils.GetClient("http://localhost:8081", 2)
+	client, err := utils.GetClient("http://localhost:7081", 2)
 	assert.NoError(t, err)
 
-	resp, err := client.Get("http://localhost:8081/config")
+	resp, err := client.Get("http://localhost:7081/config")
 	assert.NoError(t, err)
 
 	decoder := json.NewDecoder(resp.Body)
@@ -105,11 +105,11 @@ func TestRestRouter_GetConfigWithProxy(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	resp, err = utils.GetResponse("http://localhost:8081", "http://www.google.com")
+	resp, err = utils.GetResponse("http://localhost:7081", "http://www.google.com")
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	resp, err = utils.GetResponse("http://localhost:8081", "https://www.google.com")
+	resp, err = utils.GetResponse("http://localhost:7081", "https://www.google.com")
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -121,20 +121,23 @@ func TestRestRouter_GetConfigWithProxy(t *testing.T) {
 func TestRestRouter_AddRedirect(t *testing.T) {
 	fmt.Println("Running: TestRestRouter_AddReddirect")
 	utils.Init()
-	Config = Yaml{LocalPort: "8082", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "golang.org,youtube.com", Log: "info", ConfigFile: "test.yml"}
-	CreateConfig()
+	Config := Yaml{LocalPort: "7082", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "golang.org,youtube.com", Log: "info", ConfigFile: "test/config.yml"}
+	conf := CreateConfig(&Config)
 
 	utils.Sugar.Info("Creating Server")
-	CurrentServer = CreateServer(Config)
+	CurrentServer = CreateServer(conf)
 
 	r := gin.Default()
 	endServer := &http.Server{
-		Addr:    "localhost:8081",
+		Addr:    "localhost:7081",
 		Handler: r,
 	}
 
 	r.POST("/add", addRedirectFunc)
-	go endServer.ListenAndServe()
+	go func() {
+		err := endServer.ListenAndServe()
+		require.Equal(t, http.ErrServerClosed, err)
+	}()
 
 	time.Sleep(1 * time.Second)
 	client, err := utils.GetClient("", 2)
@@ -150,13 +153,13 @@ func TestRestRouter_AddRedirect(t *testing.T) {
 	assert.NoError(t, err)
 	//var jsonRequest = []byte(`{"proxy":"test.dlh.de", "address":"10.20.10.20"}`)
 
-	resp, err := client.Post("http://localhost:8081/add", "application/json", &buf)
+	resp, err := client.Post("http://localhost:7081/add", "application/json", &buf)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, resp)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	defer resp.Body.Close()
-	assert.NotNil(t, resp.Body)
+	require.NotNil(t, resp.Body)
 
 	decoder := json.NewDecoder(resp.Body)
 	var responesMessage AddRedirect
@@ -170,7 +173,8 @@ func TestRestRouter_AddRedirect(t *testing.T) {
 	assert.True(t, available)
 	assert.NotNil(t, value)
 
-	config, err := GetConfFromFile("test.yml")
+	Config = GetConfig()
+	config, err := GetConfFromFile("test/config.yml")
 	assert.NoError(t, err)
 	assert.Equal(t, config.LocalPort, Config.LocalPort)
 	assert.Equal(t, config.HealthTime, Config.HealthTime)
@@ -179,12 +183,10 @@ func TestRestRouter_AddRedirect(t *testing.T) {
 	assert.NotEqual(t, config.HostList, "golang.org,youtube.com")
 
 	buf = *bytes.NewBufferString("hallo")
-	resp, err = client.Post("http://localhost:8081/add", "application/json", &buf)
+	resp, err = client.Post("http://localhost:7081/add", "application/json", &buf)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
-	err = os.Remove("test.yml")
-	assert.NoError(t, err)
 	err = endServer.Shutdown(context.Background())
 	assert.NoError(t, err)
 	Config = Yaml{}
@@ -194,14 +196,14 @@ func TestRestRouter_ChangeOnlineCheck(t *testing.T) {
 	fmt.Println("Running: TestRestRouter_ChangeOnlineCheck")
 	utils.Init()
 
-	Config = Yaml{OnlineCheck: false}
-	CreateConfig()
+	Config := Yaml{OnlineCheck: false}
+	conf := CreateConfig(&Config)
 
 	utils.Sugar.Info("Creating Server")
-	CurrentServer = CreateServer(Config)
+	CurrentServer = CreateServer(conf)
 
 	endServer := &http.Server{
-		Addr:    "localhost:8081",
+		Addr:    "localhost:7081",
 		Handler: ConfigureRouter(DIRECT.Run(true), "localhost", true),
 	}
 	go func() {
@@ -214,7 +216,7 @@ func TestRestRouter_ChangeOnlineCheck(t *testing.T) {
 	client, err := utils.GetClient("", 2)
 	assert.NoError(t, err)
 
-	resp, err := client.Get("http://localhost:8081/getOnlineCheck")
+	resp, err := client.Get("http://localhost:7081/getOnlineCheck")
 	assert.NoError(t, err)
 	assert.NotNil(t, resp.Body)
 	defer resp.Body.Close()
@@ -230,7 +232,7 @@ func TestRestRouter_ChangeOnlineCheck(t *testing.T) {
 	encoder := json.NewEncoder(&buf)
 	err = encoder.Encode(&jsonRequest)
 	assert.NoError(t, err)
-	resp, err = client.Post("http://localhost:8081/setOnlineCheck", "application/json", &buf)
+	resp, err = client.Post("http://localhost:7081/setOnlineCheck", "application/json", &buf)
 	assert.NoError(t, err)
 	defer resp.Body.Close()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -241,11 +243,11 @@ func TestRestRouter_ChangeOnlineCheck(t *testing.T) {
 	assert.True(t, jsonRequest.OnlineCheck)
 
 	buf = *bytes.NewBufferString("[ hallo ]")
-	resp, err = client.Post("http://localhost:8081/setOnlineCheck", "application/json", &buf)
+	resp, err = client.Post("http://localhost:7081/setOnlineCheck", "application/json", &buf)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
-	resp, err = client.Get("http://localhost:8081/getOnlineCheck")
+	resp, err = client.Get("http://localhost:7081/getOnlineCheck")
 	assert.NoError(t, err)
 	defer resp.Body.Close()
 	assert.NotNil(t, resp.Body)
@@ -263,18 +265,18 @@ func TestRestRouter_DisableAutomaticChange(t *testing.T) {
 	fmt.Println("Running: TestRestRouter_DisableAutomaticChange")
 	utils.Init()
 
-	Config = Yaml{DisableAutoChangeMode: false,
+	Config := Yaml{DisableAutoChangeMode: false,
 		ProxyURL:    "http://localhost",
 		Log:         "DEBUG",
 		OnlineCheck: false,
 		CascadeMode: true}
-	CreateConfig()
+	conf := CreateConfig(&Config)
 
 	utils.Sugar.Info("Creating Server")
-	CurrentServer = CreateServer(Config)
+	CurrentServer = CreateServer(conf)
 
 	endServer := &http.Server{
-		Addr:    "localhost:8081",
+		Addr:    "localhost:7081",
 		Handler: ConfigureRouter(DIRECT.Run(true), "localhost", true),
 	}
 	go func() {
@@ -286,7 +288,7 @@ func TestRestRouter_DisableAutomaticChange(t *testing.T) {
 	client, err := utils.GetClient("", 2)
 	assert.NoError(t, err)
 
-	resp, err := client.Get("http://localhost:8081/getAutoMode")
+	resp, err := client.Get("http://localhost:7081/getAutoMode")
 	assert.NoError(t, err)
 	assert.NotNil(t, resp.Body)
 	defer resp.Body.Close()
@@ -302,7 +304,7 @@ func TestRestRouter_DisableAutomaticChange(t *testing.T) {
 	encoder := json.NewEncoder(&buf)
 	err = encoder.Encode(&jsonRequest)
 	assert.NoError(t, err)
-	resp, err = client.Post("http://localhost:8081/setAutoMode", "application/json", &buf)
+	resp, err = client.Post("http://localhost:7081/setAutoMode", "application/json", &buf)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.NotNil(t, resp.Body)
@@ -311,17 +313,23 @@ func TestRestRouter_DisableAutomaticChange(t *testing.T) {
 	decoder = json.NewDecoder(resp.Body)
 	assert.NoError(t, decoder.Decode(&jsonRequest))
 	assert.False(t, jsonRequest.AutoChangeMode)
+
+	Config = GetConfig()
 	assert.True(t, Config.DisableAutoChangeMode)
 	assert.True(t, Config.CascadeMode)
 	assert.False(t, Config.OnlineCheck)
 
-	ModeSelection("https://www.asda12313.de", Config.DisableAutoChangeMode)
+	Config.CheckAddress = "https://www.asda12313.de"
+
+	ModeSelection(&Config)
 	time.Sleep(1 * time.Millisecond)
+
+	Config = GetConfig()
 	assert.True(t, Config.CascadeMode)
 	assert.True(t, Config.DisableAutoChangeMode)
 
 	buf = *bytes.NewBufferString("hallo")
-	resp, err = client.Post("http://localhost:8081/setAutoMode", "application/json", &buf)
+	resp, err = client.Post("http://localhost:7081/setAutoMode", "application/json", &buf)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
@@ -334,16 +342,17 @@ func TestRestRouter_ChangeCascadeMode(t *testing.T) {
 	fmt.Println("Running: TestRestRouter_ChangeCascadeMode")
 	utils.Init()
 
-	Config = Yaml{
+	Config := Yaml{
 		DisableAutoChangeMode: true,
 		ProxyURL:              "http://localhost",
 		Log:                   "DEBUG",
 		OnlineCheck:           false,
 		CascadeMode:           false,
 	}
+	CreateConfig(&Config)
 
 	endServer := &http.Server{
-		Addr:    "localhost:8081",
+		Addr:    "localhost:7081",
 		Handler: ConfigureRouter(DIRECT.Run(true), "localhost", true),
 	}
 	go func() {
@@ -365,7 +374,7 @@ func TestRestRouter_ChangeCascadeMode(t *testing.T) {
 	encoder := json.NewEncoder(&buf)
 	err = encoder.Encode(&cascadeModeReq)
 	assert.NoError(t, err)
-	resp, err := client.Post("http://localhost:8081/setCascadeMode", "application/json", &buf)
+	resp, err := client.Post("http://localhost:7081/setCascadeMode", "application/json", &buf)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.NotNil(t, resp.Body)
@@ -374,6 +383,8 @@ func TestRestRouter_ChangeCascadeMode(t *testing.T) {
 	decoder := json.NewDecoder(resp.Body)
 	assert.NoError(t, decoder.Decode(&cascadeModeReq))
 	assert.True(t, cascadeModeReq.CascadeMode)
+
+	Config = GetConfig()
 	assert.True(t, Config.DisableAutoChangeMode)
 	assert.True(t, Config.CascadeMode)
 	assert.False(t, DirectOverrideChan)
@@ -381,19 +392,21 @@ func TestRestRouter_ChangeCascadeMode(t *testing.T) {
 	cascadeModeReq.CascadeMode = false
 	err = encoder.Encode(&cascadeModeReq)
 	assert.NoError(t, err)
-	resp, err = client.Post("http://localhost:8081/setCascadeMode", "application/json", &buf)
+	resp, err = client.Post("http://localhost:7081/setCascadeMode", "application/json", &buf)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.False(t, cascadeModeReq.CascadeMode)
+
+	Config = GetConfig()
 	assert.False(t, Config.CascadeMode)
 	assert.True(t, DirectOverrideChan)
 
 	buf = *bytes.NewBufferString("hallo")
-	resp, err = client.Post("http://localhost:8081/setCascadeMode", "application/json", &buf)
+	resp, err = client.Post("http://localhost:7081/setCascadeMode", "application/json", &buf)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
 	err = endServer.Shutdown(context.Background())
 	assert.NoError(t, err)
-	Config = Yaml{}
+	time.Sleep(1 * time.Second)
 }

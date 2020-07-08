@@ -38,7 +38,12 @@ func TestInit(t *testing.T) {
 		Addr:    "localhost:2000",
 		Handler: r,
 	}
-	go server.ListenAndServe()
+
+	go func() {
+		err := server.ListenAndServe()
+		assert.EqualError(t, err, http.ErrServerClosed.Error())
+	}()
+
 	time.Sleep(10 * time.Millisecond)
 
 	resp, err := GetResponse("", "http://localhost:2000/ping")
@@ -80,7 +85,6 @@ func TestInit(t *testing.T) {
 
 func TestSetLogPath(t *testing.T) {
 	fmt.Println("Running: TestSetLogPath")
-	return
 
 	/*
 		message := "message"

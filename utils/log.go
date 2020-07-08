@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"time"
 
@@ -12,19 +11,19 @@ import (
 )
 
 var (
-	Atom   = zap.NewAtomicLevel()
-	config = zap.NewProductionConfig()
-	logger *zap.Logger
-	Sugar  *zap.SugaredLogger
+	Atom      = zap.NewAtomicLevel()
+	LogConfig = zap.NewProductionConfig()
+	logger    *zap.Logger
+	Sugar     *zap.SugaredLogger
 )
 
 func Init() {
 	var err error
-	config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-	config.EncoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
-	config.Encoding = "console"
-	config.Level = Atom
-	logger, err = config.Build()
+	LogConfig.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	LogConfig.EncoderConfig.EncodeTime = zapcore.RFC3339TimeEncoder
+	LogConfig.Encoding = "console"
+	LogConfig.Level = Atom
+	logger, err = LogConfig.Build()
 	if err != nil {
 		fmt.Println("Error building logger:", err)
 	}
@@ -58,10 +57,6 @@ func EnableInfo() {
 
 func EnableDebug() {
 	Atom.SetLevel(zap.DebugLevel)
-}
-
-func disableLogger() *log.Logger {
-	return log.New(ioutil.Discard, "", 0)
 }
 
 // defaultLogFormatter is the default log format function Logger middleware uses.

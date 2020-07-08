@@ -17,9 +17,9 @@ func TestDirectProxy_Run(t *testing.T) {
 	directProxy := DIRECT.Run(true)
 	var directServer *http.Server
 	go func() {
-		utils.Sugar.Info("serving end proxy server at localhost:8082")
+		utils.Sugar.Info("serving end proxy server at localhost:7082")
 		directServer = &http.Server{
-			Addr:    "localhost:8082",
+			Addr:    "localhost:7082",
 			Handler: directProxy,
 		}
 		err := directServer.ListenAndServe()
@@ -29,12 +29,12 @@ func TestDirectProxy_Run(t *testing.T) {
 	utils.Sugar.Info("waiting for running")
 	time.Sleep(1 * time.Second)
 
-	resp, err := utils.GetResponse("http://localhost:8082", "https://www.google.de")
+	resp, err := utils.GetResponse("http://localhost:7082", "https://www.google.de")
 	assert.NoError(t, err)
 	require.NotNil(t, resp)
 	assert.Equal(t, resp.StatusCode, http.StatusOK)
 
-	resp, err = utils.GetResponse("http://localhost:8082", "http://www.google.de")
+	resp, err = utils.GetResponse("http://localhost:7082", "http://www.google.de")
 	assert.NoError(t, err)
 	require.NotNil(t, resp)
 	assert.Equal(t, resp.StatusCode, http.StatusOK)

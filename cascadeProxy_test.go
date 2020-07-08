@@ -24,22 +24,22 @@ func TestCascadeProxy_Run(t *testing.T) {
 	})
 	var endServer *http.Server
 	go func() {
-		utils.Sugar.Info("serving end proxy server at localhost:8082")
+		utils.Sugar.Info("serving end proxy server at localhost:7082")
 		endServer = &http.Server{
-			Addr:    "localhost:8082",
+			Addr:    "localhost:7082",
 			Handler: endProxy,
 		}
 		err := endServer.ListenAndServe()
 		assert.EqualError(t, err, http.ErrServerClosed.Error())
 	}()
 
-	middleProxy := CASCADE.Run(true, "http://localhost:8082", username, password)
+	middleProxy := CASCADE.Run(true, "http://localhost:7082", username, password)
 	var middleServer *http.Server
 
 	go func() {
-		utils.Sugar.Info("serving middle proxy server at localhost:8081")
+		utils.Sugar.Info("serving middle proxy server at localhost:7081")
 		middleServer = &http.Server{
-			Addr:    "localhost:8081",
+			Addr:    "localhost:7081",
 			Handler: middleProxy,
 		}
 		err := middleServer.ListenAndServe()
@@ -50,7 +50,7 @@ func TestCascadeProxy_Run(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	utils.Sugar.Info("Start http Test")
-	client, err := utils.GetClient("http://localhost:8081", 2)
+	client, err := utils.GetClient("http://localhost:7081", 2)
 	assert.NoError(t, err)
 
 	request, _ := http.NewRequest("GET", "http://google.de/", nil)
@@ -60,12 +60,12 @@ func TestCascadeProxy_Run(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	utils.Sugar.Info("Start https Test")
-	resp, err = utils.GetResponse("http://localhost:8081", "https://www.google.de")
+	resp, err = utils.GetResponse("http://localhost:7081", "https://www.google.de")
 	assert.NoError(t, err)
 	require.NotNil(t, resp)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	_, err = utils.GetResponse("http://localhost:8082", "https://www.google.de")
+	_, err = utils.GetResponse("http://localhost:7082", "https://www.google.de")
 	assert.Error(t, err)
 
 	err = middleServer.Shutdown(context.TODO())
@@ -78,13 +78,13 @@ func TestCascadeProxy_Run(t *testing.T) {
 
 func TestAddDirectConnection(t *testing.T) {
 	utils.Init()
-	middleProxy := CASCADE.Run(true, "http://localhost:8082", "", "")
+	middleProxy := CASCADE.Run(true, "http://localhost:7082", "", "")
 	var middleServer *http.Server
 
 	go func() {
-		utils.Sugar.Info("serving middle proxy server at localhost:8081")
+		utils.Sugar.Info("serving middle proxy server at localhost:7081")
 		middleServer = &http.Server{
-			Addr:    "localhost:8081",
+			Addr:    "localhost:7081",
 			Handler: middleProxy,
 		}
 		err := middleServer.ListenAndServe()
@@ -92,23 +92,26 @@ func TestAddDirectConnection(t *testing.T) {
 	}()
 
 	time.Sleep(1 * time.Second)
-	_, err := utils.GetResponse("http://localhost:8081", "https://www.google.de")
+	_, err := utils.GetResponse("http://localhost:7081", "https://www.google.de")
 	assert.Error(t, err)
 
-	Config.LocalPort = "8801"
+	test_config := Yaml{LocalPort: "7082", verbose: true}
+	conf := CreateConfig(&test_config)
+	conf.LocalPort = "8801"
+	CreateConfig(conf)
 	AddDirectConnection("google")
-	resp, err := utils.GetResponse("http://localhost:8081", "https://www.google.de")
+	resp, err := utils.GetResponse("http://localhost:7081", "https://www.google.de")
 	assert.NoError(t, err)
 	require.NotNil(t, resp)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	resp, err = utils.GetResponse("http://localhost:8081", "http://www.google.de")
+	resp, err = utils.GetResponse("http://localhost:7081", "http://www.google.de")
 	assert.NoError(t, err)
 	require.NotNil(t, resp)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	ClearHostList()
-	_, err = utils.GetResponse("http://localhost:8081", "https://www.google.de")
+	_, err = utils.GetResponse("http://localhost:7081", "https://www.google.de")
 	assert.Error(t, err)
 
 	err = middleServer.Shutdown(context.TODO())
@@ -125,9 +128,9 @@ func TestAddDifferentProxyConnection(t *testing.T) {
 		return user == username && password == pwd
 	})
 	go func() {
-		utils.Sugar.Info("serving end proxy server at localhost:8082")
+		utils.Sugar.Info("serving end proxy server at localhost:7082")
 		endServer = &http.Server{
-			Addr:    "localhost:8082",
+			Addr:    "localhost:7082",
 			Handler: endProxy,
 		}
 		err := endServer.ListenAndServe()
@@ -138,9 +141,9 @@ func TestAddDifferentProxyConnection(t *testing.T) {
 	var middleServer *http.Server
 
 	go func() {
-		utils.Sugar.Info("serving middle proxy server at localhost:8081")
+		utils.Sugar.Info("serving middle proxy server at localhost:7081")
 		middleServer = &http.Server{
-			Addr:    "localhost:8081",
+			Addr:    "localhost:7081",
 			Handler: middleProxy,
 		}
 		err := middleServer.ListenAndServe()
@@ -148,50 +151,54 @@ func TestAddDifferentProxyConnection(t *testing.T) {
 	}()
 
 	time.Sleep(1 * time.Second)
-	Config.LocalPort = "8801"
+
+	test_config := Yaml{LocalPort: "7082", verbose: true}
+	conf := CreateConfig(&test_config)
+	conf.LocalPort = "8801"
+	CreateConfig(conf)
 	utils.Sugar.Info("starting HTTPS test to fail")
-	_, err := utils.GetResponse("http://localhost:8081", "https://www.google.de")
+	_, err := utils.GetResponse("http://localhost:7081", "https://www.google.de")
 	assert.Error(t, err)
 
 	utils.Sugar.Info("starting HTTP test to fail")
-	resp, err := utils.GetResponse("http://localhost:8081", "http://www.google.de")
+	resp, err := utils.GetResponse("http://localhost:7081", "http://www.google.de")
 	assert.NoError(t, err)
 	require.NotNil(t, resp)
 	assert.Equal(t, resp.StatusCode, http.StatusInternalServerError)
 
-	AddDifferentProxyConnection("google", "http://localhost:8082")
+	AddDifferentProxyConnection("google", "http://localhost:7082")
 	utils.Sugar.Info("starting HTTPS test to work")
-	resp, err = utils.GetResponse("http://localhost:8081", "https://www.google.de")
+	resp, err = utils.GetResponse("http://localhost:7081", "https://www.google.de")
 	assert.NoError(t, err)
 	require.NotNil(t, resp)
 	assert.Equal(t, resp.StatusCode, http.StatusOK)
 
 	utils.Sugar.Info("starting HTTP test")
-	resp, err = utils.GetResponse("http://localhost:8081", "http://www.google.de")
+	resp, err = utils.GetResponse("http://localhost:7081", "http://www.google.de")
 	assert.NoError(t, err)
 	require.NotNil(t, resp)
 	assert.Equal(t, resp.StatusCode, http.StatusOK)
 
 	AddDifferentProxyConnection("google", "")
 	utils.Sugar.Info("starting HTTPS test to work")
-	resp, err = utils.GetResponse("http://localhost:8081", "https://www.google.de")
+	resp, err = utils.GetResponse("http://localhost:7081", "https://www.google.de")
 	assert.NoError(t, err)
 	require.NotNil(t, resp)
 	assert.Equal(t, resp.StatusCode, http.StatusOK)
 
 	utils.Sugar.Info("starting HTTP test")
-	resp, err = utils.GetResponse("http://localhost:8081", "http://www.google.de")
+	resp, err = utils.GetResponse("http://localhost:7081", "http://www.google.de")
 	assert.NoError(t, err)
 	require.NotNil(t, resp)
 	assert.Equal(t, resp.StatusCode, http.StatusOK)
 
-	resp, err = utils.GetResponse("http://localhost:8081", "https://www.google.de")
+	resp, err = utils.GetResponse("http://localhost:7081", "https://www.google.de")
 	assert.NoError(t, err)
 	require.NotNil(t, resp)
 	assert.Equal(t, resp.StatusCode, http.StatusOK)
 
 	utils.Sugar.Info("starting HTTP test")
-	resp, err = utils.GetResponse("http://localhost:8081", "http://www.google.de")
+	resp, err = utils.GetResponse("http://localhost:7081", "http://www.google.de")
 	assert.NoError(t, err)
 	require.NotNil(t, resp)
 	assert.Equal(t, resp.StatusCode, http.StatusOK)
@@ -200,7 +207,7 @@ func TestAddDifferentProxyConnection(t *testing.T) {
 	assert.NotContains(t, HostList, "")
 
 	ClearHostList()
-	_, err = utils.GetResponse("http://localhost:8081", "https://www.google.de")
+	_, err = utils.GetResponse("http://localhost:7081", "https://www.google.de")
 	assert.Error(t, err)
 
 	err = middleServer.Shutdown(context.TODO())
@@ -215,9 +222,9 @@ func TestCascadeProxy_ModeSwitch(t *testing.T) {
 	var middleServer *http.Server
 
 	go func() {
-		utils.Sugar.Info("serving middle proxy server at localhost:8081")
+		utils.Sugar.Info("serving middle proxy server at localhost:7081")
 		middleServer = &http.Server{
-			Addr:    "localhost:8081",
+			Addr:    "localhost:7081",
 			Handler: middleProxy,
 		}
 		err := middleServer.ListenAndServe()
@@ -225,13 +232,13 @@ func TestCascadeProxy_ModeSwitch(t *testing.T) {
 	}()
 
 	time.Sleep(1 * time.Millisecond)
-	_, err := utils.GetResponse("http://localhost:8081", "https://www.google.de")
+	_, err := utils.GetResponse("http://localhost:7081", "https://www.google.de")
 	assert.Error(t, err)
 
 	utils.Sugar.Info("writing to DirectOverrideChan")
 	DirectOverrideChan = true
 	utils.Sugar.Info("Testing direct Override")
-	resp, err := utils.GetResponse("http://localhost:8081", "https://www.google.de")
+	resp, err := utils.GetResponse("http://localhost:7081", "https://www.google.de")
 	assert.NoError(t, err)
 	require.NotNil(t, resp)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)

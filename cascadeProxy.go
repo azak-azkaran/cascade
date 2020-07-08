@@ -57,7 +57,7 @@ func basicAuth(username, password string) string {
 
 func AddDifferentProxyConnection(host string, proxyAddr string) {
 	if host == "" {
-		utils.Sugar.Error("Empty host in skiplist found, with redirect to: ", proxyAddr)
+		utils.Sugar.Warn("Empty host in skiplist found, with redirect to: ", proxyAddr)
 		return
 	}
 
