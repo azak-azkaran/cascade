@@ -16,45 +16,37 @@ func TestChangeMode(t *testing.T) {
 	Config := GetConfig()
 	assert.False(t, Config.OnlineCheck)
 
-	Config.verbose = true
+	Config.Verbose = true
 	Config.ProxyURL = "something"
 
 	Config.CascadeMode = true
-	DirectOverrideChan = false
-	fmt.Println("Test switch from\nCascadeMode: ", Config.CascadeMode, " DirectOverrideChan: ", DirectOverrideChan, " to DirectMode")
+	fmt.Println("Test switch from\nCascadeMode: ", Config.CascadeMode, " to DirectMode")
 	ChangeMode(true, &Config)
 	assert.False(t, Config.CascadeMode)
-	assert.True(t, DirectOverrideChan)
-	fmt.Println("Result CascadeMode: ", Config.CascadeMode, " DirectOverrideChan: ", DirectOverrideChan)
+	fmt.Println("Result CascadeMode: ", Config.CascadeMode)
 
 	Config.CascadeMode = false
-	DirectOverrideChan = true
-	fmt.Println("Test switch from\nCascadeMode: ", Config.CascadeMode, " DirectOverrideChan: ", DirectOverrideChan, " to CascadeMode")
+	fmt.Println("Test switch from\nCascadeMode: ", Config.CascadeMode)
 
 	ChangeMode(false, &Config)
 	assert.True(t, Config.CascadeMode)
-	assert.False(t, DirectOverrideChan)
-	fmt.Println("Result CascadeMode: ", Config.CascadeMode, " DirectOverrideChan: ", DirectOverrideChan)
+	fmt.Println("Result CascadeMode: ", Config.CascadeMode)
 
 	Config.CascadeMode = true
-	DirectOverrideChan = false
-	fmt.Println("Test switch from\nCascadeMode: ", Config.CascadeMode, " DirectOverrideChan: ", DirectOverrideChan, " to DirectMode")
+	fmt.Println("Test switch from\nCascadeMode: ", Config.CascadeMode)
 
 	Config.OnlineCheck = true
 	ChangeMode(false, &Config)
 	assert.False(t, Config.CascadeMode)
-	assert.True(t, DirectOverrideChan)
-	fmt.Println("Result CascadeMode: ", Config.CascadeMode, " DirectOverrideChan: ", DirectOverrideChan)
+	fmt.Println("Result CascadeMode: ", Config.CascadeMode)
 
 	Config.CascadeMode = false
-	DirectOverrideChan = true
-	fmt.Println("Test switch from\nCascadeMode: ", Config.CascadeMode, " DirectOverrideChan: ", DirectOverrideChan, " to CascadeMode")
+	fmt.Println("Test switch from\nCascadeMode: ", Config.CascadeMode)
 
 	Config.OnlineCheck = true
 	ChangeMode(true, &Config)
 	assert.True(t, Config.CascadeMode)
-	assert.False(t, DirectOverrideChan)
-	fmt.Println("Result CascadeMode: ", Config.CascadeMode, " DirectOverrideChan: ", DirectOverrideChan)
+	fmt.Println("Result CascadeMode: ", Config.CascadeMode)
 
 	Config.ProxyURL = ""
 }
@@ -64,7 +56,7 @@ func TestModeSelection(t *testing.T) {
 	utils.Init()
 
 	Config := GetConfig()
-	Config.verbose = true
+	Config.Verbose = true
 	Config.CascadeMode = true
 	Config.ProxyURL = "something"
 	Config.proxyRedirectList = strings.Split("golang.org,youtube.com", ",")
@@ -72,12 +64,10 @@ func TestModeSelection(t *testing.T) {
 	Config.OnlineCheck = false
 	ModeSelection(&Config)
 	time.Sleep(1 * time.Millisecond)
-	assert.False(t, DirectOverrideChan)
 
 	Config.CheckAddress = "https://www.google.de"
 	ModeSelection(&Config)
 	time.Sleep(1 * time.Millisecond)
-	assert.True(t, DirectOverrideChan)
 
 	Config = Yaml{}
 }
@@ -130,15 +120,14 @@ func TestDisableAutoChangeMode(t *testing.T) {
 	utils.Init()
 
 	Config := GetConfig()
-	Config.verbose = true
+	Config.Verbose = true
 	Config.CascadeMode = true
 	Config.ProxyURL = "something"
-	DirectOverrideChan = false
 	Config.proxyRedirectList = strings.Split("golang.org,youtube.com", ",")
 	Config.DisableAutoChangeMode = true
 	Config.CheckAddress = "https://www.asda12313.de"
 
 	ModeSelection(&Config)
 	time.Sleep(1 * time.Millisecond)
-	assert.False(t, DirectOverrideChan)
+	assert.True(t, Config.CascadeMode)
 }

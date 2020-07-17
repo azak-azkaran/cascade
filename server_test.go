@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var test_config Yaml = Yaml{LocalPort: "7082", verbose: true}
+var test_config Yaml = Yaml{LocalPort: "7082", Verbose: true}
 
 func TestCreateServer(t *testing.T) {
 	fmt.Println("Running: TestCreateServer")
@@ -30,7 +30,6 @@ func TestCreateServer(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 	assert.NotNil(t, CurrentServer)
-	DirectOverrideChan = true
 	resp, err := utils.GetResponse("http://localhost:7082", "http://www.google.de")
 	assert.NoError(t, err)
 	require.NotNil(t, resp)
@@ -42,7 +41,6 @@ func TestCreateServer(t *testing.T) {
 	time.Sleep(1 * time.Second)
 	resp, err = utils.GetResponse("http://localhost:7082", "http://www.google.de")
 	assert.Error(t, err)
-	DirectOverrideChan = false
 
 	//err = utils.Sugar.Sync()
 	//assert.NoError(t, err)
@@ -59,7 +57,6 @@ func TestRunServer(t *testing.T) {
 	RunServer()
 	time.Sleep(1 * time.Second)
 	assert.True(t, running)
-	DirectOverrideChan = true
 
 	resp, err := utils.GetResponse("http://localhost:7082", "https://www.google.de")
 	assert.NoError(t, err)
@@ -69,7 +66,6 @@ func TestRunServer(t *testing.T) {
 	err = testServer.Shutdown(context.TODO())
 	time.Sleep(1 * time.Second)
 	assert.NoError(t, err)
-	DirectOverrideChan = false
 	CurrentServer = nil
 }
 
@@ -128,7 +124,6 @@ func TestRestRequest(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	assert.True(t, running, "Server was not started")
-	DirectOverrideChan = true
 
 	client, err := utils.GetClient("", 2)
 	assert.NoError(t, err)

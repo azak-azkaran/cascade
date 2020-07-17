@@ -23,7 +23,7 @@ func HandleCustomProxies(list []string) {
 	}
 }
 
-func ModeSelection(config *Yaml) {
+func ModeSelection(config *Yaml) *Yaml {
 	var success bool
 	utils.Sugar.Info("Running check on: ", config.CheckAddress)
 	rep, err := utils.GetResponse("", config.CheckAddress)
@@ -48,18 +48,18 @@ func ModeSelection(config *Yaml) {
 	}
 
 	if !config.DisableAutoChangeMode {
-		ChangeMode(success, config)
+		config = ChangeMode(success, config)
 	} else {
 		utils.Sugar.Info("Automatic Change Mode is disabled")
 	}
+	return config
 }
 
-func ChangeMode(success bool, config *Yaml) {
+func ChangeMode(success bool, config *Yaml) *Yaml {
 	if len(config.ProxyURL) == 0 {
 		utils.Sugar.Error("ProxyURL was not set so staying in DirectMode")
 		config.CascadeMode = false
-		DirectOverrideChan = true
-		return
+		return config
 	}
 
 	if (!success && config.CascadeMode && config.OnlineCheck) ||
@@ -68,32 +68,29 @@ func ChangeMode(success bool, config *Yaml) {
 		// switch to direct mode
 		utils.Sugar.Warn("switch to: DirectMode")
 		config.CascadeMode = false
-		DirectOverrideChan = true
-		return
+		return config
 
 	} else if (success && !config.CascadeMode && config.OnlineCheck) ||
 		(success && CurrentServer == nil && config.OnlineCheck) {
 		// switch to cascade mode
 		utils.Sugar.Warn("switch to: CascadeMode")
 		config.CascadeMode = true
-		DirectOverrideChan = false
-		return
+		return config
 	}
 
 	if (success && config.CascadeMode) || (success && CurrentServer == nil) {
 		// switch to direct mode
 		utils.Sugar.Warn("switch to: DirectMode")
 		config.CascadeMode = false
-		DirectOverrideChan = true
-		return
+		return config
 		//go Config.DirectFunction()
 	} else if (!success && !config.CascadeMode) || (!success && CurrentServer == nil) {
 
 		// switch to cascade mode
 		utils.Sugar.Warn("switch to: CascadeMode")
 		config.CascadeMode = true
-		DirectOverrideChan = false
-		return
+		return config
 		//go Config.CascadeFunction()
 	}
+	return config
 }

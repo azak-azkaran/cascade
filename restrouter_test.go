@@ -363,7 +363,6 @@ func TestRestRouter_ChangeCascadeMode(t *testing.T) {
 	time.Sleep(1 * time.Second)
 	client, err := utils.GetClient("", 2)
 	assert.NoError(t, err)
-	assert.False(t, DirectOverrideChan)
 	assert.False(t, Config.CascadeMode)
 
 	cascadeModeReq := SetCascadeModeRequest{
@@ -387,7 +386,6 @@ func TestRestRouter_ChangeCascadeMode(t *testing.T) {
 	Config = GetConfig()
 	assert.True(t, Config.DisableAutoChangeMode)
 	assert.True(t, Config.CascadeMode)
-	assert.False(t, DirectOverrideChan)
 
 	cascadeModeReq.CascadeMode = false
 	err = encoder.Encode(&cascadeModeReq)
@@ -399,7 +397,6 @@ func TestRestRouter_ChangeCascadeMode(t *testing.T) {
 
 	Config = GetConfig()
 	assert.False(t, Config.CascadeMode)
-	assert.True(t, DirectOverrideChan)
 
 	buf = *bytes.NewBufferString("hallo")
 	resp, err = client.Post("http://localhost:7081/setCascadeMode", "application/json", &buf)

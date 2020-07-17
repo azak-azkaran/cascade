@@ -70,7 +70,7 @@ func shutdown(timeout time.Duration, server *http.Server) {
 func create(proxy *goproxy.ProxyHttpServer, addr string, config *Yaml) *http.Server {
 	return &http.Server{
 		Addr:    addr + ":" + config.LocalPort,
-		Handler: ConfigureRouter(proxy, addr, config.verbose),
+		Handler: ConfigureRouter(proxy, addr, config.Verbose),
 		// Disable HTTP/2.
 		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
 		ReadTimeout:  5 * time.Second,
@@ -82,7 +82,7 @@ func create(proxy *goproxy.ProxyHttpServer, addr string, config *Yaml) *http.Ser
 // CreateServer creates a proxy server on addr:port
 func CreateServer(config *Yaml) *http.Server {
 	utils.Sugar.Warn("Creating Proxy on: localhost", ":", config.LocalPort)
-	proxy := CASCADE.Run(config.verbose, config.ProxyURL, config.Username, config.Password)
+	proxy := CASCADE.Run(config.Verbose, config.ProxyURL, config.Username, config.Password)
 	HandleCustomProxies(config.proxyRedirectList)
 	CurrentServer = create(proxy, "localhost", config)
 	return CurrentServer

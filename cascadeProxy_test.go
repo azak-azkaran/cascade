@@ -95,7 +95,7 @@ func TestAddDirectConnection(t *testing.T) {
 	_, err := utils.GetResponse("http://localhost:7081", "https://www.google.de")
 	assert.Error(t, err)
 
-	test_config := Yaml{LocalPort: "7082", verbose: true}
+	test_config := Yaml{LocalPort: "7082", Verbose: true}
 	conf := CreateConfig(&test_config)
 	conf.LocalPort = "8801"
 	CreateConfig(conf)
@@ -152,7 +152,7 @@ func TestAddDifferentProxyConnection(t *testing.T) {
 
 	time.Sleep(1 * time.Second)
 
-	test_config := Yaml{LocalPort: "7082", verbose: true}
+	test_config := Yaml{LocalPort: "7082", Verbose: true}
 	conf := CreateConfig(&test_config)
 	conf.LocalPort = "8801"
 	CreateConfig(conf)
@@ -235,8 +235,9 @@ func TestCascadeProxy_ModeSwitch(t *testing.T) {
 	_, err := utils.GetResponse("http://localhost:7081", "https://www.google.de")
 	assert.Error(t, err)
 
+	test_config := Yaml{CascadeMode: false, Verbose: true}
+	CreateConfig(&test_config)
 	utils.Sugar.Info("writing to DirectOverrideChan")
-	DirectOverrideChan = true
 	utils.Sugar.Info("Testing direct Override")
 	resp, err := utils.GetResponse("http://localhost:7081", "https://www.google.de")
 	assert.NoError(t, err)
@@ -245,5 +246,4 @@ func TestCascadeProxy_ModeSwitch(t *testing.T) {
 
 	err = middleServer.Shutdown(context.TODO())
 	assert.NoError(t, err)
-	DirectOverrideChan = false
 }

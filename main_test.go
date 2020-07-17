@@ -32,8 +32,6 @@ func TestRun(t *testing.T) {
 	time.Sleep(1 * time.Second)
 	assert.NotNil(t, CurrentServer, "No Server was created")
 
-	assert.True(t, DirectOverrideChan, "Direct Override is not active")
-
 	resp, err := utils.GetResponse("http://localhost:7081", "https://www.google.de")
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)

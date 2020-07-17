@@ -29,7 +29,7 @@ type Yaml struct {
 	LogPath               string `yaml:"log-path"`
 	proxyRedirectList     []string
 	health                time.Duration
-	verbose               bool
+	Verbose               bool   `yaml:"verbose"`
 	CascadeMode           bool   `yaml:"cascadeMode"`
 	Log                   string `yaml:"log"`
 	OnlineCheck           bool   `yaml:"onlineCheck"`
@@ -104,6 +104,8 @@ func GetConfFromVault(vaultAddr string, vaultToken string, path string) (*Yaml, 
 	vaultConfig := &vault.Config{
 		Address: vaultAddr,
 	}
+	config.VaultAddr = vaultAddr
+	config.VaultToken = vaultToken
 
 	resp, err := SealStatus(vaultConfig)
 	if err != nil {
@@ -228,7 +230,6 @@ func GetConfFromFile(path string) (*Yaml, error) {
 		config.HealthTime = 5
 	}
 
-	config.proxyRedirectList = strings.Split(config.HostList, ",")
 	return &config, nil
 }
 
@@ -270,38 +271,7 @@ func CreateConfig(config *Yaml) *Yaml {
 	if err != nil {
 		conf = config
 	}
-
-	switch strings.ToUpper(conf.Log) {
-	case "DEBUG":
-		fmt.Println(conf)
-		fmt.Println("Starting Proxy with the following flags:")
-		fmt.Println("Username: ", conf.Username)
-		fmt.Println("Password: ", conf.Password)
-		fmt.Println("ProxyUrl: ", conf.ProxyURL)
-		fmt.Println("Health Address: ", conf.CheckAddress)
-		fmt.Println("Health Time: ", conf.health)
-		fmt.Println("Skip Cascade for Hosts: ", conf.proxyRedirectList)
-		fmt.Println("Log Level: ", conf.Log)
-		utils.EnableDebug()
-		conf.Log = "DEBUG"
-		conf.verbose = true
-	case "INFO":
-		conf.Log = "INFO"
-		conf.verbose = true
-		utils.EnableInfo()
-	case "ERROR":
-		conf.Log = "ERROR"
-		conf.verbose = false
-		utils.EnableError()
-	case "WARNING":
-		fallthrough
-	default:
-		conf.Log = "WARNING"
-		conf.verbose = true
-		utils.EnableWarning()
-	}
-
-	SetConfig(conf)
+	conf = SetConfig(conf)
 	return conf
 }
 
@@ -336,6 +306,39 @@ func GetConfig() Yaml {
 	return config
 }
 
-func SetConfig(config *Yaml) {
-	currentConfig = config
+func SetConfig(conf *Yaml) *Yaml {
+	switch strings.ToUpper(conf.Log) {
+	case "DEBUG":
+		utils.Sugar.Debug(conf)
+		utils.Sugar.Debug("Starting Proxy with the following flags:")
+		utils.Sugar.Debug("Username: ", conf.Username)
+		utils.Sugar.Debug("Password: ", conf.Password)
+		utils.Sugar.Debug("ProxyUrl: ", conf.ProxyURL)
+		utils.Sugar.Debug("Health Address: ", conf.CheckAddress)
+		utils.Sugar.Debug("Health Time: ", conf.health)
+		utils.Sugar.Debug("Skip Cascade for Hosts: ", conf.proxyRedirectList)
+		utils.Sugar.Debug("Log Level: ", conf.Log)
+		utils.Sugar.Debug("OnlineCheck: ", conf.OnlineCheck)
+		utils.Sugar.Debug("CascadeMode: ", conf.CascadeMode)
+		utils.Sugar.Debug("DisableAutoChangeMode: ", conf.DisableAutoChangeMode)
+		utils.EnableDebug()
+		conf.Log = "DEBUG"
+		conf.Verbose = true
+	case "INFO":
+		conf.Log = "INFO"
+		conf.Verbose = false
+		utils.EnableInfo()
+	case "ERROR":
+		conf.Log = "ERROR"
+		conf.Verbose = false
+		utils.EnableError()
+	case "WARNING":
+		fallthrough
+	default:
+		conf.Log = "WARNING"
+		conf.Verbose = false
+		utils.EnableWarning()
+	}
+	currentConfig = conf
+	return currentConfig
 }

@@ -26,10 +26,8 @@ type hostConfig struct {
 }
 
 var CASCADE cascadeProxy
-var DirectOverrideChan bool
 var LoginRequired bool
 var HostList cmap.ConcurrentMap = cmap.New()
-var cascadeMode bool = true
 var DialTimeout time.Duration = 5 * time.Second
 
 const (
@@ -93,13 +91,8 @@ func parseProxyUrl(proxyURL string) (*url.URL, error) {
 }
 
 func directOverride() bool {
-	if DirectOverrideChan {
-		cascadeMode = false
-	} else {
-		cascadeMode = true
-	}
-
-	return !cascadeMode
+	conf := GetConfig()
+	return !conf.CascadeMode
 }
 
 func directRedirect(Host string, proxyURL string) (bool, string) {
