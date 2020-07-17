@@ -92,7 +92,11 @@ func parseProxyUrl(proxyURL string) (*url.URL, error) {
 
 func directOverride() bool {
 	conf := GetConfig()
-	return !conf.CascadeMode
+	if conf != nil {
+		return !conf.CascadeMode
+	}
+	utils.Sugar.Error("Configuration is not setting direct override")
+	return true
 }
 
 func directRedirect(Host string, proxyURL string) (bool, string) {

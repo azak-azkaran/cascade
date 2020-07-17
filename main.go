@@ -32,7 +32,7 @@ func Run(config *Yaml) {
 		if currentDuration > config.health {
 			conf := GetConfig()
 			lastTime = time.Now()
-			config = CreateConfig(&conf)
+			config = CreateConfig(conf)
 			go ModeSelection(config)
 			time.Sleep(config.health)
 		}

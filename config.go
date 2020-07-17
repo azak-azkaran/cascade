@@ -301,8 +301,8 @@ func ParseCommandline() (*Yaml, error) {
 	return UpdateConfig(&config)
 }
 
-func GetConfig() Yaml {
-	config := *currentConfig
+func GetConfig() *Yaml {
+	config := currentConfig
 	return config
 }
 

@@ -21,14 +21,14 @@ func TestChangeMode(t *testing.T) {
 
 	Config.CascadeMode = true
 	fmt.Println("Test switch from\nCascadeMode: ", Config.CascadeMode, " to DirectMode")
-	ChangeMode(true, &Config)
+	ChangeMode(true, Config)
 	assert.False(t, Config.CascadeMode)
 	fmt.Println("Result CascadeMode: ", Config.CascadeMode)
 
 	Config.CascadeMode = false
 	fmt.Println("Test switch from\nCascadeMode: ", Config.CascadeMode)
 
-	ChangeMode(false, &Config)
+	ChangeMode(false, Config)
 	assert.True(t, Config.CascadeMode)
 	fmt.Println("Result CascadeMode: ", Config.CascadeMode)
 
@@ -36,7 +36,7 @@ func TestChangeMode(t *testing.T) {
 	fmt.Println("Test switch from\nCascadeMode: ", Config.CascadeMode)
 
 	Config.OnlineCheck = true
-	ChangeMode(false, &Config)
+	ChangeMode(false, Config)
 	assert.False(t, Config.CascadeMode)
 	fmt.Println("Result CascadeMode: ", Config.CascadeMode)
 
@@ -44,7 +44,7 @@ func TestChangeMode(t *testing.T) {
 	fmt.Println("Test switch from\nCascadeMode: ", Config.CascadeMode)
 
 	Config.OnlineCheck = true
-	ChangeMode(true, &Config)
+	ChangeMode(true, Config)
 	assert.True(t, Config.CascadeMode)
 	fmt.Println("Result CascadeMode: ", Config.CascadeMode)
 
@@ -62,14 +62,12 @@ func TestModeSelection(t *testing.T) {
 	Config.proxyRedirectList = strings.Split("golang.org,youtube.com", ",")
 	Config.CheckAddress = "https://www.asda12313.de"
 	Config.OnlineCheck = false
-	ModeSelection(&Config)
+	ModeSelection(Config)
 	time.Sleep(1 * time.Millisecond)
 
 	Config.CheckAddress = "https://www.google.de"
-	ModeSelection(&Config)
+	ModeSelection(Config)
 	time.Sleep(1 * time.Millisecond)
-
-	Config = Yaml{}
 }
 
 func TestCreateConfig(t *testing.T) {
@@ -127,7 +125,7 @@ func TestDisableAutoChangeMode(t *testing.T) {
 	Config.DisableAutoChangeMode = true
 	Config.CheckAddress = "https://www.asda12313.de"
 
-	ModeSelection(&Config)
+	ModeSelection(Config)
 	time.Sleep(1 * time.Millisecond)
 	assert.True(t, Config.CascadeMode)
 }

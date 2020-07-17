@@ -173,15 +173,6 @@ func TestRestRouter_AddRedirect(t *testing.T) {
 	assert.True(t, available)
 	assert.NotNil(t, value)
 
-	Config = GetConfig()
-	config, err := GetConfFromFile("test/config.yml")
-	assert.NoError(t, err)
-	assert.Equal(t, config.LocalPort, Config.LocalPort)
-	assert.Equal(t, config.HealthTime, Config.HealthTime)
-	assert.Equal(t, config.HostList, Config.HostList)
-	assert.Equal(t, config.CheckAddress, Config.CheckAddress)
-	assert.NotEqual(t, config.HostList, "golang.org,youtube.com")
-
 	buf = *bytes.NewBufferString("hallo")
 	resp, err = client.Post("http://localhost:7081/add", "application/json", &buf)
 	assert.NoError(t, err)
@@ -189,7 +180,6 @@ func TestRestRouter_AddRedirect(t *testing.T) {
 
 	err = endServer.Shutdown(context.Background())
 	assert.NoError(t, err)
-	Config = Yaml{}
 }
 
 func TestRestRouter_ChangeOnlineCheck(t *testing.T) {
@@ -314,19 +304,19 @@ func TestRestRouter_DisableAutomaticChange(t *testing.T) {
 	assert.NoError(t, decoder.Decode(&jsonRequest))
 	assert.False(t, jsonRequest.AutoChangeMode)
 
-	Config = GetConfig()
-	assert.True(t, Config.DisableAutoChangeMode)
-	assert.True(t, Config.CascadeMode)
-	assert.False(t, Config.OnlineCheck)
+	conf = GetConfig()
+	assert.True(t, conf.DisableAutoChangeMode)
+	assert.True(t, conf.CascadeMode)
+	assert.False(t, conf.OnlineCheck)
 
 	Config.CheckAddress = "https://www.asda12313.de"
 
 	ModeSelection(&Config)
 	time.Sleep(1 * time.Millisecond)
 
-	Config = GetConfig()
-	assert.True(t, Config.CascadeMode)
-	assert.True(t, Config.DisableAutoChangeMode)
+	conf = GetConfig()
+	assert.True(t, conf.CascadeMode)
+	assert.True(t, conf.DisableAutoChangeMode)
 
 	buf = *bytes.NewBufferString("hallo")
 	resp, err = client.Post("http://localhost:7081/setAutoMode", "application/json", &buf)
@@ -349,7 +339,7 @@ func TestRestRouter_ChangeCascadeMode(t *testing.T) {
 		OnlineCheck:           false,
 		CascadeMode:           false,
 	}
-	CreateConfig(&Config)
+	conf := CreateConfig(&Config)
 
 	endServer := &http.Server{
 		Addr:    "localhost:7081",
@@ -383,9 +373,9 @@ func TestRestRouter_ChangeCascadeMode(t *testing.T) {
 	assert.NoError(t, decoder.Decode(&cascadeModeReq))
 	assert.True(t, cascadeModeReq.CascadeMode)
 
-	Config = GetConfig()
-	assert.True(t, Config.DisableAutoChangeMode)
-	assert.True(t, Config.CascadeMode)
+	conf = GetConfig()
+	assert.True(t, conf.DisableAutoChangeMode)
+	assert.True(t, conf.CascadeMode)
 
 	cascadeModeReq.CascadeMode = false
 	err = encoder.Encode(&cascadeModeReq)
@@ -395,8 +385,8 @@ func TestRestRouter_ChangeCascadeMode(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 	assert.False(t, cascadeModeReq.CascadeMode)
 
-	Config = GetConfig()
-	assert.False(t, Config.CascadeMode)
+	conf = GetConfig()
+	assert.False(t, conf.CascadeMode)
 
 	buf = *bytes.NewBufferString("hallo")
 	resp, err = client.Post("http://localhost:7081/setCascadeMode", "application/json", &buf)

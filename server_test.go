@@ -12,12 +12,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var test_config Yaml = Yaml{LocalPort: "7082", Verbose: true}
-
 func TestCreateServer(t *testing.T) {
 	fmt.Println("Running: TestCreateServer")
 	utils.Init()
-
+	test_config := Yaml{LocalPort: "7082", Verbose: true}
 	conf := CreateConfig(&test_config)
 	testServer := CreateServer(conf) //CASCADE.Run(true, "", "", ""), "localhost", "7082")
 	go func() {
@@ -49,6 +47,7 @@ func TestCreateServer(t *testing.T) {
 func TestRunServer(t *testing.T) {
 	fmt.Println("Running: TestRunServer")
 	utils.Init()
+	test_config := Yaml{LocalPort: "7082", Verbose: true}
 	conf := CreateConfig(&test_config)
 	testServer := CreateServer(conf)
 	require.False(t, running)
@@ -72,6 +71,7 @@ func TestRunServer(t *testing.T) {
 func TestShutdownCurrentServer(t *testing.T) {
 	fmt.Println("Running: TestShutdownCurrentServer")
 	utils.Init()
+	test_config := Yaml{LocalPort: "7082", Verbose: true}
 	conf := CreateConfig(&test_config)
 	CreateServer(conf)
 	assert.False(t, running)
@@ -89,7 +89,9 @@ func TestCreateBrokenServer(t *testing.T) {
 		CheckAddress: "https://www.google.de",
 		HealthTime:   5,
 		HostList:     "golang.org,youtube.com",
-		Log:          "info"}
+		Log:          "info",
+		CascadeMode:  true,
+	}
 	conf := CreateConfig(&Config)
 
 	utils.Sugar.Info("Creating Server")
@@ -117,6 +119,7 @@ func TestCreateBrokenServer(t *testing.T) {
 func TestRestRequest(t *testing.T) {
 	fmt.Println("Running: TestRestRequest")
 	utils.Init()
+	test_config := Yaml{LocalPort: "7082", Verbose: true}
 	conf := CreateConfig(&test_config)
 	testServer := CreateServer(conf)
 
@@ -156,6 +159,7 @@ func TestRestServerLateCreation(t *testing.T) {
 	RunServer()
 	time.Sleep(3 * time.Second)
 	assert.False(t, running)
+	test_config := Yaml{LocalPort: "7082", Verbose: true}
 	conf := CreateConfig(&test_config)
 	testServer := CreateServer(conf)
 	assert.Eventually(t, func() bool { return running }, 5*time.Second, 10*time.Millisecond)

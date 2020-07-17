@@ -30,7 +30,6 @@ type SetCascadeModeRequest struct {
 	CascadeMode bool `json:"cascadeMode"`
 }
 
-var error_decode string = html.EscapeString("Problem with Decoding Body")
 var error_proxy_parse string = html.EscapeString("Proxy URL could not be parsed")
 var error_url_parse string = html.EscapeString("Address URL could not be parsed")
 var error_binding string = html.EscapeString("Error while binding JSON: ")
@@ -93,13 +92,13 @@ func setCascadeModeFunc(c *gin.Context) {
 	if req.CascadeMode {
 		utils.Sugar.Info("Setting Cascade to: CascadeMode")
 		config.CascadeMode = false
-		ChangeMode(false, &config)
+		ChangeMode(false, config)
 	} else {
 		utils.Sugar.Info("Setting Cascade to: DirectMode")
 		config.CascadeMode = true
-		ChangeMode(true, &config)
+		ChangeMode(true, config)
 	}
-	conf := CreateConfig(&config)
+	conf := CreateConfig(config)
 	post := gin.H{
 		"CascadeMode": conf.CascadeMode,
 	}
@@ -123,7 +122,7 @@ func setDisableAutoChangeModeFunc(c *gin.Context) {
 	config := GetConfig()
 	config.DisableAutoChangeMode = !req.AutoChangeMode
 
-	conf := CreateConfig(&config)
+	conf := CreateConfig(config)
 	post := gin.H{
 		"AutoChangeMode": !conf.DisableAutoChangeMode,
 	}
@@ -145,7 +144,7 @@ func setOnlineCheckFunc(c *gin.Context) {
 	config := GetConfig()
 	config.OnlineCheck = req.OnlineCheck
 
-	conf := CreateConfig(&config)
+	conf := CreateConfig(config)
 	post := gin.H{
 		"OnlineCheck": conf.OnlineCheck,
 	}
@@ -191,7 +190,7 @@ func addRedirectFunc(c *gin.Context) {
 	config.HostList += req.Address + "->" + req.Proxy
 	config.proxyRedirectList = strings.Split(config.HostList, ",")
 	AddDifferentProxyConnection(req.Address, req.Proxy)
-	conf, err := UpdateConfig(&config)
+	conf, err := UpdateConfig(config)
 	if err != nil {
 		utils.Sugar.Error(err)
 		c.JSON(http.StatusInternalServerError, gin.H{

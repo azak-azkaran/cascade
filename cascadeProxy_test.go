@@ -15,6 +15,9 @@ import (
 func TestCascadeProxy_Run(t *testing.T) {
 	utils.Init()
 	username, password := "foo", "bar"
+	test_config := Yaml{LocalPort: "7082", Verbose: true}
+	test_config.CascadeMode = true
+	CreateConfig(&test_config)
 
 	// start end proxy server
 	endProxy := DIRECT.Run(true)
@@ -78,6 +81,7 @@ func TestCascadeProxy_Run(t *testing.T) {
 
 func TestAddDirectConnection(t *testing.T) {
 	utils.Init()
+
 	middleProxy := CASCADE.Run(true, "http://localhost:7082", "", "")
 	var middleServer *http.Server
 
@@ -96,6 +100,7 @@ func TestAddDirectConnection(t *testing.T) {
 	assert.Error(t, err)
 
 	test_config := Yaml{LocalPort: "7082", Verbose: true}
+	test_config.CascadeMode = true
 	conf := CreateConfig(&test_config)
 	conf.LocalPort = "8801"
 	CreateConfig(conf)
@@ -153,6 +158,7 @@ func TestAddDifferentProxyConnection(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	test_config := Yaml{LocalPort: "7082", Verbose: true}
+	test_config.CascadeMode = true
 	conf := CreateConfig(&test_config)
 	conf.LocalPort = "8801"
 	CreateConfig(conf)
@@ -218,6 +224,9 @@ func TestAddDifferentProxyConnection(t *testing.T) {
 
 func TestCascadeProxy_ModeSwitch(t *testing.T) {
 	utils.Init()
+	Config := Yaml{LocalPort: "8888", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "google,eclipse", Log: "info"}
+	Config.CascadeMode = true
+	CreateConfig(&Config)
 	middleProxy := CASCADE.Run(true, "http://localhost:8083", "", "")
 	var middleServer *http.Server
 
@@ -231,7 +240,7 @@ func TestCascadeProxy_ModeSwitch(t *testing.T) {
 		assert.EqualError(t, err, http.ErrServerClosed.Error())
 	}()
 
-	time.Sleep(1 * time.Millisecond)
+	time.Sleep(1 * time.Second)
 	_, err := utils.GetResponse("http://localhost:7081", "https://www.google.de")
 	assert.Error(t, err)
 
