@@ -240,6 +240,7 @@ func getFileConfig(config *Yaml) (*Yaml, error) {
 		}
 		file_config.DisableAutoChangeMode = config.DisableAutoChangeMode
 		file_config.CascadeMode = config.CascadeMode
+		file_config.ConfigFile = config.ConfigFile
 		return file_config, nil
 	}
 	return config, nil
