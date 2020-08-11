@@ -104,8 +104,6 @@ func GetConfFromVault(vaultAddr string, vaultToken string, path string) (*Yaml, 
 	vaultConfig := &vault.Config{
 		Address: vaultAddr,
 	}
-	config.VaultAddr = vaultAddr
-	config.VaultToken = vaultToken
 
 	resp, err := SealStatus(vaultConfig)
 	if err != nil {
@@ -233,16 +231,21 @@ func GetConfFromFile(path string) (*Yaml, error) {
 	return &config, nil
 }
 
-func UpdateConfig(config *Yaml) (*Yaml, error) {
-	var err error
-	utils.Sugar.Info("Check for Configuration update")
+func getFileConfig(config *Yaml) (*Yaml, error) {
 	if config.ConfigFile != "" && config.ConfigFile != "config" {
-		config, err = GetConfFromFile(config.ConfigFile)
+		utils.Sugar.Info("Check File Configuration")
+		file_config, err := GetConfFromFile(config.ConfigFile)
 		if err != nil {
-			return nil, err
+			return config, err
 		}
+		file_config.DisableAutoChangeMode = config.DisableAutoChangeMode
+		file_config.CascadeMode = config.CascadeMode
+		return file_config, nil
 	}
+	return config, nil
+}
 
+func getVaultConfig(config *Yaml) (*Yaml, error) {
 	if config.VaultAddr != "" {
 		utils.Sugar.Info("Found Vault server address")
 
@@ -252,30 +255,38 @@ func UpdateConfig(config *Yaml) (*Yaml, error) {
 		}
 
 		if len(config.VaultToken) == 0 {
-			return nil, errors.New("Vault token is not provided")
+			return config, errors.New("Vault token is not provided")
 		}
 
-		config, err = GetConfFromVault(config.VaultAddr, config.VaultToken, hostname)
+		vault_config, err := GetConfFromVault(config.VaultAddr, config.VaultToken, hostname)
 		if err != nil {
-			return nil, err
+			return config, err
 		}
+		vault_config.DisableAutoChangeMode = config.DisableAutoChangeMode
+		vault_config.VaultAddr = config.VaultAddr
+		vault_config.VaultToken = config.VaultToken
+		vault_config.CascadeMode = config.CascadeMode
+		return vault_config, nil
 	}
-
-	config.proxyRedirectList = strings.Split(config.HostList, ",")
-	config.health = time.Duration(int(config.HealthTime)) * time.Second
 	return config, nil
 }
 
 func CreateConfig(config *Yaml) *Yaml {
-	conf, err := UpdateConfig(config)
+	utils.Sugar.Info("Creating configuration")
+	conf, err := getFileConfig(config)
 	if err != nil {
-		conf = config
+		utils.Sugar.Error(err.Error())
+	}
+
+	conf, err = getVaultConfig(config)
+	if err != nil {
+		utils.Sugar.Error(err.Error())
 	}
 	conf = SetConfig(conf)
 	return conf
 }
 
-func ParseCommandline() (*Yaml, error) {
+func ParseCommandline() *Yaml {
 	config := Yaml{}
 	flag.StringVar(&config.Password, "password", "", "Password for authentication to a forward proxy")
 	flag.StringVar(&config.ProxyURL, "host", "", "Address of a forward proxy")
@@ -296,9 +307,9 @@ func ParseCommandline() (*Yaml, error) {
 	flag.Parse()
 
 	if *ver {
-		return nil, nil
+		return nil
 	}
-	return UpdateConfig(&config)
+	return CreateConfig(&config)
 }
 
 func GetConfig() *Yaml {
@@ -307,6 +318,9 @@ func GetConfig() *Yaml {
 }
 
 func SetConfig(conf *Yaml) *Yaml {
+	conf.proxyRedirectList = strings.Split(conf.HostList, ",")
+	conf.health = time.Duration(int(conf.HealthTime)) * time.Second
+
 	switch strings.ToUpper(conf.Log) {
 	case "DEBUG":
 		utils.Sugar.Debug(conf)

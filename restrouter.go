@@ -4,7 +4,6 @@ import (
 	"html"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/azak-azkaran/cascade/utils"
 	"github.com/azak-azkaran/goproxy"
@@ -122,7 +121,7 @@ func setDisableAutoChangeModeFunc(c *gin.Context) {
 	config := GetConfig()
 	config.DisableAutoChangeMode = !req.AutoChangeMode
 
-	conf := CreateConfig(config)
+	conf := SetConfig(config)
 	post := gin.H{
 		"AutoChangeMode": !conf.DisableAutoChangeMode,
 	}
@@ -188,24 +187,12 @@ func addRedirectFunc(c *gin.Context) {
 		config.HostList += ","
 	}
 	config.HostList += req.Address + "->" + req.Proxy
-	config.proxyRedirectList = strings.Split(config.HostList, ",")
 	AddDifferentProxyConnection(req.Address, req.Proxy)
-	conf, err := UpdateConfig(config)
-	if err != nil {
-		utils.Sugar.Error(err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"address": html.EscapeString(addressURL.String()),
-			"proxy":   html.EscapeString(proxyURL.String()),
-			"message": html.EscapeString("Added to Redirect List but config file was not updated because:\n" + err.Error()),
-		})
-		return
-	}
-	CreateConfig(conf)
-
+	SetConfig(config)
 	post := gin.H{
 		"address": html.EscapeString(addressURL.String()),
 		"proxy":   html.EscapeString(proxyURL.String()),
-		"message": html.EscapeString("Added to Redirect List, updated File at: " + conf.ConfigFile),
+		"message": html.EscapeString("Added to Redirect List, updated File at: " + config.ConfigFile),
 	}
 	c.JSON(http.StatusOK, post)
 }

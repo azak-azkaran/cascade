@@ -13,9 +13,9 @@ var closeChan bool
 var stopChan = make(chan os.Signal, 2)
 
 func Run(config *Yaml) {
-	utils.Sugar.Warn("Creating Configuration")
+	utils.Sugar.Info("Creating Configuration")
 	config.CascadeMode = true
-	config = CreateConfig(config)
+	SetConfig(config)
 
 	utils.Sugar.Info("Creating Server")
 	CurrentServer = CreateServer(config)
@@ -30,10 +30,8 @@ func Run(config *Yaml) {
 	for !closeChan {
 		currentDuration := time.Since(lastTime)
 		if currentDuration > config.health {
-			conf := GetConfig()
 			lastTime = time.Now()
-			config = CreateConfig(conf)
-			go ModeSelection(config)
+			go StatusUpdate()
 			time.Sleep(config.health)
 		}
 	}
@@ -42,6 +40,14 @@ func Run(config *Yaml) {
 		utils.Sugar.Info("Close was set")
 		ShutdownCurrentServer()
 	}
+}
+
+func StatusUpdate() {
+	conf := GetConfig()
+	utils.Sugar.Info("Status Update")
+	conf = CreateConfig(conf)
+	ModeSelection(conf)
+
 }
 
 func cleanup() {
@@ -62,10 +68,8 @@ func main() {
 		utils.Sugar.Error("Stop was called")
 		cleanup()
 	}()
-	config, err := ParseCommandline()
-	if err != nil {
-		utils.Sugar.Error("Dying Horribly because problems with Configuration: ", err)
-	} else if config != nil {
+	config := ParseCommandline()
+	if config != nil {
 		Run(config)
 	} else {
 		utils.Sugar.Info("Version: ", version)
