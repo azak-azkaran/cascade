@@ -70,19 +70,6 @@ func TestModeSelection(t *testing.T) {
 	time.Sleep(1 * time.Millisecond)
 }
 
-func TestCreateConfig(t *testing.T) {
-	fmt.Println("Running: TestCreateConfig")
-	utils.Init()
-	Config := Yaml{LocalPort: "8888", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "google,eclipse", Log: "info"}
-	conf := CreateConfig(&Config)
-
-	utils.Sugar.Info("Creating Server")
-	CurrentServer = CreateServer(conf)
-
-	assert.NotNil(t, CurrentServer)
-	assert.Equal(t, len(Config.proxyRedirectList), 2)
-}
-
 func TestHandleCustomProxies(t *testing.T) {
 	fmt.Println("Running: TestHandleCustomProxies")
 	utils.Init()

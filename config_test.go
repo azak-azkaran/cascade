@@ -54,7 +54,20 @@ func TestGetConfFromVault(t *testing.T) {
 	assert.Equal(t, false, conf.DisableAutoChangeMode)
 }
 
-func TestUpdateConfig(t *testing.T) {
+func TestCreateConfig(t *testing.T) {
+	fmt.Println("Running: TestCreateConfig")
+	utils.Init()
+	Config := Yaml{LocalPort: "8888", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "google,eclipse", Log: "info"}
+	conf := CreateConfig(&Config)
+
+	utils.Sugar.Info("Creating Server")
+	CurrentServer = CreateServer(conf)
+
+	assert.NotNil(t, CurrentServer)
+	assert.Equal(t, len(Config.proxyRedirectList), 2)
+}
+
+func TestSetConfig(t *testing.T) {
 	fmt.Println("Running: TestUpdateConfig")
 	utils.Init()
 	StartServer(t, "http://localhost:2000")
@@ -73,11 +86,11 @@ func TestUpdateConfig(t *testing.T) {
 	assert.Equal(t, int64(5), conf.HealthTime)
 	assert.Equal(t, "http://localhost:2000", conf.VaultAddr)
 	assert.Equal(t, "random", conf.VaultToken)
-	conf, err = UpdateConfig(conf)
-	assert.NoError(t, err)
-	require.NotNil(t, conf)
 
-	assert.Equal(t, int64(30), conf.HealthTime)
+	conf = SetConfig(conf)
+	require.NotNil(t, currentConfig)
+
+	assert.Equal(t, int64(5), currentConfig.HealthTime)
 	//assert.Equal(t, true, conf.CascadeMode)
-	assert.Equal(t, false, conf.DisableAutoChangeMode)
+	assert.Equal(t, false, currentConfig.DisableAutoChangeMode)
 }
