@@ -14,8 +14,11 @@ go:
 before_install:
   - sudo apt-get update
   - sudo apt-get install findutils
+  - go get github.com/mattn/goveralls
+
 script:
   - go get ./...
   - make coverage
   # other script steps might be done before running the actual analysis
   - sonar-scanner
+  - make coverall

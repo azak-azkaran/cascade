@@ -29,6 +29,12 @@ coverage: test
 	go test github.com/azak-azkaran/cascade/utils -coverprofile=./utils/cover.out
 	#go test github.com/azak-azkaran/cascade/utils -json > ./utils/report.json
 
+coverall: test
+	@echo Running Test with Coverall
+	go test -v -coverprofile=cover.out -covermode=count
+	go test github.com/azak-azkaran/cascade/utils -v -covermode=count -coverprofile=./utils/cover.out
+	goveralls -coverprofile=cover.out,./utils/cover.out -service=travis-ci -repotoken $COVERALLS_TOKEN
+
 daemon: build
 	@echo Moving cascade to /usr/local/bin
 	mv ./cascade /usr/local/bin/
