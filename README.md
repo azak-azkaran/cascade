@@ -2,7 +2,7 @@
 [![Build Status](https://travis-ci.org/azak-azkaran/cascade.svg?branch=master)](https://travis-ci.org/azak-azkaran/cascade)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=azak-azkaran_cascade&metric=alert_status)](https://sonarcloud.io/dashboard?id=azak-azkaran_cascade)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=azak-azkaran_cascade&metric=coverage)](https://sonarcloud.io/dashboard?id=azak-azkaran_cascade)
-[![Coverage Status](https://coveralls.io/repos/github/azak-azkaran/cascade/badge.svg?branch=master)](https://coveralls.io/github/azak-azkaran/cascade?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/azak-azkaran/cascade/badge.svg)](https://coveralls.io/github/azak-azkaran/cascade)
 
 Go proxy which can switch between Direct mode and Cascade mode
 Switch is done according to health check.
@@ -29,6 +29,8 @@ Configuration can be done by file or command line arguments
 * __host-list__ : Comma Separated List of Host for which Proxy Redirect is used in Cascade Mode
 * __config__ : Path to configuration yaml file. If set all other command line parameters will be ignored
 * __version__: Just shows the current version
+* __vault-addr__: address to the hashi corp vault
+* __vault-token__: token for the hashi corp vault
 
 ### Health Check
 A temporary client tries to connect to a certain address regularly.
@@ -51,6 +53,25 @@ Direct Configuration:
 * __DIRECT Connection__: eclipse
 * __DIRECT Connection__: azure->
 * __REDIRECT Connection to other Proxy__: google->test:8888
+
+### HashiCorp Vault Configuration
+Cascade can also get the configuration from a HashiCorp Vault.
+The secret store has to be version 2 and a vault configuration will overwrite a file configuration.
+The following secrets have to be saved in store:
+
+* username
+* password
+* host 
+
+The following secrets are optional:
+
+* port (default: 8888) 
+* host-list (default: "")
+* health (default: www.google.de) 
+* log (default: WARNING)
+* health-time (default: 5s)
+* disableAutoChangeMode  (default: false)
+
 
 ## REST Interface
 
@@ -102,6 +123,7 @@ curl -D- --request POST \
   localhost/setAutoMode
 ```
 
+**will overwrite the setting from file,vault or command line**
 
 ## Systemd
 
