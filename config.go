@@ -279,7 +279,7 @@ func CreateConfig(config *Yaml) *Yaml {
 		utils.Sugar.Error(err.Error())
 	}
 
-	conf, err = getVaultConfig(config)
+	conf, err = getVaultConfig(conf)
 	if err != nil {
 		utils.Sugar.Error(err.Error())
 	}
@@ -318,25 +318,29 @@ func GetConfig() *Yaml {
 	return config
 }
 
+func PrintConfig(conf *Yaml) {
+	utils.Sugar.Warn("Running Configuration")
+	utils.Sugar.Warn("Username: ", conf.Username)
+	utils.Sugar.Warn("Password: ", conf.Password)
+	utils.Sugar.Warn("ProxyUrl: ", conf.ProxyURL)
+	utils.Sugar.Warn("Health Address: ", conf.CheckAddress)
+	utils.Sugar.Warn("Health Time: ", conf.health)
+	utils.Sugar.Warn("Skip Cascade for Hosts: ", conf.proxyRedirectList)
+	utils.Sugar.Warn("Log Level: ", conf.Log)
+	utils.Sugar.Warn("OnlineCheck: ", conf.OnlineCheck)
+	utils.Sugar.Warn("CascadeMode: ", conf.CascadeMode)
+	utils.Sugar.Warn("DisableAutoChangeMode: ", conf.DisableAutoChangeMode)
+}
+
 func SetConfig(conf *Yaml) *Yaml {
 	conf.proxyRedirectList = strings.Split(conf.HostList, ",")
 	conf.health = time.Duration(int(conf.HealthTime)) * time.Second
 
 	switch strings.ToUpper(conf.Log) {
 	case "DEBUG":
-		utils.Sugar.Debug(conf)
-		utils.Sugar.Debug("Starting Proxy with the following flags:")
-		utils.Sugar.Debug("Username: ", conf.Username)
-		utils.Sugar.Debug("Password: ", conf.Password)
-		utils.Sugar.Debug("ProxyUrl: ", conf.ProxyURL)
-		utils.Sugar.Debug("Health Address: ", conf.CheckAddress)
-		utils.Sugar.Debug("Health Time: ", conf.health)
-		utils.Sugar.Debug("Skip Cascade for Hosts: ", conf.proxyRedirectList)
-		utils.Sugar.Debug("Log Level: ", conf.Log)
-		utils.Sugar.Debug("OnlineCheck: ", conf.OnlineCheck)
-		utils.Sugar.Debug("CascadeMode: ", conf.CascadeMode)
-		utils.Sugar.Debug("DisableAutoChangeMode: ", conf.DisableAutoChangeMode)
 		utils.EnableDebug()
+		utils.Sugar.Debug(conf)
+		PrintConfig(conf)
 		conf.Log = "DEBUG"
 		conf.Verbose = true
 	case "INFO":

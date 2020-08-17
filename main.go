@@ -13,10 +13,6 @@ var closeChan bool
 var stopChan = make(chan os.Signal, 2)
 
 func Run(config *Yaml) {
-	utils.Sugar.Info("Creating Configuration")
-	config.CascadeMode = true
-	SetConfig(config)
-
 	utils.Sugar.Info("Creating Server")
 	CurrentServer = CreateServer(config)
 
@@ -38,6 +34,11 @@ func Run(config *Yaml) {
 
 	if closeChan {
 		utils.Sugar.Info("Close was set")
+		err := utils.Sugar.Sync()
+		if err != nil {
+			utils.Sugar.Error("Error during Sugar Sync:", err.Error())
+		}
+
 		ShutdownCurrentServer()
 	}
 }
@@ -70,6 +71,10 @@ func main() {
 	}()
 	config := ParseCommandline()
 	if config != nil {
+		utils.Sugar.Info("Creating Configuration")
+		config.CascadeMode = true
+		SetConfig(config)
+		PrintConfig(config)
 		Run(config)
 	} else {
 		utils.Sugar.Info("Version: ", version)

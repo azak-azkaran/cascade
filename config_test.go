@@ -57,14 +57,32 @@ func TestGetConfFromVault(t *testing.T) {
 func TestCreateConfig(t *testing.T) {
 	fmt.Println("Running: TestCreateConfig")
 	utils.Init()
-	Config := Yaml{LocalPort: "8888", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "google,eclipse", Log: "info"}
-	conf := CreateConfig(&Config)
+	Config := Yaml{LocalPort: "8888", CheckAddress: "https://www.google.de", HealthTime: 5, HostList: "google,eclipse,blub", Log: "info"}
+	CreateConfig(&Config)
 
-	utils.Sugar.Info("Creating Server")
-	CurrentServer = CreateServer(conf)
+	conf := GetConfig()
+	assert.Equal(t, "https://www.google.de", conf.CheckAddress)
+	assert.Equal(t, "8888", conf.LocalPort)
+	assert.Equal(t, int64(5), conf.HealthTime)
+	assert.Equal(t, "", conf.VaultAddr)
+	assert.Equal(t, "", conf.VaultToken)
+	assert.Equal(t, len(conf.proxyRedirectList), 3)
 
-	assert.NotNil(t, CurrentServer)
-	assert.Equal(t, len(Config.proxyRedirectList), 2)
+	Config.VaultToken = "token"
+	Config.VaultAddr = "http://localhost:2000"
+
+	StartServer(t, "http://localhost:2000")
+	sealStatus = false
+	time.Sleep(1 * time.Millisecond)
+	CreateConfig(&Config)
+
+	conf = GetConfig()
+	assert.Equal(t, VAULT_TEST_HEALTH, conf.CheckAddress)
+	assert.Equal(t, "8888", conf.LocalPort)
+	assert.Equal(t, int64(30), conf.HealthTime)
+	assert.Equal(t, "http://localhost:2000", conf.VaultAddr)
+	assert.Equal(t, "token", conf.VaultToken)
+	assert.Equal(t, len(conf.proxyRedirectList), 2)
 }
 
 func TestSetConfig(t *testing.T) {
