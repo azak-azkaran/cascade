@@ -154,7 +154,7 @@ func TestRestRequest(t *testing.T) {
 }
 
 func TestRestServerLateCreation(t *testing.T) {
-	fmt.Println("Running: TestRestServerNegative")
+	fmt.Println("Running: TestRestServerLateCreation")
 	utils.Init()
 	CurrentServer = nil
 	running = false
@@ -174,4 +174,5 @@ func TestRestServerLateCreation(t *testing.T) {
 
 	err = CurrentServer.Shutdown(context.TODO())
 	assert.NoError(t, err, "Error while shutdown")
+	time.Sleep(1 * time.Second)
 }
