@@ -180,6 +180,9 @@ func TestRestRouter_AddRedirect(t *testing.T) {
 
 	err = endServer.Shutdown(context.Background())
 	assert.NoError(t, err)
+
+	err = CurrentServer.Shutdown(context.Background())
+	assert.NoError(t, err)
 }
 
 func TestRestRouter_ChangeOnlineCheck(t *testing.T) {
@@ -245,6 +248,9 @@ func TestRestRouter_ChangeOnlineCheck(t *testing.T) {
 	decoder = json.NewDecoder(resp.Body)
 	assert.NoError(t, decoder.Decode(&decodedBool))
 	assert.True(t, decodedBool)
+
+	err = CurrentServer.Shutdown(context.Background())
+	assert.NoError(t, err)
 
 	err = endServer.Shutdown(context.Background())
 	assert.NoError(t, err)
@@ -322,6 +328,9 @@ func TestRestRouter_DisableAutomaticChange(t *testing.T) {
 	resp, err = client.Post("http://localhost:7081/setAutoMode", "application/json", &buf)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+	err = CurrentServer.Shutdown(context.Background())
+	assert.NoError(t, err)
 
 	err = endServer.Shutdown(context.Background())
 	assert.NoError(t, err)
