@@ -29,7 +29,7 @@ coverage: fetch
 
 coverall: coverage
 	@echo Running Test with Coverall
-	goveralls -coverprofile=cover.out -service=travis-ci -repotoken ${COVERALLS_TOKEN }
+	goveralls -coverprofile=cover.out -service=travis-ci -repotoken=${COVERALLS_TOKEN }
 
 daemon: build
 	@echo Moving cascade to /usr/local/bin
