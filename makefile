@@ -1,4 +1,5 @@
-VERSION := $(shell git describe --always --long --dirty)
+VERSION := $(shell git describe --always --long --dirty --tags)
+CLEAN := $(shell git describe --tags)
 all: install
 
 fetch:
@@ -40,6 +41,10 @@ daemon: build
 	systemctl daemon-reload
 	@echo starting cascade as daemon
 	systemctl start cascade
+
+release: build
+	@echo creating zip
+	tar -czvf ~/cascade.v${CLEAN}.tar.gz cascade README.md cascade.service
 
 clean:
 	go clean
