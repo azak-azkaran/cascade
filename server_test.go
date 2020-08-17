@@ -148,6 +148,9 @@ func TestRestRequest(t *testing.T) {
 
 	err = testServer.Shutdown(context.TODO())
 	assert.NoError(t, err, "Error while shutdown")
+
+	err = CurrentServer.Shutdown(context.TODO())
+	assert.NoError(t, err, "Error while shutdown")
 }
 
 func TestRestServerLateCreation(t *testing.T) {

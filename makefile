@@ -22,16 +22,15 @@ test: fetch
 	go test
 	go test github.com/azak-azkaran/cascade/utils
 
-coverage: test
+coverage: fetch
 	@echo Running Test with Coverage export
-	go test github.com/azak-azkaran/cascade github.com/azak-azkaran/cascade/utils -coverprofile=cover.out
-	#go test -json > report.json
+	go test github.com/azak-azkaran/cascade github.com/azak-azkaran/cascade/utils -v -coverprofile=cover.out -covermode=count
+	go test github.com/azak-azkaran/cascade github.com/azak-azkaran/cascade/utils -json > report.json
 	#go test github.com/azak-azkaran/cascade/utils -coverprofile=./utils/cover.out
 	#go test github.com/azak-azkaran/cascade/utils -json > ./utils/report.json
 
-coverall: test
+coverall: coverage
 	@echo Running Test with Coverall
-	go test github.com/azak-azkaran/cascade github.com/azak-azkaran/cascade/utils -v -coverprofile=cover.out -covermode=count
 	#go test -v -coverprofile=cover.out -covermode=count
 	#go test github.com/azak-azkaran/cascade/utils -v -covermode=count -coverprofile=./cover.out
 	goveralls -coverprofile=cover.out -service=travis-ci -repotoken ${COVERALLS_TOKEN }
