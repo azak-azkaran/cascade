@@ -20,5 +20,6 @@ script:
   - go get ./...
   - make coverage
   # other script steps might be done before running the actual analysis
+  - echo "sonar.projectVersion=`git describe --tags --abbrev=0`" >> sonar-project.properties
   - sonar-scanner
   - make coverall
