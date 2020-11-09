@@ -1,5 +1,6 @@
 # cascade
-[![Build Status](https://travis-ci.org/azak-azkaran/cascade.svg?branch=master)](https://travis-ci.org/azak-azkaran/cascade)
+[![Build Status](https://github.com/azak-azkaran/cascade/workflows/Go/badge.svg) ](https://github.com/azak-azkaran/cascade)
+[![Travis Status](https://travis-ci.org/azak-azkaran/cascade.svg?branch=master)](https://travis-ci.org/azak-azkaran/cascade)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=azak-azkaran_cascade&metric=alert_status)](https://sonarcloud.io/dashboard?id=azak-azkaran_cascade)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=azak-azkaran_cascade&metric=coverage)](https://sonarcloud.io/dashboard?id=azak-azkaran_cascade)
 [![Coverage Status](https://coveralls.io/repos/github/azak-azkaran/cascade/badge.svg)](https://coveralls.io/github/azak-azkaran/cascade)
